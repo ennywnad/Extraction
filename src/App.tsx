@@ -176,7 +176,9 @@ export default function App() {
 
   // Manage initial load and search parameter decoder snapshot
   useEffect(() => {
-    const loaded = loadSessions();
+    const loaded = loadSessions(() =>
+      showToast("Warning: Session storage appears corrupted. Your past sessions could not be loaded.")
+    );
     setSessions(loaded);
 
     // Decode base64 snapshot if loaded
@@ -253,12 +255,10 @@ export default function App() {
   };
 
   const handleDeleteSession = (id: string) => {
-    if (window.confirm("Are you sure you want to delete this session permanently? This is non-reversible.")) {
-      deleteSession(id);
-      setSessions(loadSessions());
-      if (currentSession?.id === id) {
-        setCurrentSession(null);
-      }
+    deleteSession(id);
+    setSessions(loadSessions());
+    if (currentSession?.id === id) {
+      setCurrentSession(null);
     }
   };
 

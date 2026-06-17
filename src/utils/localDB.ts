@@ -1,11 +1,12 @@
 import { Session } from "../types";
 
-export function loadSessions(): Session[] {
+export function loadSessions(onError?: () => void): Session[] {
   try {
     const raw = localStorage.getItem("extraction_sessions");
     return raw ? JSON.parse(raw) : [];
   } catch (e) {
     console.error("Failed to load sessions from localStorage", e);
+    onError?.();
     return [];
   }
 }

@@ -94,9 +94,3 @@ export interface SentencePrompt {
   prefix: string;
   completed?: string;
 }
-
-export interface ImageCard {
-  id: string;
-  url: string;
-  keywords: string[];
-}

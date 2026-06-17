@@ -117,6 +117,7 @@ export default function IntakeForm({
   const [outputFilter, setOutputFilter] = useState<'comprehensive' | 'actions' | 'roadmap'>('comprehensive');
   const [cognitiveBiasAudit, setCognitiveBiasAudit] = useState<'include' | 'exclude'>('exclude');
 
+  const [confirmingDeleteId, setConfirmingDeleteId] = useState<string | null>(null);
   const [loadingRecommendation, setLoadingRecommendation] = useState(false);
   const [recommendationResult, setRecommendationResult] = useState<{
     recommendation: ExtractionMode;
@@ -814,7 +815,7 @@ export default function IntakeForm({
                       <div>
                         <span className="text-[9px] uppercase font-bold tracking-wider text-zinc-500 font-mono">AI Recommended Mode</span>
                         <h4 className="text-xs font-black text-black uppercase font-display tracking-wide mt-1">
-                          {recommendationResult.recommendation.replace("_", " ")}
+                          {recommendationResult.recommendation.replaceAll("_", " ")}
                         </h4>
                       </div>
                       <span className="bg-black text-white text-[9px] px-2 py-0.5 font-mono uppercase font-semibold">{recommendationResult.confidence}% Match</span>
@@ -838,7 +839,7 @@ export default function IntakeForm({
                             onClick={() => handleLaunchWithMode(alt)}
                             className="bg-white border-2 border-black text-black px-3.5 hover:bg-black hover:text-white text-[10px] font-display font-bold uppercase cursor-pointer transition-all"
                           >
-                            Use {alt.replace("_", " ")}
+                            Use {alt.replaceAll("_", " ")}
                           </button>
                         ))}
                       </div>
@@ -883,13 +884,30 @@ export default function IntakeForm({
                       {session.thoughts.length} SURFACED THOUGHTS • {new Date(session.updatedAt).toLocaleDateString()}
                     </span>
                   </button>
-                  <button
-                    onClick={() => onDeleteSession(session.id)}
-                    className="text-zinc-300 hover:text-black ml-1 p-1 hover:bg-zinc-100 border border-transparent hover:border-black transition-all cursor-pointer"
-                    title="Delete session"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  {confirmingDeleteId === session.id ? (
+                    <div className="flex items-center gap-1 ml-1 shrink-0">
+                      <button
+                        onClick={() => { onDeleteSession(session.id); setConfirmingDeleteId(null); }}
+                        className="text-[9px] font-mono font-black uppercase px-2 py-1 bg-black text-white border border-black cursor-pointer hover:bg-red-600 transition-all"
+                      >
+                        Delete
+                      </button>
+                      <button
+                        onClick={() => setConfirmingDeleteId(null)}
+                        className="text-[9px] font-mono font-bold uppercase px-2 py-1 bg-white text-black border border-black cursor-pointer hover:bg-zinc-100 transition-all"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setConfirmingDeleteId(session.id)}
+                      className="text-zinc-300 hover:text-black ml-1 p-1 hover:bg-zinc-100 border border-transparent hover:border-black transition-all cursor-pointer shrink-0"
+                      title="Delete session"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               ))
             )}
