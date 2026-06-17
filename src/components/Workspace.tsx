@@ -420,7 +420,7 @@ export default function Workspace({
                     <div className="flex justify-between items-center shrink-0 mb-2">
                       <span className="flex items-center gap-1.5 text-[9px] uppercase tracking-wider font-extrabold text-black font-mono">
                         <div className={`w-1.5 h-1.5 rounded-full bg-linear-to-r ${thoughtColorClass}`} />
-                        {thought.mode.replace("_", " ")}
+                        {thought.mode.replaceAll("_", " ")}
                       </span>
                       <span className="text-[9px] text-zinc-400 font-mono">
                         #{session.thoughts.length - session.thoughts.findIndex(t => t.id === thought.id)}
