@@ -6,3 +6,6 @@ coverage/
 *.log
 .env*
 !.env.example
+
+# AI IDE session artifacts
+.antigravity/
