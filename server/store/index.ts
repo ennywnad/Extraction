@@ -20,7 +20,7 @@ export async function getEngagementStore(): Promise<EngagementStore> {
     store = new FirestoreEngagementStore(projectId);
   } else {
     console.log("Engagement store: local file (.data/engagements.json)");
-    store = new FileEngagementStore();
+    store = new FileEngagementStore(process.env.ENGAGEMENT_DATA_DIR || ".data");
   }
   return store;
 }

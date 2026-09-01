@@ -22,16 +22,25 @@ import { Session, Thought, ExtractionMode } from "../types";
 interface WorkspaceProps {
   session: Session;
   onUpdateSession: (updates: Partial<Session>) => void;
+  /** Explicit, so a deletion is never inferred from a shrinking thoughts array. */
+  onDeleteThought: (id: string) => void;
   onExit: () => void;
   onSynthesize: () => void;
+  /** Lets the parent pause polling while a fragment is being edited. */
+  onEditingChange?: (editing: boolean) => void;
+  /** The signed-in contributor, when this session is an engagement. */
+  viewerEmail?: string;
   children: React.ReactNode;
 }
 
 export default function Workspace({
   session,
   onUpdateSession,
+  onDeleteThought,
   onExit,
   onSynthesize,
+  onEditingChange,
+  viewerEmail,
   children,
 }: WorkspaceProps) {
   const [editingThoughtId, setEditingThoughtId] = useState<string | null>(null);
@@ -106,15 +115,10 @@ export default function Workspace({
     });
   };
 
-  const handleDeleteThought = (id: string) => {
-    onUpdateSession({
-      thoughts: session.thoughts.filter((t) => t.id !== id),
-    });
-  };
-
   const handleStartEdit = (thought: Thought) => {
     setEditingThoughtId(thought.id);
     setEditText(thought.text);
+    onEditingChange?.(true);
   };
 
   const handleSaveEdit = (id: string) => {
@@ -122,7 +126,14 @@ export default function Workspace({
       thoughts: session.thoughts.map((t) => (t.id === id ? { ...t, text: editText } : t)),
     });
     setEditingThoughtId(null);
+    onEditingChange?.(false);
   };
+
+  /** A fragment is yours if you wrote it, or if the pile has no attribution at all (solo). */
+  const isMine = (thought: Thought) => !thought.author || thought.author.email === viewerEmail;
+
+  const initialsOf = (name: string) =>
+    name.trim().split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("") || "?";
 
   const handleAddDirectThought = () => {
     if (!newThoughtText.trim()) return;
@@ -416,16 +427,45 @@ export default function Workspace({
                     exit={{ opacity: 0, x: -20 }}
                     className="p-3.5 bg-white border-2 border-black hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:translate-x-0.5 hover:translate-y-0.5 transition-all relative group"
                   >
-                    {/* Header bar metadata */}
-                    <div className="flex justify-between items-center shrink-0 mb-2">
-                      <span className="flex items-center gap-1.5 text-[9px] uppercase tracking-wider font-extrabold text-black font-mono">
-                        <div className={`w-1.5 h-1.5 rounded-full bg-linear-to-r ${thoughtColorClass}`} />
-                        {thought.mode.replaceAll("_", " ")}
-                      </span>
-                      <span className="text-[9px] text-zinc-400 font-mono">
-                        #{session.thoughts.length - session.thoughts.findIndex(t => t.id === thought.id)}
-                      </span>
-                    </div>
+                    {/* Header bar metadata. Attributed fragments lead with the contributor;
+                        solo fragments render exactly as they always have. */}
+                    {thought.author ? (
+                      <div className="flex justify-between items-start shrink-0 mb-2 gap-2">
+                        <span className="flex items-center gap-2 min-w-0">
+                          <span
+                            className="w-[22px] h-[22px] shrink-0 border-2 border-black bg-[#FFF3BF] flex items-center justify-center text-[9px] font-extrabold font-mono text-black"
+                            title={thought.author.email}
+                          >
+                            {initialsOf(thought.author.name)}
+                          </span>
+                          <span className="min-w-0 leading-tight">
+                            <span className="block text-[10px] font-bold text-black truncate">
+                              {thought.author.name}
+                            </span>
+                            <span className="block text-[8px] uppercase tracking-wider font-mono text-zinc-500 truncate">
+                              {thought.author.role}
+                            </span>
+                          </span>
+                        </span>
+                        <span className="flex items-center gap-1.5 shrink-0 text-[9px] text-zinc-400 font-mono">
+                          <div
+                            className={`w-1.5 h-1.5 rounded-full bg-linear-to-r ${thoughtColorClass}`}
+                            title={thought.mode.replaceAll("_", " ")}
+                          />
+                          #{session.thoughts.length - session.thoughts.findIndex(t => t.id === thought.id)}
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="flex justify-between items-center shrink-0 mb-2">
+                        <span className="flex items-center gap-1.5 text-[9px] uppercase tracking-wider font-extrabold text-black font-mono">
+                          <div className={`w-1.5 h-1.5 rounded-full bg-linear-to-r ${thoughtColorClass}`} />
+                          {thought.mode.replaceAll("_", " ")}
+                        </span>
+                        <span className="text-[9px] text-zinc-400 font-mono">
+                          #{session.thoughts.length - session.thoughts.findIndex(t => t.id === thought.id)}
+                        </span>
+                      </div>
+                    )}
 
                     {/* Thought Content Body */}
                     {editingThoughtId === thought.id ? (
@@ -494,23 +534,26 @@ export default function Workspace({
                       </div>
                     )}
 
-                    {/* Operational edit overlay on hover */}
-                    <div className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition duration-150 flex items-center bg-white border border-black rounded-none shadow-sm gap-1 shrink-0 px-1 py-0.5">
-                      <button
-                        onClick={() => handleStartEdit(thought)}
-                        className="p-1 hover:text-black text-zinc-400 hover:bg-zinc-50 cursor-pointer"
-                        title="Edit thought"
-                      >
-                        <Edit2 className="w-3 h-3" />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteThought(thought.id)}
-                        className="p-1 hover:text-black text-zinc-400 hover:bg-zinc-50 cursor-pointer"
-                        title="Delete thought"
-                      >
-                        <Trash2 className="w-3 h-3" />
-                      </button>
-                    </div>
+                    {/* Operational edit overlay on hover. Nobody rewrites anyone else's
+                        words; the same rule is enforced server-side. */}
+                    {isMine(thought) && (
+                      <div className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition duration-150 flex items-center bg-white border border-black rounded-none shadow-sm gap-1 shrink-0 px-1 py-0.5">
+                        <button
+                          onClick={() => handleStartEdit(thought)}
+                          className="p-1 hover:text-black text-zinc-400 hover:bg-zinc-50 cursor-pointer"
+                          title="Edit thought"
+                        >
+                          <Edit2 className="w-3 h-3" />
+                        </button>
+                        <button
+                          onClick={() => onDeleteThought(thought.id)}
+                          className="p-1 hover:text-black text-zinc-400 hover:bg-zinc-50 cursor-pointer"
+                          title="Delete thought"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
+                    )}
                   </motion.div>
                 );
               })

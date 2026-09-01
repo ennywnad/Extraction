@@ -20,6 +20,7 @@ import {
   ClipboardList
 } from "lucide-react";
 import { Session, ExtractionMode } from "../types";
+import type { EngagementSummary } from "../utils/engagementAPI";
 import CompareSettingsModal from "./CompareSettingsModal";
 
 interface IntakeFormProps {
@@ -27,6 +28,11 @@ interface IntakeFormProps {
   pastSessions: Session[];
   onLoadSession: (id: string) => void;
   onDeleteSession: (id: string) => void;
+  /** Group mode below is rendered only when the server established an identity. */
+  viewerName?: string;
+  engagements?: EngagementSummary[];
+  onCreateEngagement?: (input: { topic: string; intention?: string }) => void;
+  onJoinEngagement?: (id: string) => void;
 }
 
 const PRESET_GROUPS = [
@@ -97,8 +103,13 @@ export default function IntakeForm({
   pastSessions,
   onLoadSession,
   onDeleteSession,
+  viewerName,
+  engagements = [],
+  onCreateEngagement,
+  onJoinEngagement,
 }: IntakeFormProps) {
   const [topic, setTopic] = useState("");
+  const [engagementTopic, setEngagementTopic] = useState("");
   const [intention, setIntention] = useState("");
   const [customIntention, setCustomIntention] = useState("");
   const [showRecommendationQuiz, setShowRecommendationQuiz] = useState(false);
@@ -850,6 +861,71 @@ export default function IntakeForm({
             )}
           </div>
         </div>
+
+        {/* Group engagements. Absent entirely in solo deployments, where whoami() fails. */}
+        {onCreateEngagement && (
+          <div className="bg-[#FFF3BF] border-3 border-black p-5 md:p-6 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] flex flex-col gap-3 lg:col-span-3">
+            <div className="flex items-baseline justify-between gap-3 flex-wrap">
+              <h2 className="text-base font-black text-black uppercase tracking-wider font-display flex items-center gap-2">
+                <Users className="w-5 h-5 text-black" />
+                Group Engagements
+              </h2>
+              {viewerName && (
+                <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-600">
+                  signed in as {viewerName}
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-zinc-600 font-sans">
+              One shared pile for a whole room. Every fragment is stamped with who contributed
+              it, and the pile keeps growing after the workshop ends.
+            </p>
+
+            <div className="flex gap-2 flex-wrap">
+              <input
+                value={engagementTopic}
+                onChange={(e) => setEngagementTopic(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && engagementTopic.trim()) {
+                    onCreateEngagement({ topic: engagementTopic.trim() });
+                    setEngagementTopic("");
+                  }
+                }}
+                placeholder="What is this engagement about?"
+                className="flex-1 min-w-[220px] border-2 border-black bg-white px-3 py-2 text-xs font-sans focus:outline-none"
+              />
+              <button
+                onClick={() => {
+                  if (!engagementTopic.trim()) return;
+                  onCreateEngagement({ topic: engagementTopic.trim() });
+                  setEngagementTopic("");
+                }}
+                disabled={!engagementTopic.trim()}
+                className="border-2 border-black bg-black text-white px-4 py-2 text-xs font-bold uppercase tracking-wider font-mono disabled:opacity-40 cursor-pointer"
+              >
+                Start
+              </button>
+            </div>
+
+            {engagements.length > 0 && (
+              <div className="grid gap-2 sm:grid-cols-2">
+                {engagements.map((e) => (
+                  <button
+                    key={e.id}
+                    onClick={() => onJoinEngagement?.(e.id)}
+                    className="text-left bg-white border-2 border-black p-3 hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:translate-x-0.5 hover:translate-y-0.5 transition-all cursor-pointer"
+                  >
+                    <p className="text-xs font-bold text-black truncate">{e.topic}</p>
+                    <p className="text-[10px] font-mono uppercase tracking-wider text-zinc-500 mt-1">
+                      {e.thoughtCount} fragments · {e.memberCount}{" "}
+                      {e.memberCount === 1 ? "contributor" : "contributors"}
+                    </p>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* History / Sessions Sidebar */}
         <div className="bg-white border-3 border-black p-5 md:p-6 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] flex flex-col h-full max-h-[600px] overflow-hidden">

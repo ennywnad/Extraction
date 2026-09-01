@@ -1,5 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { loadSessions, persistSession, deleteSession } from "./utils/localDB";
+import * as engagementAPI from "./utils/engagementAPI";
+import type { EngagementSummary, ViewerIdentity } from "./utils/engagementAPI";
+import { pushSessionUpdate } from "./utils/engagementSync";
 import { Session, Thought, ExtractionMode } from "./types";
 
 // Intake/Shell layouts
@@ -166,6 +169,12 @@ export default function App() {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [currentSession, setCurrentSession] = useState<Session | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [viewer, setViewer] = useState<ViewerIdentity | null>(null);
+  const [engagements, setEngagements] = useState<EngagementSummary[]>([]);
+
+  // Held in refs so the polling effect can read them without resubscribing every render.
+  const engagementEtag = useRef<string | null>(null);
+  const isEditingRef = useRef(false);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -181,8 +190,27 @@ export default function App() {
     );
     setSessions(loaded);
 
-    // Decode base64 snapshot if loaded
     const params = new URLSearchParams(window.location.search);
+
+    // Group mode is available only when the server says who we are.
+    engagementAPI
+      .whoami()
+      .then(async (identity) => {
+        setViewer(identity);
+        setEngagements(await engagementAPI.listEngagements());
+        const deepLink = params.get("engagement");
+        if (deepLink) {
+          const session = await engagementAPI.joinEngagement(deepLink);
+          engagementEtag.current = null;
+          setCurrentSession(session);
+        }
+      })
+      .catch(() => {
+        // No identity: solo mode only. Expected whenever the app is served without IAP.
+        setViewer(null);
+      });
+
+    // Decode base64 snapshot if loaded
     const snapshot = params.get("snapshot");
     if (snapshot) {
       try {
@@ -239,12 +267,80 @@ export default function App() {
 
   const handleUpdateSession = (updates: Partial<Session>) => {
     if (!currentSession) return;
+
+    if (currentSession.engagementId) {
+      // Optimistic locally, authoritative from the server. Note that a fragment absent from
+      // updates.thoughts is never deleted here; deletion is handleDeleteThought's job.
+      const optimistic = { ...currentSession, ...updates };
+      setCurrentSession(optimistic);
+      pushSessionUpdate(currentSession, updates)
+        .then((fresh) => {
+          engagementEtag.current = null; // the pile moved; force a full read next poll
+          setCurrentSession((prev) =>
+            prev?.engagementId === fresh.engagementId ? fresh : prev
+          );
+        })
+        .catch((e) => {
+          console.error("Failed to sync engagement update", e);
+          showToast(e?.message || "Could not save to the shared pile. Retrying on next change.");
+          setCurrentSession(currentSession); // roll back to the last known-good state
+        });
+      return;
+    }
+
     const updated = { ...currentSession, ...updates, updatedAt: new Date().toISOString() };
     setCurrentSession(updated);
     persistSession(updated);
 
     // Keep state updated in parent list
     setSessions(loadSessions());
+  };
+
+  /**
+   * Deletion is explicit rather than inferred from a shrinking thoughts array. In a shared
+   * pile an array composed from stale local state is missing other people's contributions,
+   * so treating absence as removal would silently destroy them.
+   */
+  const handleDeleteThought = (id: string) => {
+    if (!currentSession) return;
+    const remaining = currentSession.thoughts.filter((t) => t.id !== id);
+
+    if (currentSession.engagementId) {
+      setCurrentSession({ ...currentSession, thoughts: remaining });
+      engagementAPI
+        .deleteThought(currentSession.engagementId, id)
+        .then(() => { engagementEtag.current = null; })
+        .catch((e) => {
+          console.error("Failed to delete fragment", e);
+          showToast(e?.message || "Could not delete that fragment.");
+          setCurrentSession(currentSession);
+        });
+      return;
+    }
+    handleUpdateSession({ thoughts: remaining });
+  };
+
+  const handleCreateEngagement = async (input: { topic: string; intention?: string }) => {
+    try {
+      const session = await engagementAPI.createEngagement(input);
+      engagementEtag.current = null;
+      setCurrentSession(session);
+      window.history.replaceState({}, document.title, `?engagement=${session.id}`);
+      setEngagements(await engagementAPI.listEngagements());
+    } catch (e: any) {
+      showToast(e?.message || "Could not create the engagement.");
+    }
+  };
+
+  const handleJoinEngagement = async (id: string) => {
+    try {
+      const session = await engagementAPI.joinEngagement(id);
+      engagementEtag.current = null;
+      setCurrentSession(session);
+      window.history.replaceState({}, document.title, `?engagement=${id}`);
+    } catch (e: any) {
+      showToast(e?.message || "Could not open that engagement.");
+    }
   };
 
   const handleLoadSession = (id: string) => {
@@ -318,6 +414,49 @@ export default function App() {
     // Clear URL snapshots query params
     window.history.pushState({}, document.title, window.location.pathname);
   };
+
+  // Poll the shared pile. The ETag makes an idle poll a 304, and polling pauses while the
+  // tab is hidden or a fragment is being edited, so an in-flight edit is never clobbered.
+  const engagementId = currentSession?.engagementId;
+  useEffect(() => {
+    if (!engagementId) return;
+
+    let cancelled = false;
+    let failures = 0;
+
+    const poll = async () => {
+      if (cancelled || document.hidden || isEditingRef.current) return;
+      try {
+        const result = await engagementAPI.fetchEngagement(
+          engagementId,
+          engagementEtag.current ?? undefined
+        );
+        failures = 0;
+        if (cancelled || !result) return; // null means 304: nothing changed
+        engagementEtag.current = result.etag;
+        setCurrentSession((prev) =>
+          prev?.engagementId === engagementId ? { ...prev, ...result.session } : prev
+        );
+      } catch (e) {
+        // Back off rather than hammering a server that is struggling.
+        failures += 1;
+        if (failures === 3) showToast("Lost contact with the shared pile. Still retrying.");
+      }
+    };
+
+    const interval = setInterval(poll, 5000);
+    window.addEventListener("focus", poll);
+    poll();
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+      window.removeEventListener("focus", poll);
+    };
+  }, [engagementId]);
+
+  const handleEditingChange = useCallback((editing: boolean) => {
+    isEditingRef.current = editing;
+  }, []);
 
   const renderActiveMode = () => {
     if (!currentSession) return null;
@@ -428,8 +567,11 @@ export default function App() {
             <Workspace
               session={currentSession}
               onUpdateSession={handleUpdateSession}
+              onDeleteThought={handleDeleteThought}
               onExit={handleExitSession}
               onSynthesize={handleLaunchReview}
+              onEditingChange={handleEditingChange}
+              viewerEmail={viewer?.email}
             >
               {renderActiveMode()}
             </Workspace>
@@ -442,6 +584,10 @@ export default function App() {
             pastSessions={sessions}
             onLoadSession={handleLoadSession}
             onDeleteSession={handleDeleteSession}
+            viewerName={viewer?.name}
+            engagements={engagements}
+            onCreateEngagement={viewer ? handleCreateEngagement : undefined}
+            onJoinEngagement={viewer ? handleJoinEngagement : undefined}
           />
         );
       })()}
