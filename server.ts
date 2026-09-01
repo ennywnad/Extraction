@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 import rateLimit from "express-rate-limit";
 import { resolveAuthConfig } from "./server/authMode.ts";
 import { createRequireIdentity } from "./server/iapAuth.ts";
+import { createEngagementRouter } from "./server/engagementRoutes.ts";
 
 dotenv.config();
 
@@ -534,6 +535,10 @@ Write in a supportively tuned, clear, structured professional tone. Do not use g
     res.status(500).json({ error: error.message });
   }
 });
+
+// Group mode. Everything under here requires an identity; the Gemini routes above do not,
+// because in production IAP has already gated the whole service.
+app.use("/api/engagement", requireIdentity, createEngagementRouter());
 
 // Initialize dev server or static server
 async function startServer() {

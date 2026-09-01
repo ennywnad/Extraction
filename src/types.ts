@@ -12,6 +12,14 @@ export type ExtractionMode =
   | 'letter_writing'
   | 'priority_pile';
 
+/** Who contributed a fragment, stamped server-side from the verified identity. */
+export interface AuthorStamp {
+  /** Lowercased; the canonical roster key. */
+  email: string;
+  name: string;
+  role: string;
+}
+
 export interface Thought {
   id: string;
   text: string;
@@ -40,10 +48,21 @@ export interface Thought {
   
   // Optional linkage to parent prompt
   promptContext?: string;
+
+  /** Present only on engagement fragments. Absent means a solo, local thought. */
+  author?: AuthorStamp;
 }
 
 export interface Session {
   id: string;
+
+  /**
+   * Set (and equal to `id`) when this session is held server-side rather than in
+   * localStorage. Its presence is what switches every persistence path in the app.
+   */
+  engagementId?: string;
+  /** email -> identity, for rendering attribution. Engagements only. */
+  roster?: Record<string, AuthorStamp>;
   topic: string;
   intention: string;
   isCustomIntention: boolean;
