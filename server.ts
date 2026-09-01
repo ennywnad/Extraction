@@ -3,8 +3,14 @@ import path from "path";
 import { GoogleGenAI, Type } from "@google/genai";
 import dotenv from "dotenv";
 import rateLimit from "express-rate-limit";
+import { resolveAuthConfig } from "./server/authMode.ts";
+import { createRequireIdentity } from "./server/iapAuth.ts";
 
 dotenv.config();
+
+// Resolved before anything is served; exits the process if inconsistent.
+const authConfig = resolveAuthConfig();
+const requireIdentity = createRequireIdentity(authConfig);
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
@@ -24,8 +30,33 @@ const apiLimiter = rateLimit({
 app.use(express.json());
 app.use("/api/session", apiLimiter);
 
+// Dev-only: ?dev_user=someone@example.com pins an identity for this browser, so a shared pile
+// can be exercised from two profiles against one server (and one store).
+if (authConfig.mode === "dev") {
+  app.use((req, res, next) => {
+    const who = req.query.dev_user;
+    if (typeof who === "string" && who) {
+      res.cookie("dev_user", who, { httpOnly: true, sameSite: "lax" });
+    }
+    next();
+  });
+}
+
 app.get("/healthz", (_req, res) => {
   res.json({ ok: true, aiEnabled: getGemini() !== null });
+});
+
+// Who the caller is, as far as the server is concerned. The frontend uses this to decide
+// which fragments are editable; `dev: true` means the identity is asserted, not verified.
+app.get("/api/whoami", requireIdentity, (req, res) => {
+  const identity = req.identity!;
+  res.json({
+    email: identity.email,
+    name: identity.email.split("@")[0],
+    role: null,
+    dev: !identity.verified,
+    aiEnabled: getGemini() !== null,
+  });
 });
 
 // Initialize Gemini client lazily
@@ -523,7 +554,13 @@ async function startServer() {
   }
 
   const server = app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server running on port ${PORT} (NODE_ENV=${process.env.NODE_ENV || "development"})`);
+    console.log(
+      `Server running on port ${PORT} ` +
+        `(NODE_ENV=${process.env.NODE_ENV || "development"}, AUTH_MODE=${authConfig.mode})`
+    );
+    if (authConfig.mode === "dev") {
+      console.log(`  dev identity: ${authConfig.devUser.email} (override with ?dev_user= or x-dev-user)`);
+    }
   });
 
   // Cloud Run sends SIGTERM and hard-kills after ~10s; stop accepting new work first.
