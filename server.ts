@@ -1,6 +1,5 @@
 import express from "express";
 import path from "path";
-import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, Type } from "@google/genai";
 import dotenv from "dotenv";
 import rateLimit from "express-rate-limit";
@@ -8,7 +7,11 @@ import rateLimit from "express-rate-limit";
 dotenv.config();
 
 const app = express();
-const PORT = 3000;
+const PORT = Number(process.env.PORT) || 3000;
+
+// Cloud Run / IAP terminate in front of us; without this express-rate-limit keys every
+// request on the proxy address, so all users share one bucket.
+app.set("trust proxy", 1);
 
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -20,6 +23,10 @@ const apiLimiter = rateLimit({
 
 app.use(express.json());
 app.use("/api/session", apiLimiter);
+
+app.get("/healthz", (_req, res) => {
+  res.json({ ok: true, aiEnabled: getGemini() !== null });
+});
 
 // Initialize Gemini client lazily
 let aiClient: GoogleGenAI | null = null;
@@ -500,6 +507,8 @@ Write in a supportively tuned, clear, structured professional tone. Do not use g
 // Initialize dev server or static server
 async function startServer() {
   if (process.env.NODE_ENV !== "production") {
+    // Imported lazily: vite is a devDependency and is absent from the production image.
+    const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",
@@ -513,9 +522,18 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server running on port ${PORT}`);
+  const server = app.listen(PORT, "0.0.0.0", () => {
+    console.log(`Server running on port ${PORT} (NODE_ENV=${process.env.NODE_ENV || "development"})`);
   });
+
+  // Cloud Run sends SIGTERM and hard-kills after ~10s; stop accepting new work first.
+  const shutdown = (signal: string) => {
+    console.log(`${signal} received, shutting down`);
+    server.close(() => process.exit(0));
+    setTimeout(() => process.exit(0), 8000).unref();
+  };
+  process.on("SIGTERM", () => shutdown("SIGTERM"));
+  process.on("SIGINT", () => shutdown("SIGINT"));
 }
 
 startServer();

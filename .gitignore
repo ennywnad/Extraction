@@ -1,6 +1,7 @@
 node_modules/
 build/
 dist/
+dist-server/
 coverage/
 .DS_Store
 *.log
@@ -9,3 +10,6 @@ coverage/
 
 # AI IDE session artifacts
 .antigravity/
+
+# Local engagement store (AUTH_MODE=dev)
+.data/
