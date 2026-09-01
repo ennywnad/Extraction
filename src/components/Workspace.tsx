@@ -30,6 +30,8 @@ interface WorkspaceProps {
   onEditingChange?: (editing: boolean) => void;
   /** The signed-in contributor, when this session is an engagement. */
   viewerEmail?: string;
+  /** False when the AI proxy is unreachable and every mode is serving canned prompts. */
+  aiEnabled?: boolean;
   children: React.ReactNode;
 }
 
@@ -41,6 +43,7 @@ export default function Workspace({
   onSynthesize,
   onEditingChange,
   viewerEmail,
+  aiEnabled = true,
   children,
 }: WorkspaceProps) {
   const [editingThoughtId, setEditingThoughtId] = useState<string | null>(null);
@@ -315,6 +318,19 @@ export default function Workspace({
         
         {/* Main Mode Interactive Playground area */}
         <main className="flex-1 p-6 overflow-y-auto bg-[#F8F7F4] flex flex-col justify-between">
+          {/* Degradation has to be visible. Without this the modes quietly serve generic
+              canned prompts, which in a paid workshop is worse than an outright error. */}
+          {!aiEnabled && (
+            <div className="max-w-3xl mx-auto w-full mb-4 border-3 border-black bg-[#FFD5CC] p-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+              <p className="text-[11px] font-mono font-bold uppercase tracking-wider text-black">
+                AI is unavailable
+              </p>
+              <p className="text-[11px] text-zinc-800 font-sans mt-0.5">
+                Prompts are falling back to a fixed list and are not tailored to this topic.
+                Check the Gemini configuration before running a session that matters.
+              </p>
+            </div>
+          )}
           <div className="max-w-3xl mx-auto w-full flex-1 flex flex-col justify-center">
             {children}
           </div>

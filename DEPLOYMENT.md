@@ -99,4 +99,7 @@ IAP writes request-level Admin Activity logs regardless.
   solo instance, deploy the same image as a second service without `--iap`.
 - **Using the Gemini Developer API instead of Vertex:** `export GENAI_BACKEND=apikey GEMINI_KEY=...`
   before bootstrap. That path adds Secret Manager and a key to rotate; Vertex needs neither.
+- **Model ids** differ between the Developer API and Vertex and move faster than this repo
+  does. `GEMINI_MODELS` overrides the chain; the server logs which model actually served a
+  request, and fails loudly with the whole chain rather than swallowing each failure.
 - **Local development** needs none of this. Copy `.env.example` to `.env` and `npm run dev`.

@@ -171,6 +171,7 @@ export default function App() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [viewer, setViewer] = useState<ViewerIdentity | null>(null);
   const [engagements, setEngagements] = useState<EngagementSummary[]>([]);
+  const [aiEnabled, setAiEnabled] = useState(true);
 
   // Held in refs so the polling effect can read them without resubscribing every render.
   const engagementEtag = useRef<string | null>(null);
@@ -191,6 +192,13 @@ export default function App() {
     setSessions(loaded);
 
     const params = new URLSearchParams(window.location.search);
+
+    // Unauthenticated, so this answers in solo deployments too. A silent downgrade to canned
+    // prompts is the failure nobody notices until a workshop has already gone badly.
+    fetch("/healthz")
+      .then((r) => r.json())
+      .then((h) => setAiEnabled(h.aiEnabled !== false))
+      .catch(() => undefined);
 
     // Group mode is available only when the server says who we are.
     engagementAPI
@@ -572,6 +580,7 @@ export default function App() {
               onSynthesize={handleLaunchReview}
               onEditingChange={handleEditingChange}
               viewerEmail={viewer?.email}
+              aiEnabled={aiEnabled}
             >
               {renderActiveMode()}
             </Workspace>

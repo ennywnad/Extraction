@@ -1,11 +1,12 @@
 import express from "express";
 import path from "path";
-import { GoogleGenAI, Type } from "@google/genai";
+import { Type } from "@google/genai";
 import dotenv from "dotenv";
 import rateLimit from "express-rate-limit";
 import { resolveAuthConfig } from "./server/authMode.ts";
 import { createRequireIdentity } from "./server/iapAuth.ts";
 import { createEngagementRouter } from "./server/engagementRoutes.ts";
+import { generateContentWithFallback, getGemini } from "./server/ai/client.ts";
 
 dotenv.config();
 
@@ -60,41 +61,6 @@ app.get("/api/whoami", requireIdentity, (req, res) => {
   });
 });
 
-// Initialize Gemini client lazily
-let aiClient: GoogleGenAI | null = null;
-function getGemini(): GoogleGenAI | null {
-  if (!aiClient) {
-    const key = process.env.GEMINI_API_KEY;
-    if (key && key !== "MY_GEMINI_API_KEY") {
-      aiClient = new GoogleGenAI({
-        apiKey: key,
-        httpOptions: {
-          headers: {
-            "User-Agent": "aistudio-build",
-          },
-        },
-      });
-    }
-  }
-  return aiClient;
-}
-
-async function generateContentWithFallback(ai: GoogleGenAI, requestParams: any) {
-  const models = ["gemini-3.5-flash", "gemini-2.5-flash", "gemini-3.1-flash-lite"];
-  let lastError: any = null;
-  for (const model of models) {
-    try {
-      return await ai.models.generateContent({
-        ...requestParams,
-        model,
-      });
-    } catch (err: any) {
-      console.warn(`Model ${model} failed:`, err.message || err);
-      lastError = err;
-    }
-  }
-  throw lastError || new Error("All models failed to generate content");
-}
 
 // 1. RECOMMEND A MODE BASED ON WARMUP ANSWERS
 app.post("/api/session/recommend", async (req, res) => {

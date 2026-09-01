@@ -37,6 +37,14 @@ export default function ExportPanel({
   const [showCompareModal, setShowCompareModal] = useState(false);
   const [compareModalTab, setCompareModalTab] = useState<"tone" | "filter" | "bias" | "intention" | "quiz">("tone");
   const [sharingEnabled, setSharingEnabled] = useState(false);
+  const [levelSet, setLevelSet] = useState<any>(null);
+  const [synthesizedAt, setSynthesizedAt] = useState<string | null>(null);
+  const [synthesisError, setSynthesisError] = useState<string | null>(null);
+
+  // A shared pile keeps growing after the deliverable is generated — that is the whole point
+  // of the async window — so a level set built from an older pile is stale, not wrong.
+  const isEngagement = Boolean(session.engagementId);
+  const isStale = isEngagement && synthesizedAt !== null && synthesizedAt !== session.updatedAt;
 
   // Advanced Styling Config States
   const [promptingStyle, setPromptingStyle] = useState<'standard' | 'socratic' | 'empathetic'>(
@@ -56,23 +64,40 @@ export default function ExportPanel({
   ) => {
     setLoading(true);
     try {
-      const response = await fetch("/api/session/synthesize", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          topic: session.topic,
-          intention: session.intention,
-          thoughts: session.thoughts,
-          advancedSettings: {
-            promptingStyle: customStyle,
-            outputFilter: customFilter,
-            cognitiveBiasAudit: customBias,
-          },
-        }),
-      });
+      // An engagement sends only its id: the server holds the pile, so the browser does not
+      // re-upload every fragment, and the prompt corpus is not client-controlled.
+      const response = session.engagementId
+        ? await fetch(`/api/engagement/${session.engagementId}/synthesize`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              outputFilter: customFilter,
+              cognitiveBiasAudit: customBias,
+            }),
+          })
+        : await fetch("/api/session/synthesize", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              topic: session.topic,
+              intention: session.intention,
+              thoughts: session.thoughts,
+              advancedSettings: {
+                promptingStyle: customStyle,
+                outputFilter: customFilter,
+                cognitiveBiasAudit: customBias,
+              },
+            }),
+          });
 
-      if (response.ok) {
-        const data = await response.json();
+      if (!response.ok) throw new Error("HTTP error " + response.status);
+      const data = await response.json();
+
+      if (session.engagementId) {
+        // The server already persisted this version against the pile it was built from.
+        setLevelSet(data);
+        setSynthesizedAt(data.pileVersion);
+      } else {
         onUpdateSession({
           synthesizedSummary: data.summary,
           synthesizedOutline: data.outline,
@@ -84,11 +109,17 @@ export default function ExportPanel({
           },
           status: "review",
         });
-      } else {
-        throw new Error("HTTP error " + response.status);
       }
     } catch (e) {
       console.error(e);
+      if (session.engagementId) {
+        // Never write a placeholder into a shared client deliverable: it reads exactly like
+        // a real result, so nobody would know to regenerate it. Surface the failure instead.
+        setSynthesisError(
+          e instanceof Error ? e.message : "Could not generate the level set. Try again."
+        );
+        return;
+      }
       // Fallback local structures if server errors out
       onUpdateSession({
         synthesizedSummary: `We analyzed your brainstorming on '${session.topic}'. Your thoughts highlight key priorities matching your timeline constraints.`,
@@ -102,10 +133,14 @@ export default function ExportPanel({
   }, [session.topic, session.intention, session.thoughts, onUpdateSession, promptingStyle, outputFilter, cognitiveBiasAudit]);
 
   useEffect(() => {
+    // Engagements never auto-generate. The deliverable is shared and expensive, so ten people
+    // opening this panel must not mean ten concurrent runs racing to overwrite one field;
+    // it is an explicit facilitator action instead.
+    if (session.engagementId) return;
     if (!session.synthesizedOutline || !session.synthesizedSummary) {
       triggerSynthesize();
     }
-  }, [session.synthesizedOutline, session.synthesizedSummary, triggerSynthesize]);
+  }, [session.engagementId, session.synthesizedOutline, session.synthesizedSummary, triggerSynthesize]);
 
   const handleCopyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -154,6 +189,38 @@ export default function ExportPanel({
           </button>
         </div>
       </div>
+
+      {/* Group deliverable controls. Explicit, because the level set is shared and the pile
+          keeps growing underneath it. */}
+      {isEngagement && (
+        <div className="mb-6 bg-[#FFF3BF] border-3 border-black p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex flex-wrap items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-xs font-black uppercase tracking-wider font-display text-black">
+              Level set
+            </p>
+            <p className="text-[11px] text-zinc-700 font-sans mt-0.5">
+              {synthesisError
+                ? synthesisError
+                : !synthesizedAt
+                  ? `${session.thoughts.length} fragments in the shared pile. Nothing generated yet.`
+                  : isStale
+                    ? "The pile has grown since this was generated."
+                    : "Current with the pile."}
+            </p>
+          </div>
+          <button
+            onClick={() => {
+              setSynthesisError(null);
+              triggerSynthesize();
+            }}
+            disabled={loading || session.thoughts.length === 0}
+            className="border-2 border-black bg-black text-white px-4 py-2 text-xs font-bold uppercase tracking-wider font-mono disabled:opacity-40 cursor-pointer flex items-center gap-2 shrink-0"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
+            {synthesizedAt ? "Regenerate" : "Generate"}
+          </button>
+        </div>
+      )}
 
       {loading ? (
         <div className="py-24 text-center text-zinc-650 flex flex-col items-center justify-center gap-4">

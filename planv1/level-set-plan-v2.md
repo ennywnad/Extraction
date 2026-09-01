@@ -392,11 +392,11 @@ IAP already writes request-level Admin Activity logs; this is what makes "who re
 | Phase | Contents | Deployable at end? |
 |---|---|---|
 | 0 ✅ | `PORT` fix, lazy vite import, `/healthz`, SIGTERM, `dist-server` split (F7), `trust proxy` (F6), Dockerfile, bootstrap + deploy scripts, `DEPLOYMENT.md` | **Done, not deployed** — solo app ready for Cloud Run behind IAP. Nothing group-related yet. |
-| 1 | `AUTH_MODE` + `iapAuth.ts` + `/api/whoami`, dev-identity override | Yes — verified identity, unused |
-| 2 | Store interface, file store, Firestore store, engagement routes (F3 field allowlist, F4 `memberEmails`, F5 join + open read) | Yes — API testable by curl |
-| 3 | `engagementAPI.ts`, `handleUpdateSession` branch (F2 explicit delete), ETag polling (F9), `?engagement=` deep link | Yes |
-| 4 | Attribution-A card, IntakeForm engagement shelf, ownership-gated affordances | Yes |
-| 5 | Part C: server-side corpus assembly, group synthesis job, `advancedSettings` split, Vertex backend, visible degradation | **Feature complete** |
+| 1 ✅ | `AUTH_MODE` + `iapAuth.ts` + `/api/whoami`, dev-identity override | Yes — verified identity, unused |
+| 2 ✅ | Store interface, file store, Firestore store, engagement routes (F3 field allowlist, F4 `memberEmails`, F5 join + open read) | Yes — API testable by curl |
+| 3 ✅ | `engagementAPI.ts`, `handleUpdateSession` branch (F2 explicit delete), ETag polling (F9), `?engagement=` deep link | Yes |
+| 4 ✅ | Attribution-A card, IntakeForm engagement shelf, ownership-gated affordances | Yes |
+| 5 ✅ | Part C: server-side corpus assembly, group synthesis job, `advancedSettings` split, Vertex backend, visible degradation | **Built; deploy pending** |
 
 Phase 0 is worth doing first on its own: it gets a real URL and a real container out of the
 way while the group-mode surface is still zero, so any deployment problem you hit is isolated

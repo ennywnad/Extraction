@@ -3,6 +3,7 @@ import express, { type Request, type Response } from "express";
 import type { AuthorStamp, Session, Thought } from "../src/types.ts";
 import { getEngagementStore } from "./store/index.ts";
 import { CONTRIBUTOR_ROLE, FACILITATOR_ROLE, VALID_MODES } from "./store/shape.ts";
+import { isSynthesisRunning, synthesizeEngagement } from "./ai/synthesis.ts";
 
 /**
  * Fields any roster member may change on any fragment.
@@ -77,6 +78,14 @@ function sanitizeMetaPatch(body: any) {
     if (key === "activeMode" && !VALID_MODES.includes(value)) continue;
     if (key === "status" &&
         !["intake", "intention", "recommendation", "active", "review", "exported"].includes(value)) {
+      continue;
+    }
+    if (key === "advancedSettings" && value && typeof value === "object") {
+      // promptingStyle shapes the questions one person is being asked, so it stays local to
+      // each viewer. Persisting it would let one member's switch to a socratic tone change
+      // everyone else's Guided Drill mid-workshop with no explanation.
+      const { promptingStyle, ...shared } = value as Record<string, unknown>;
+      patch[key] = shared;
       continue;
     }
     patch[key] = value;
@@ -240,6 +249,36 @@ export function createEngagementRouter() {
     }
     await store.deleteThought(session.id, req.params.tid);
     res.status(204).end();
+  });
+
+  /**
+   * The group deliverable. Explicit and single-flight: never fired automatically on render,
+   * and concurrent callers join the run in progress rather than starting another.
+   */
+  router.post("/:id/synthesize", async (req, res) => {
+    const session = await loadOr404(req.params.id, res);
+    if (!session) return;
+    if (!session.thoughts.length) {
+      return res.status(400).json({ error: "Nothing to synthesize yet" });
+    }
+    const author = await ensureMember(session, identityOf(req).email);
+    try {
+      const { levelSet, joined } = await synthesizeEngagement(session, author.email, {
+        outputFilter: req.body?.outputFilter,
+        cognitiveBiasAudit: req.body?.cognitiveBiasAudit,
+      });
+      // 202 tells the caller it attached to a run someone else started.
+      res.status(joined ? 202 : 200).json(levelSet);
+    } catch (e: any) {
+      // Nothing is written on failure: a placeholder in a shared client deliverable reads
+      // like a real result, and nobody would know to regenerate it.
+      console.error("Synthesis failed:", e?.message || e);
+      res.status(503).json({ error: e?.message || "Synthesis failed" });
+    }
+  });
+
+  router.get("/:id/synthesize/status", async (req, res) => {
+    res.json({ running: isSynthesisRunning(req.params.id) });
   });
 
   router.get("/:id/roster", async (req, res) => {
