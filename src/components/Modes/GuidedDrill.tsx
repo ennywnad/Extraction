@@ -1,6 +1,16 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { HelpCircle, RefreshCw, Send, ArrowUpRight, HelpCircle as HelpIcon, Smile, Mic, MicOff, MessageSquareCode } from "lucide-react";
+import {
+  HelpCircle,
+  RefreshCw,
+  Send,
+  ArrowUpRight,
+  HelpCircle as HelpIcon,
+  Smile,
+  Mic,
+  MicOff,
+  MessageSquareCode,
+} from "lucide-react";
 import { Thought } from "../../types";
 
 interface GuidedDrillProps {
@@ -9,9 +19,9 @@ interface GuidedDrillProps {
   onAddThought: (text: string) => void;
   thoughts: Thought[];
   advancedSettings?: {
-    promptingStyle: 'standard' | 'socratic' | 'empathetic';
-    outputFilter: 'comprehensive' | 'actions' | 'roadmap';
-    cognitiveBiasAudit: 'include' | 'exclude';
+    promptingStyle: "standard" | "socratic" | "empathetic";
+    outputFilter: "comprehensive" | "actions" | "roadmap";
+    cognitiveBiasAudit: "include" | "exclude";
   };
 }
 
@@ -22,14 +32,20 @@ interface QAHistory {
   isDialogue?: boolean;
 }
 
-export default function GuidedDrill({ topic, intention, onAddThought, thoughts, advancedSettings }: GuidedDrillProps) {
+export default function GuidedDrill({
+  topic,
+  intention,
+  onAddThought,
+  thoughts,
+  advancedSettings,
+}: GuidedDrillProps) {
   const [qaHistory, setQaHistory] = useState<QAHistory[]>([]);
   const [currentQuestion, setCurrentQuestion] = useState("");
   const [contextNote, setContextNote] = useState("");
   const [answerDraft, setAnswerDraft] = useState("");
   const [loading, setLoading] = useState(false);
   const [isDialogueMode, setIsDialogueMode] = useState(false);
-  
+
   // Voice Dictation States
   const [isRecording, setIsRecording] = useState(false);
   const recognitionRef = useRef<any>(null);
@@ -37,7 +53,8 @@ export default function GuidedDrill({ topic, intention, onAddThought, thoughts, 
 
   // Initialize Speech Recognition
   useEffect(() => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const SpeechRecognition =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (SpeechRecognition) {
       const rec = new SpeechRecognition();
       rec.continuous = true;
@@ -73,7 +90,9 @@ export default function GuidedDrill({ topic, intention, onAddThought, thoughts, 
 
   const toggleSpeech = () => {
     if (!recognitionRef.current) {
-      alert("Speech-to-text is not supported in this browser version or current container view. Please type your thoughts.");
+      alert(
+        "Speech-to-text is not supported in this browser version or current container view. Please type your thoughts.",
+      );
       return;
     }
 
@@ -127,12 +146,17 @@ export default function GuidedDrill({ topic, intention, onAddThought, thoughts, 
     } catch (e) {
       console.error(e);
       if (updatedHistory.length === 0) {
-        setCurrentQuestion(`Let's start by unpacking "${topic}". What is the primary milestone or outcome you want to focus on first?`);
+        setCurrentQuestion(
+          `Let's start by unpacking "${topic}". What is the primary milestone or outcome you want to focus on first?`,
+        );
         setContextNote("Initial Focus");
       } else {
         const lastAnswer = updatedHistory[updatedHistory.length - 1]?.answer || "";
-        const truncatedAnswer = lastAnswer.length > 50 ? lastAnswer.substring(0, 50) + "..." : lastAnswer;
-        setCurrentQuestion(`Unpacking your point: "${truncatedAnswer}". What is the next bottleneck or detail we should clarify for "${topic}"?`);
+        const truncatedAnswer =
+          lastAnswer.length > 50 ? lastAnswer.substring(0, 50) + "..." : lastAnswer;
+        setCurrentQuestion(
+          `Unpacking your point: "${truncatedAnswer}". What is the next bottleneck or detail we should clarify for "${topic}"?`,
+        );
         setContextNote("Deepening Thread");
       }
     } finally {
@@ -170,9 +194,11 @@ export default function GuidedDrill({ topic, intention, onAddThought, thoughts, 
 
         if (response.ok) {
           const data = await response.json();
-          
+
           // Capture as a conversational thought bubble in our pile!
-          onAddThought(`Perspective Clarification // User Query: "${currentText}" -> Guide Response: "${data.reply}"`);
+          onAddThought(
+            `Perspective Clarification // User Query: "${currentText}" -> Guide Response: "${data.reply}"`,
+          );
 
           const newQA: QAHistory = {
             question: currentQuestion, // Keeps same question we clarifyingly pivoted on
@@ -193,7 +219,9 @@ export default function GuidedDrill({ topic, intention, onAddThought, thoughts, 
         console.error(e);
         // Fallback
         onAddThought(`Perspective Clarification // User Query: "${currentText}"`);
-        setCurrentQuestion(`Unpacking your point about "${currentText}". How does this impact your main goal for "${topic}"?`);
+        setCurrentQuestion(
+          `Unpacking your point about "${currentText}". How does this impact your main goal for "${topic}"?`,
+        );
         setContextNote("Clarification Pivot");
         setIsDialogueMode(false);
       } finally {
@@ -221,7 +249,6 @@ export default function GuidedDrill({ topic, intention, onAddThought, thoughts, 
 
   return (
     <div className="space-y-6 flex flex-col h-[520px]" id="guided-drill-mode">
-      
       {/* Header Info */}
       <div className="bg-white border-3 border-black p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-start gap-4 shrink-0">
         <HelpCircle className="w-5 h-5 text-black shrink-0 mt-0.5" />
@@ -233,7 +260,8 @@ export default function GuidedDrill({ topic, intention, onAddThought, thoughts, 
             </span>
           </h3>
           <p className="text-[11px] text-zinc-650 leading-normal mt-0.5 font-sans">
-            An adaptive expert interview. Type answers, consult the coach directly, or speak your ideas.
+            An adaptive expert interview. Type answers, consult the coach directly, or speak your
+            ideas.
           </p>
         </div>
       </div>
@@ -263,9 +291,9 @@ export default function GuidedDrill({ topic, intention, onAddThought, thoughts, 
 
             {/* AI Clarifying Reply Bubble if it was Dialogue Mode */}
             {h.isDialogue && h.clarifyingReply && (
-              <motion.div 
-                initial={{ opacity: 0, y: 5 }} 
-                animate={{ opacity: 1, y: 0 }} 
+              <motion.div
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
                 className="flex items-start max-w-[85%] pl-4"
               >
                 <div className="bg-yellow-100 border-2 border-dashed border-black p-3 text-xs text-black font-serif italic">
@@ -312,13 +340,12 @@ export default function GuidedDrill({ topic, intention, onAddThought, thoughts, 
       {/* Input panel block */}
       <div className="space-y-3 shrink-0">
         <div className="flex gap-2.5 items-stretch relative">
-          
           <input
             type="text"
             placeholder={
-              loading 
-                ? "Formulating thread..." 
-                : isDialogueMode 
+              loading
+                ? "Formulating thread..."
+                : isDialogueMode
                   ? "Converse with AI (e.g. 'Can you explain why you are asking that?')..."
                   : "Respond to the question here..."
             }
@@ -330,15 +357,15 @@ export default function GuidedDrill({ topic, intention, onAddThought, thoughts, 
               isDialogueMode ? "bg-yellow-50 border-yellow-500 ring-2 ring-yellow-400" : ""
             }`}
           />
-          
+
           {/* Hands-free Voice Dictation Microphone Button */}
           <button
             onClick={toggleSpeech}
             disabled={loading}
             type="button"
             className={`px-3 border-2 border-black flex items-center justify-center transition-all cursor-pointer ${
-              isRecording 
-                ? "bg-red-500 text-white animate-pulse" 
+              isRecording
+                ? "bg-red-500 text-white animate-pulse"
                 : "bg-white hover:bg-zinc-100 text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
             }`}
             title="Speak your answer (Speech-to-Text)"
@@ -361,8 +388,8 @@ export default function GuidedDrill({ topic, intention, onAddThought, thoughts, 
             onClick={() => setIsDialogueMode((prev) => !prev)}
             type="button"
             className={`flex items-center gap-1.5 px-3 py-1.5 border-2 text-[10px] font-mono uppercase tracking-wider transition-all cursor-pointer ${
-              isDialogueMode 
-                ? "bg-yellow-300 border-black text-black font-bold" 
+              isDialogueMode
+                ? "bg-yellow-300 border-black text-black font-bold"
                 : "bg-zinc-100 border-black text-zinc-650 hover:bg-zinc-200"
             }`}
           >

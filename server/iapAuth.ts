@@ -34,18 +34,12 @@ const ASSERTION_HEADER = "x-goog-iap-jwt-assertion";
 
 const oAuth2Client = new OAuth2Client();
 
-export async function verifyIapAssertion(
-  assertion: string,
-  audience: string
-): Promise<Identity> {
+export async function verifyIapAssertion(assertion: string, audience: string): Promise<Identity> {
   // getIapPublicKeys() caches internally, so this is not a fetch per request.
   const { pubkeys } = await oAuth2Client.getIapPublicKeys();
-  const ticket = await oAuth2Client.verifySignedJwtWithCertsAsync(
-    assertion,
-    pubkeys,
-    audience,
-    [IAP_ISSUER]
-  );
+  const ticket = await oAuth2Client.verifySignedJwtWithCertsAsync(assertion, pubkeys, audience, [
+    IAP_ISSUER,
+  ]);
 
   const payload = ticket.getPayload();
   if (!payload?.email || !payload.sub) {
@@ -85,7 +79,7 @@ export function createRequireIdentity(config: AuthConfig) {
       // The overwhelmingly common cause is an audience mismatch, which is invisible from the
       // outside, so name the expectation in the log. Never in the response.
       console.error(
-        `IAP assertion rejected (expected aud "${config.iapAudience}"): ${err?.message || err}`
+        `IAP assertion rejected (expected aud "${config.iapAudience}"): ${err?.message || err}`,
       );
       return res.status(401).json({ error: "Invalid IAP assertion" });
     }

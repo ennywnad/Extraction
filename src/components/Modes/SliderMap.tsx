@@ -9,7 +9,7 @@ interface SliderMapProps {
 
 export default function SliderMap({ thoughts, onUpdateThought }: SliderMapProps) {
   const [selectedThoughtId, setSelectedThoughtId] = useState<string | null>(
-    thoughts.length > 0 ? thoughts[0].id : null
+    thoughts.length > 0 ? thoughts[0].id : null,
   );
 
   const activeThought = thoughts.find((t) => t.id === selectedThoughtId);
@@ -20,9 +20,17 @@ export default function SliderMap({ thoughts, onUpdateThought }: SliderMapProps)
   const emotion = activeThought?.intensity?.emotion ?? 5;
   const actionability = activeThought?.intensity?.actionability ?? 5;
 
-  const handleSliderChange = (key: "urgency" | "certainty" | "emotion" | "actionability", val: number) => {
+  const handleSliderChange = (
+    key: "urgency" | "certainty" | "emotion" | "actionability",
+    val: number,
+  ) => {
     if (!selectedThoughtId || !activeThought) return;
-    const existingIntensity = activeThought.intensity || { urgency: 5, certainty: 5, emotion: 5, actionability: 5 };
+    const existingIntensity = activeThought.intensity || {
+      urgency: 5,
+      certainty: 5,
+      emotion: 5,
+      actionability: 5,
+    };
     onUpdateThought(selectedThoughtId, {
       ...existingIntensity,
       [key]: val,
@@ -36,7 +44,8 @@ export default function SliderMap({ thoughts, onUpdateThought }: SliderMapProps)
         <div>
           <h3 className="font-semibold text-xs text-slate-800">Slider / Intensity Map</h3>
           <p className="text-[11px] text-slate-500 leading-normal mt-0.5">
-            Calibrate the load-bearing weight of each surfaced idea. Rate them along key cognitive dimensions to construct a heat-map outline of what actually matters.
+            Calibrate the load-bearing weight of each surfaced idea. Rate them along key cognitive
+            dimensions to construct a heat-map outline of what actually matters.
           </p>
         </div>
       </div>
@@ -44,7 +53,9 @@ export default function SliderMap({ thoughts, onUpdateThought }: SliderMapProps)
       {thoughts.length === 0 ? (
         <div className="text-center py-16 border border-dashed border-slate-200 rounded-2xl bg-slate-50 space-y-3">
           <AlertCircle className="w-8 h-8 text-slate-400 mx-auto" />
-          <p className="text-xs text-slate-500 font-medium">Capture some thoughts first using Free Stream or Quick Fire.</p>
+          <p className="text-xs text-slate-500 font-medium">
+            Capture some thoughts first using Free Stream or Quick Fire.
+          </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
@@ -66,7 +77,7 @@ export default function SliderMap({ thoughts, onUpdateThought }: SliderMapProps)
                   }`}
                 >
                   <p className="line-clamp-2 leading-relaxed">{t.text}</p>
-                  
+
                   {/* Miniature heat pill count */}
                   {t.intensity && (
                     <div className="flex gap-2.5 mt-2 text-[9px] font-bold text-indigo-600">
@@ -84,7 +95,9 @@ export default function SliderMap({ thoughts, onUpdateThought }: SliderMapProps)
             {activeThought ? (
               <div className="space-y-6 bg-slate-50/50 p-6 border border-slate-200/80 rounded-2xl">
                 <div>
-                  <span className="text-[10px] uppercase font-bold tracking-wider text-indigo-500">MAPPING INTENSITIES</span>
+                  <span className="text-[10px] uppercase font-bold tracking-wider text-indigo-500">
+                    MAPPING INTENSITIES
+                  </span>
                   <p className="text-sm text-slate-800 leading-relaxed font-medium mt-1">
                     "{activeThought.text}"
                   </p>
@@ -124,7 +137,7 @@ export default function SliderMap({ thoughts, onUpdateThought }: SliderMapProps)
                       highLabel: "Fully actionable",
                       value: actionability,
                       color: "accent-emerald-500",
-                    }
+                    },
                   ].map((slider) => (
                     <div key={slider.key} className="space-y-1.5">
                       <div className="flex justify-between items-center text-xs font-semibold text-slate-705">
@@ -136,7 +149,9 @@ export default function SliderMap({ thoughts, onUpdateThought }: SliderMapProps)
                         min="1"
                         max="10"
                         value={slider.value}
-                        onChange={(e) => handleSliderChange(slider.key as any, parseInt(e.target.value))}
+                        onChange={(e) =>
+                          handleSliderChange(slider.key as any, parseInt(e.target.value))
+                        }
                         className={`w-full ${slider.color} bg-slate-200 h-1.5 rounded-lg appearance-none cursor-pointer`}
                       />
                       <div className="flex justify-between text-[9px] text-slate-400 font-bold uppercase tracking-wider">
@@ -152,11 +167,22 @@ export default function SliderMap({ thoughts, onUpdateThought }: SliderMapProps)
                   <TrendingUp className="w-5 h-5 text-indigo-600 shrink-0" />
                   <div>
                     {urgency >= 7 && emotion >= 7 ? (
-                      <p>🔥 <strong className="text-slate-900 font-semibold">Tension Spot:</strong> This thought carries both high urgency and emotional energy. This is a critical item for immediate focus and unburdening.</p>
+                      <p>
+                        🔥 <strong className="text-slate-900 font-semibold">Tension Spot:</strong>{" "}
+                        This thought carries both high urgency and emotional energy. This is a
+                        critical item for immediate focus and unburdening.
+                      </p>
                     ) : actionability >= 7 ? (
-                      <p>✨ <strong className="text-slate-900 font-semibold">Quick Win:</strong> Easily actionable variable. Let's make sure this becomes a top structured action item in your export.</p>
+                      <p>
+                        ✨ <strong className="text-slate-900 font-semibold">Quick Win:</strong>{" "}
+                        Easily actionable variable. Let's make sure this becomes a top structured
+                        action item in your export.
+                      </p>
                     ) : (
-                      <p>💡 Calibrating these weights aids the AI in structuring your final outline layers smoothly.</p>
+                      <p>
+                        💡 Calibrating these weights aids the AI in structuring your final outline
+                        layers smoothly.
+                      </p>
                     )}
                   </div>
                 </div>

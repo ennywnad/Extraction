@@ -12,7 +12,7 @@ import {
   FolderLock,
   Target,
   Brain,
-  Timer
+  Timer,
 } from "lucide-react";
 
 interface CompareSettingsModalProps {
@@ -23,7 +23,11 @@ interface CompareSettingsModalProps {
 
 type TabType = "framing" | "intention" | "tone" | "filter" | "bias" | "quiz";
 
-export default function CompareSettingsModal({ isOpen, onClose, defaultTab = "framing" }: CompareSettingsModalProps) {
+export default function CompareSettingsModal({
+  isOpen,
+  onClose,
+  defaultTab = "framing",
+}: CompareSettingsModalProps) {
   const [activeTab, setActiveTab] = useState<TabType>(defaultTab);
 
   useEffect(() => {
@@ -36,7 +40,10 @@ export default function CompareSettingsModal({ isOpen, onClose, defaultTab = "fr
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-6" id="compare-modal-root">
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-6"
+        id="compare-modal-root"
+      >
         {/* Dark overlay backdrop */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -75,7 +82,9 @@ export default function CompareSettingsModal({ isOpen, onClose, defaultTab = "fr
 
           <div className="space-y-4">
             <p className="text-xs text-zinc-700 leading-relaxed font-serif italic">
-              "Below is a comparison of how different settings process a sample topic: **'Should I make a career pivot from corporate to freelancing?'** with the thought: **'I am burnt out by corporate rules but terrified of freelance income instability.'**"
+              "Below is a comparison of how different settings process a sample topic: **'Should I
+              make a career pivot from corporate to freelancing?'** with the thought: **'I am burnt
+              out by corporate rules but terrified of freelance income instability.'**"
             </p>
 
             {/* Neo-Brutalist Tabs */}
@@ -115,7 +124,10 @@ export default function CompareSettingsModal({ isOpen, onClose, defaultTab = "fr
                       Session Framing Guide
                     </span>
                     <p className="text-xs text-zinc-700 leading-relaxed font-sans">
-                      To get the highest signal synthesis from Gemini, follow these three core guidelines when starting a new session. Since Gemini acts as a cognitive mirror, the structure of your starting statement primes the depth of the entire session.
+                      To get the highest signal synthesis from Gemini, follow these three core
+                      guidelines when starting a new session. Since Gemini acts as a cognitive
+                      mirror, the structure of your starting statement primes the depth of the
+                      entire session.
                     </p>
                   </div>
 
@@ -130,13 +142,19 @@ export default function CompareSettingsModal({ isOpen, onClose, defaultTab = "fr
                           Define a concrete problem space
                         </h4>
                         <p className="text-[10px] text-zinc-650 font-sans leading-relaxed">
-                          Instead of entering general topics like "work problems" or "marketing project", frame it as a specific question, constraint, or goal.
+                          Instead of entering general topics like "work problems" or "marketing
+                          project", frame it as a specific question, constraint, or goal.
                         </p>
-                        
+
                         <div className="mt-4 pt-3 border-t border-dashed border-black/15 font-mono text-[9px] text-zinc-600 leading-normal">
-                          <span className="font-bold text-red-650 uppercase tracking-wide block mb-1">❌ Avoid generic topics:</span>
-                          "Work problems"<br />
-                          <span className="font-bold text-green-755 uppercase tracking-wide block mt-2 mb-1">✅ Frame specifically:</span>
+                          <span className="font-bold text-red-650 uppercase tracking-wide block mb-1">
+                            ❌ Avoid generic topics:
+                          </span>
+                          "Work problems"
+                          <br />
+                          <span className="font-bold text-green-755 uppercase tracking-wide block mt-2 mb-1">
+                            ✅ Frame specifically:
+                          </span>
                           "Should I delegate core backend work to a contractor next month?"
                         </div>
                       </div>
@@ -152,12 +170,16 @@ export default function CompareSettingsModal({ isOpen, onClose, defaultTab = "fr
                           Don't edit or filter yourself
                         </h4>
                         <p className="text-[10px] text-zinc-650 font-sans leading-relaxed">
-                          Write exactly as you think. Spill out random thoughts, worries, facts, and tasks. Do not worry about grammar or logical hierarchy.
+                          Write exactly as you think. Spill out random thoughts, worries, facts, and
+                          tasks. Do not worry about grammar or logical hierarchy.
                         </p>
-                        
+
                         <div className="mt-4 pt-3 border-t border-dashed border-black/15 font-mono text-[9px] text-zinc-650 leading-normal">
-                          <span className="font-bold text-black uppercase tracking-wide block mb-1">How Gemini Synthesizes:</span>
-                          The synthesis engine is specifically designed to sort, cluster, and outline messy brain dumps into clear structured Blueprints.
+                          <span className="font-bold text-black uppercase tracking-wide block mb-1">
+                            How Gemini Synthesizes:
+                          </span>
+                          The synthesis engine is specifically designed to sort, cluster, and
+                          outline messy brain dumps into clear structured Blueprints.
                         </div>
                       </div>
                     </div>
@@ -172,12 +194,17 @@ export default function CompareSettingsModal({ isOpen, onClose, defaultTab = "fr
                           Include deadlines & blockers
                         </h4>
                         <p className="text-[10px] text-zinc-650 font-sans leading-relaxed">
-                          Mentioning timelines, budget anxiety, external blockers, or emotional friction points allows Gemini to suggest the most optimal extraction mode.
+                          Mentioning timelines, budget anxiety, external blockers, or emotional
+                          friction points allows Gemini to suggest the most optimal extraction mode.
                         </p>
-                        
+
                         <div className="mt-4 pt-3 border-t border-dashed border-black/15 font-mono text-[9px] text-zinc-650 leading-normal">
-                          <span className="font-bold text-black uppercase tracking-wide block mb-1">Adaptive Mode Suggestions:</span>
-                          Friction-heavy sessions recommend <strong>Devil's Advocate</strong>, whereas low-time, high-clarity sessions recommend <strong>Quick Fire</strong>.
+                          <span className="font-bold text-black uppercase tracking-wide block mb-1">
+                            Adaptive Mode Suggestions:
+                          </span>
+                          Friction-heavy sessions recommend <strong>Devil's Advocate</strong>,
+                          whereas low-time, high-clarity sessions recommend{" "}
+                          <strong>Quick Fire</strong>.
                         </div>
                       </div>
                     </div>
@@ -201,14 +228,15 @@ export default function CompareSettingsModal({ isOpen, onClose, defaultTab = "fr
                       <p className="text-[10px] text-zinc-500 font-sans leading-relaxed mb-4">
                         Ideal for structural roadmap building and logical mapping.
                       </p>
-                      
+
                       <div className="space-y-3.5 border-t border-dashed border-black/15 pt-3">
                         <div>
                           <span className="text-[8px] uppercase font-bold tracking-widest font-mono text-zinc-400 block mb-1">
                             Example Interview Nudge
                           </span>
                           <p className="text-xs text-black font-sans leading-relaxed">
-                            "What is the primary milestone or safety buffer you want to secure first before quitting?"
+                            "What is the primary milestone or safety buffer you want to secure first
+                            before quitting?"
                           </p>
                         </div>
                         <div>
@@ -216,12 +244,16 @@ export default function CompareSettingsModal({ isOpen, onClose, defaultTab = "fr
                             Example Synthesized Outline
                           </span>
                           <div className="p-2 bg-white border border-black font-mono text-[9px] text-zinc-700 leading-normal">
-                            <strong>## 1. Core Focus: Freelance</strong><br />
-                            - Rigid Rules vs Flexibility<br />
-                            - Key Bottleneck: Income Stability<br />
-                            <strong>## 2. Action Priorities</strong><br />
-                            - Establish 6-month buffer<br />
-                            - Land 2 beta clients
+                            <strong>## 1. Core Focus: Freelance</strong>
+                            <br />
+                            - Rigid Rules vs Flexibility
+                            <br />
+                            - Key Bottleneck: Income Stability
+                            <br />
+                            <strong>## 2. Action Priorities</strong>
+                            <br />
+                            - Establish 6-month buffer
+                            <br />- Land 2 beta clients
                           </div>
                         </div>
                       </div>
@@ -241,16 +273,18 @@ export default function CompareSettingsModal({ isOpen, onClose, defaultTab = "fr
                         Challenging core assumptions
                       </h4>
                       <p className="text-[10px] text-zinc-755 font-sans leading-relaxed mb-4">
-                        Forces you to test assumptions, cut through hesitation, and audit rationalizations.
+                        Forces you to test assumptions, cut through hesitation, and audit
+                        rationalizations.
                       </p>
-                      
+
                       <div className="space-y-3.5 border-t border-dashed border-black/15 pt-3">
                         <div>
                           <span className="text-[8px] uppercase font-bold tracking-widest font-mono text-zinc-600 block mb-1">
                             Example Interview Nudge
                           </span>
                           <p className="text-xs text-black font-sans leading-relaxed font-semibold italic">
-                            "If your stability concern is purely financial, why haven't you drafted an exact budget sheet yet? Is it a math block or a fear block?"
+                            "If your stability concern is purely financial, why haven't you drafted
+                            an exact budget sheet yet? Is it a math block or a fear block?"
                           </p>
                         </div>
                         <div>
@@ -258,12 +292,16 @@ export default function CompareSettingsModal({ isOpen, onClose, defaultTab = "fr
                             Example Synthesized Outline
                           </span>
                           <div className="p-2 bg-white border border-black font-mono text-[9px] text-zinc-800 leading-normal">
-                            <strong>## 1. Viability Audit: Income</strong><br />
-                            - Reality Test: Financial projection<br />
-                            - Sunk-Cost Trap: Years of tenure<br />
-                            <strong>## 2. Hard Action Items</strong><br />
-                            - [ ] Draft concrete expense ledger<br />
-                            - [ ] Audit consulting hourly market rate
+                            <strong>## 1. Viability Audit: Income</strong>
+                            <br />
+                            - Reality Test: Financial projection
+                            <br />
+                            - Sunk-Cost Trap: Years of tenure
+                            <br />
+                            <strong>## 2. Hard Action Items</strong>
+                            <br />
+                            - [ ] Draft concrete expense ledger
+                            <br />- [ ] Audit consulting hourly market rate
                           </div>
                         </div>
                       </div>
@@ -283,16 +321,18 @@ export default function CompareSettingsModal({ isOpen, onClose, defaultTab = "fr
                         Supporting emotional unburdening
                       </h4>
                       <p className="text-[10px] text-zinc-650 font-sans leading-relaxed mb-4">
-                        Gives room to decompress burnout fatigue and align choices with emotional security.
+                        Gives room to decompress burnout fatigue and align choices with emotional
+                        security.
                       </p>
-                      
+
                       <div className="space-y-3.5 border-t border-dashed border-black/15 pt-3">
                         <div>
                           <span className="text-[8px] uppercase font-bold tracking-widest font-mono text-zinc-500 block mb-1">
                             Example Interview Nudge
                           </span>
                           <p className="text-xs text-black font-sans leading-relaxed">
-                            "How does it feel when you imagine staying in your corporate job for another full year? Let's acknowledge the exhaustion first."
+                            "How does it feel when you imagine staying in your corporate job for
+                            another full year? Let's acknowledge the exhaustion first."
                           </p>
                         </div>
                         <div>
@@ -300,12 +340,16 @@ export default function CompareSettingsModal({ isOpen, onClose, defaultTab = "fr
                             Example Synthesized Outline
                           </span>
                           <div className="p-2 bg-white border border-black font-mono text-[9px] text-zinc-700 leading-normal">
-                            <strong>## 1. Burnout & Fatigue Relief</strong><br />
-                            - Honoring exhaustion boundaries<br />
-                            - Emotional safety over speed<br />
-                            <strong>## 2. Supportive Roadmap</strong><br />
-                            - Phase 1: Set firm off-work limits<br />
-                            - Phase 2: Gentle freelance testing
+                            <strong>## 1. Burnout & Fatigue Relief</strong>
+                            <br />
+                            - Honoring exhaustion boundaries
+                            <br />
+                            - Emotional safety over speed
+                            <br />
+                            <strong>## 2. Supportive Roadmap</strong>
+                            <br />
+                            - Phase 1: Set firm off-work limits
+                            <br />- Phase 2: Gentle freelance testing
                           </div>
                         </div>
                       </div>
@@ -325,14 +369,17 @@ export default function CompareSettingsModal({ isOpen, onClose, defaultTab = "fr
                       Comprehensive Document
                     </h4>
                     <p className="text-[10px] text-zinc-500 font-sans leading-relaxed mb-4">
-                      Outputs a detailed narrative summary of your state, a complete Markdown outline tree, and actionable steps.
+                      Outputs a detailed narrative summary of your state, a complete Markdown
+                      outline tree, and actionable steps.
                     </p>
                     <div className="border-t border-dashed border-black/15 pt-3">
                       <span className="text-[8px] uppercase font-bold tracking-widest font-mono text-zinc-400 block mb-1.5">
                         Generated Outcome Structure
                       </span>
                       <div className="p-2.5 bg-white border border-black font-mono text-[9px] text-zinc-700 leading-relaxed whitespace-pre-line">
-                        {"### Executive Summary\nYou are exploring a career transition from corporate structure to freelance work, balancing exhaustion...\n\n### Outline\n## 1. Freelance Transition\n- Rigidity vs flexibility\n\n### Action Checklist\n- [ ] Establish 6-month buffer"}
+                        {
+                          "### Executive Summary\nYou are exploring a career transition from corporate structure to freelance work, balancing exhaustion...\n\n### Outline\n## 1. Freelance Transition\n- Rigidity vs flexibility\n\n### Action Checklist\n- [ ] Establish 6-month buffer"
+                        }
                       </div>
                     </div>
                   </div>
@@ -347,14 +394,17 @@ export default function CompareSettingsModal({ isOpen, onClose, defaultTab = "fr
                       High-Level Milestones Focus
                     </h4>
                     <p className="text-[10px] text-zinc-500 font-sans leading-relaxed mb-4">
-                      Filters out granular daily tasks, generating strategic phases, milestones, and timeline steps.
+                      Filters out granular daily tasks, generating strategic phases, milestones, and
+                      timeline steps.
                     </p>
                     <div className="border-t border-dashed border-black/15 pt-3">
                       <span className="text-[8px] uppercase font-bold tracking-widest font-mono text-zinc-400 block mb-1.5">
                         Generated Outcome Structure
                       </span>
                       <div className="p-2.5 bg-white border border-black font-mono text-[9px] text-zinc-700 leading-relaxed whitespace-pre-line">
-                        {"### Strategic Roadmap Milestones\n\n## Phase 1: Burnout Mitigation (Month 1)\n- Set firm offline hours\n- Re-energize baseline\n\n## Phase 2: Client Validation (Months 2-3)\n- Land 2 beta consulting projects\n- Build project catalog"}
+                        {
+                          "### Strategic Roadmap Milestones\n\n## Phase 1: Burnout Mitigation (Month 1)\n- Set firm offline hours\n- Re-energize baseline\n\n## Phase 2: Client Validation (Months 2-3)\n- Land 2 beta consulting projects\n- Build project catalog"
+                        }
                       </div>
                     </div>
                   </div>
@@ -369,14 +419,17 @@ export default function CompareSettingsModal({ isOpen, onClose, defaultTab = "fr
                       Action List Focused
                     </h4>
                     <p className="text-[10px] text-zinc-500 font-sans leading-relaxed mb-4">
-                      Removes conversational intros and analytical summaries. Emphasizes checkboxes and direct, executable recipes.
+                      Removes conversational intros and analytical summaries. Emphasizes checkboxes
+                      and direct, executable recipes.
                     </p>
                     <div className="border-t border-dashed border-black/15 pt-3">
                       <span className="text-[8px] uppercase font-bold tracking-widest font-mono text-zinc-400 block mb-1.5">
                         Generated Outcome Structure
                       </span>
                       <div className="p-2.5 bg-white border border-black font-mono text-[9px] text-zinc-700 leading-relaxed whitespace-pre-line">
-                        {"### Transition Action Checklists\n\n- [ ] Save 6-month buffer ledger\n- [ ] Draft freelance services page\n- [ ] Pitch first 5 corporate alumni contacts\n- [ ] Register consulting LLC"}
+                        {
+                          "### Transition Action Checklists\n\n- [ ] Save 6-month buffer ledger\n- [ ] Draft freelance services page\n- [ ] Pitch first 5 corporate alumni contacts\n- [ ] Register consulting LLC"
+                        }
                       </div>
                     </div>
                   </div>
@@ -394,14 +447,17 @@ export default function CompareSettingsModal({ isOpen, onClose, defaultTab = "fr
                       Unmodified Thought Mapping
                     </h4>
                     <p className="text-[10px] text-zinc-500 font-sans leading-relaxed mb-4">
-                      Gemini organizes, clusters, and outlines your thoughts exactly as you brainstormed them.
+                      Gemini organizes, clusters, and outlines your thoughts exactly as you
+                      brainstormed them.
                     </p>
                     <div className="border-t border-dashed border-black/15 pt-3">
                       <span className="text-[8px] uppercase font-bold tracking-widest font-mono text-zinc-400 block mb-1.5">
                         Example Summary Output
                       </span>
                       <div className="p-3 bg-white border border-black text-xs text-zinc-700 leading-relaxed font-sans font-medium italic">
-                        "We analyzed your career pivot thoughts. You want to escape corporate structures but feel anxious about finance stability. You outlined a plan to build up savings and pitch consulting clients..."
+                        "We analyzed your career pivot thoughts. You want to escape corporate
+                        structures but feel anxious about finance stability. You outlined a plan to
+                        build up savings and pitch consulting clients..."
                       </div>
                     </div>
                   </div>
@@ -416,7 +472,8 @@ export default function CompareSettingsModal({ isOpen, onClose, defaultTab = "fr
                       Intellectual Fallacy Audit
                     </h4>
                     <p className="text-[10px] text-zinc-755 font-sans leading-relaxed mb-4">
-                      Gemini scans your thoughts for logical blocks or psychological fallacies, appending warning overlays.
+                      Gemini scans your thoughts for logical blocks or psychological fallacies,
+                      appending warning overlays.
                     </p>
                     <div className="border-t border-dashed border-black/15 pt-3">
                       <span className="text-[8px] uppercase font-bold tracking-widest font-mono text-zinc-600 block mb-1.5">
@@ -429,8 +486,12 @@ export default function CompareSettingsModal({ isOpen, onClose, defaultTab = "fr
                             <FolderLock className="w-3 h-3 shrink-0" />
                             Cognitive Bias Audit // Diagnostic Traps:
                           </span>
-                          - **Sunk-Cost Fallacy**: Your hesitation is heavily anchored in 'years spent climbing corporate ladder', treating past time spent as future obligation.<br />
-                          - **Avoidance Trap**: You prioritized LLC registration over savings calculation, avoiding the hard numerical assessment of your stability worry.
+                          - **Sunk-Cost Fallacy**: Your hesitation is heavily anchored in 'years
+                          spent climbing corporate ladder', treating past time spent as future
+                          obligation.
+                          <br />- **Avoidance Trap**: You prioritized LLC registration over savings
+                          calculation, avoiding the hard numerical assessment of your stability
+                          worry.
                         </div>
                       </div>
                     </div>
@@ -453,16 +514,18 @@ export default function CompareSettingsModal({ isOpen, onClose, defaultTab = "fr
                         Structure Stream of Consciousness
                       </h4>
                       <p className="text-[10px] text-zinc-500 font-sans leading-relaxed mb-4">
-                        Prioritizes logical clustering, structural hierarchy, and categorization of scattered details.
+                        Prioritizes logical clustering, structural hierarchy, and categorization of
+                        scattered details.
                       </p>
-                      
+
                       <div className="space-y-3.5 border-t border-dashed border-black/15 pt-3">
                         <div>
                           <span className="text-[8px] uppercase font-bold tracking-widest font-mono text-zinc-400 block mb-1">
                             Engine Synthesis Bias
                           </span>
                           <p className="text-xs text-black font-sans leading-relaxed">
-                            Heavy mapping of chronological steps, semantic tagging, and nested grouping.
+                            Heavy mapping of chronological steps, semantic tagging, and nested
+                            grouping.
                           </p>
                         </div>
                         <div>
@@ -470,11 +533,14 @@ export default function CompareSettingsModal({ isOpen, onClose, defaultTab = "fr
                             Sample Synthesis Focus
                           </span>
                           <div className="p-2 bg-white border border-black font-mono text-[9px] text-zinc-700 leading-normal">
-                            <strong>## 1. Burnout Triggers</strong><br />
-                            - Rigid rules constraint<br />
-                            - Overtime overhead<br />
-                            <strong>## 2. Fear Vectors</strong><br />
-                            - Monthly overhead risk
+                            <strong>## 1. Burnout Triggers</strong>
+                            <br />
+                            - Rigid rules constraint
+                            <br />
+                            - Overtime overhead
+                            <br />
+                            <strong>## 2. Fear Vectors</strong>
+                            <br />- Monthly overhead risk
                           </div>
                         </div>
                       </div>
@@ -494,16 +560,18 @@ export default function CompareSettingsModal({ isOpen, onClose, defaultTab = "fr
                         Decisiveness & Priority Actions
                       </h4>
                       <p className="text-[10px] text-zinc-755 font-sans leading-relaxed mb-4">
-                        Filters out fluff to highlight tradeoffs, decision-matrices, and immediate actions.
+                        Filters out fluff to highlight tradeoffs, decision-matrices, and immediate
+                        actions.
                       </p>
-                      
+
                       <div className="space-y-3.5 border-t border-dashed border-black/15 pt-3">
                         <div>
                           <span className="text-[8px] uppercase font-bold tracking-widest font-mono text-zinc-600 block mb-1">
                             Engine Synthesis Bias
                           </span>
                           <p className="text-xs text-black font-sans leading-relaxed">
-                            Identifies trade-offs, assigns impact vectors, and details high-priority actions.
+                            Identifies trade-offs, assigns impact vectors, and details high-priority
+                            actions.
                           </p>
                         </div>
                         <div>
@@ -511,11 +579,14 @@ export default function CompareSettingsModal({ isOpen, onClose, defaultTab = "fr
                             Sample Synthesis Focus
                           </span>
                           <div className="p-2.5 bg-white border border-black font-mono text-[9px] text-zinc-800 leading-normal">
-                            <strong>## Tradeoff Analysis</strong><br />
-                            - Corporate (Stable vs Dull)<br />
-                            - Freelance (Free vs Risky)<br />
-                            <strong>## High-Priority Actions</strong><br />
-                            - [ ] Draft 6mo stability budget
+                            <strong>## Tradeoff Analysis</strong>
+                            <br />
+                            - Corporate (Stable vs Dull)
+                            <br />
+                            - Freelance (Free vs Risky)
+                            <br />
+                            <strong>## High-Priority Actions</strong>
+                            <br />- [ ] Draft 6mo stability budget
                           </div>
                         </div>
                       </div>
@@ -535,16 +606,18 @@ export default function CompareSettingsModal({ isOpen, onClose, defaultTab = "fr
                         Emotional Calm & Validation
                       </h4>
                       <p className="text-[10px] text-zinc-650 font-sans leading-relaxed mb-4">
-                        Prioritizes cognitive load reduction, stressor mapping, and emotional de-escalation.
+                        Prioritizes cognitive load reduction, stressor mapping, and emotional
+                        de-escalation.
                       </p>
-                      
+
                       <div className="space-y-3.5 border-t border-dashed border-black/15 pt-3">
                         <div>
                           <span className="text-[8px] uppercase font-bold tracking-widest font-mono text-zinc-500 block mb-1">
                             Engine Synthesis Bias
                           </span>
                           <p className="text-xs text-black font-sans leading-relaxed">
-                            Reframes self-pressure, normalizes fear blocks, and details gentle recovery boundaries.
+                            Reframes self-pressure, normalizes fear blocks, and details gentle
+                            recovery boundaries.
                           </p>
                         </div>
                         <div>
@@ -552,11 +625,14 @@ export default function CompareSettingsModal({ isOpen, onClose, defaultTab = "fr
                             Sample Synthesis Focus
                           </span>
                           <div className="p-2.5 bg-white border border-black font-mono text-[9px] text-zinc-700 leading-normal">
-                            <strong>## Stress & Exhaustion Scan</strong><br />
-                            - Burden of rules is highly draining<br />
-                            - Stability fear is natural protection<br />
-                            <strong>## Restoration Plan</strong><br />
-                            - Stop work strict boundary at 6 PM
+                            <strong>## Stress & Exhaustion Scan</strong>
+                            <br />
+                            - Burden of rules is highly draining
+                            <br />
+                            - Stability fear is natural protection
+                            <br />
+                            <strong>## Restoration Plan</strong>
+                            <br />- Stop work strict boundary at 6 PM
                           </div>
                         </div>
                       </div>
@@ -580,9 +656,10 @@ export default function CompareSettingsModal({ isOpen, onClose, defaultTab = "fr
                         Foggy + Analytical + Decide
                       </h4>
                       <p className="text-[10px] text-zinc-500 font-sans leading-relaxed mb-4">
-                        For users facing complex options, unable to prioritize action items due to information overload.
+                        For users facing complex options, unable to prioritize action items due to
+                        information overload.
                       </p>
-                      
+
                       <div className="space-y-3.5 border-t border-dashed border-black/15 pt-3">
                         <div>
                           <span className="text-[8px] uppercase font-bold tracking-widest font-mono text-zinc-400 block mb-1">
@@ -598,7 +675,9 @@ export default function CompareSettingsModal({ isOpen, onClose, defaultTab = "fr
                           </span>
                           <div className="p-2 bg-white border border-black text-[11px] font-bold text-black flex items-center justify-between">
                             <span>👿 Devil's Advocate</span>
-                            <span className="text-[8px] bg-red-100 text-red-700 px-1 border border-red-300 font-mono">CHALLENGING</span>
+                            <span className="text-[8px] bg-red-100 text-red-700 px-1 border border-red-300 font-mono">
+                              CHALLENGING
+                            </span>
                           </div>
                           <p className="text-[9px] text-zinc-500 font-sans mt-1">
                             Stress-tests stability arguments, forces binary choices.
@@ -621,16 +700,18 @@ export default function CompareSettingsModal({ isOpen, onClose, defaultTab = "fr
                         Foggy + Emotional + Process
                       </h4>
                       <p className="text-[10px] text-zinc-500 font-sans leading-relaxed mb-4">
-                        For users feeling heavy exhaustion and overwhelm who need to express complex feelings.
+                        For users feeling heavy exhaustion and overwhelm who need to express complex
+                        feelings.
                       </p>
-                      
+
                       <div className="space-y-3.5 border-t border-dashed border-black/15 pt-3">
                         <div>
                           <span className="text-[8px] uppercase font-bold tracking-widest font-mono text-zinc-400 block mb-1">
                             Diagnostic Assessment
                           </span>
                           <p className="text-xs text-black font-sans leading-relaxed">
-                            User needs safe holding-space to unpack stress before applying execution plans.
+                            User needs safe holding-space to unpack stress before applying execution
+                            plans.
                           </p>
                         </div>
                         <div>
@@ -639,7 +720,9 @@ export default function CompareSettingsModal({ isOpen, onClose, defaultTab = "fr
                           </span>
                           <div className="p-2 bg-white border border-black text-[11px] font-bold text-black flex items-center justify-between">
                             <span>🔍 Guided Drill</span>
-                            <span className="text-[8px] bg-green-100 text-green-700 px-1 border border-green-300 font-mono">SUPPORTIVE</span>
+                            <span className="text-[8px] bg-green-100 text-green-700 px-1 border border-green-300 font-mono">
+                              SUPPORTIVE
+                            </span>
                           </div>
                           <p className="text-[9px] text-zinc-500 font-sans mt-1">
                             Gently coaxes thoughts out via step-by-step diagnostic inquiries.
@@ -662,16 +745,18 @@ export default function CompareSettingsModal({ isOpen, onClose, defaultTab = "fr
                         Clear + Analytical + Capture
                       </h4>
                       <p className="text-[10px] text-zinc-500 font-sans leading-relaxed mb-4">
-                        For users with structured thoughts who want to capture everything before focus shifts.
+                        For users with structured thoughts who want to capture everything before
+                        focus shifts.
                       </p>
-                      
+
                       <div className="space-y-3.5 border-t border-dashed border-black/15 pt-3">
                         <div>
                           <span className="text-[8px] uppercase font-bold tracking-widest font-mono text-zinc-400 block mb-1">
                             Diagnostic Assessment
                           </span>
                           <p className="text-xs text-black font-sans leading-relaxed">
-                            High clarity, high urgency. Needs minimum prompt friction, zero conversational lag.
+                            High clarity, high urgency. Needs minimum prompt friction, zero
+                            conversational lag.
                           </p>
                         </div>
                         <div>
@@ -680,7 +765,9 @@ export default function CompareSettingsModal({ isOpen, onClose, defaultTab = "fr
                           </span>
                           <div className="p-2 bg-white border border-black text-[11px] font-bold text-black flex items-center justify-between">
                             <span>⚡ Quick Fire</span>
-                            <span className="text-[8px] bg-blue-100 text-blue-700 px-1 border border-blue-300 font-mono font-bold">RAPID</span>
+                            <span className="text-[8px] bg-blue-100 text-blue-700 px-1 border border-blue-300 font-mono font-bold">
+                              RAPID
+                            </span>
                           </div>
                           <p className="text-[9px] text-zinc-500 font-sans mt-1">
                             Fires quick single-line prompts to catalog ideas in fast sequence.
@@ -696,7 +783,8 @@ export default function CompareSettingsModal({ isOpen, onClose, defaultTab = "fr
 
           {/* Footer info box */}
           <div className="mt-6 p-3 bg-zinc-100 border-2 border-black text-center font-mono text-[9px] text-zinc-550 uppercase tracking-wide leading-relaxed">
-            Note: You can re-synthesize your outlines with different blueprint settings at any time without losing your thoughts history list!
+            Note: You can re-synthesize your outlines with different blueprint settings at any time
+            without losing your thoughts history list!
           </div>
         </motion.div>
       </div>

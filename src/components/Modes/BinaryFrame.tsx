@@ -52,8 +52,10 @@ export default function BinaryFrame({ topic, onAddThought, thoughts }: BinaryFra
       console.error(e);
       setCurrentPair({
         id: crypto.randomUUID(),
-        optionA: "Option A: I feel stuck because I am worried about making a mistake and burning valuable bridges.",
-        optionB: "Option B: I feel stuck because deep down I don't actually believe this plan is worth pursuing.",
+        optionA:
+          "Option A: I feel stuck because I am worried about making a mistake and burning valuable bridges.",
+        optionB:
+          "Option B: I feel stuck because deep down I don't actually believe this plan is worth pursuing.",
       });
     } finally {
       setLoading(false);
@@ -80,7 +82,8 @@ export default function BinaryFrame({ topic, onAddThought, thoughts }: BinaryFra
         <div>
           <h3 className="font-semibold text-xs text-slate-800">Binary Frame / Bracket</h3>
           <p className="text-[11px] text-slate-500 leading-normal mt-0.5">
-            Compare two deep framings of your current situation. Ask yourself: “Which feels *more true* right now?” We'll use your choices to lock down your core beliefs.
+            Compare two deep framings of your current situation. Ask yourself: “Which feels *more
+            true* right now?” We'll use your choices to lock down your core beliefs.
           </p>
         </div>
       </div>
@@ -88,7 +91,9 @@ export default function BinaryFrame({ topic, onAddThought, thoughts }: BinaryFra
       {loading ? (
         <div className="py-16 text-center text-slate-450 flex flex-col items-center justify-center gap-2">
           <RefreshCw className="w-6 h-6 animate-spin text-emerald-500" />
-          <span className="text-xs font-medium">Drilling deep and shaping contrasting framings...</span>
+          <span className="text-xs font-medium">
+            Drilling deep and shaping contrasting framings...
+          </span>
         </div>
       ) : currentPair ? (
         <div className="space-y-6">

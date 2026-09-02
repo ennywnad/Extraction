@@ -11,7 +11,7 @@ export interface AreaCoverage {
   fragmentIds: string[];
 }
 
-const PARTIAL_AT = 1;  // at least this many fragments to be more than dark
+const PARTIAL_AT = 1; // at least this many fragments to be more than dark
 const DEFINED_AT = 12; // and this many, from more than one voice, to count as defined
 
 /**
@@ -26,7 +26,7 @@ const DEFINED_AT = 12; // and this many, from more than one voice, to count as d
 export function computeCoverage(
   session: Session,
   areas: string[],
-  classification: Record<string, string>
+  classification: Record<string, string>,
 ): AreaCoverage[] {
   const byId = new Map<string, Thought>(session.thoughts.map((t) => [t.id, t]));
 
@@ -37,7 +37,7 @@ export function computeCoverage(
       .filter((id) => byId.has(id));
 
     const voices = new Set(
-      fragmentIds.map((id) => byId.get(id)?.author?.role).filter(Boolean) as string[]
+      fragmentIds.map((id) => byId.get(id)?.author?.role).filter(Boolean) as string[],
     ).size;
 
     let status: AreaStatus = "dark";

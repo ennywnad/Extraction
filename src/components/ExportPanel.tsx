@@ -13,7 +13,7 @@ import {
   Printer,
   ChevronDown,
   RefreshCw,
-  Plus
+  Plus,
 } from "lucide-react";
 import { Session } from "../types";
 import CompareSettingsModal from "./CompareSettingsModal";
@@ -35,7 +35,9 @@ export default function ExportPanel({
   const [copied, setCopied] = useState(false);
   const [showMarkdownSource, setShowMarkdownSource] = useState(false);
   const [showCompareModal, setShowCompareModal] = useState(false);
-  const [compareModalTab, setCompareModalTab] = useState<"tone" | "filter" | "bias" | "intention" | "quiz">("tone");
+  const [compareModalTab, setCompareModalTab] = useState<
+    "tone" | "filter" | "bias" | "intention" | "quiz"
+  >("tone");
   const [sharingEnabled, setSharingEnabled] = useState(false);
   const [levelSet, setLevelSet] = useState<any>(null);
   const [synthesizedAt, setSynthesizedAt] = useState<string | null>(null);
@@ -47,90 +49,101 @@ export default function ExportPanel({
   const isStale = isEngagement && synthesizedAt !== null && synthesizedAt !== session.updatedAt;
 
   // Advanced Styling Config States
-  const [promptingStyle, setPromptingStyle] = useState<'standard' | 'socratic' | 'empathetic'>(
-    session.advancedSettings?.promptingStyle || "standard"
+  const [promptingStyle, setPromptingStyle] = useState<"standard" | "socratic" | "empathetic">(
+    session.advancedSettings?.promptingStyle || "standard",
   );
-  const [outputFilter, setOutputFilter] = useState<'comprehensive' | 'actions' | 'roadmap'>(
-    session.advancedSettings?.outputFilter || "comprehensive"
+  const [outputFilter, setOutputFilter] = useState<"comprehensive" | "actions" | "roadmap">(
+    session.advancedSettings?.outputFilter || "comprehensive",
   );
-  const [cognitiveBiasAudit, setCognitiveBiasAudit] = useState<'include' | 'exclude'>(
-    session.advancedSettings?.cognitiveBiasAudit || "exclude"
+  const [cognitiveBiasAudit, setCognitiveBiasAudit] = useState<"include" | "exclude">(
+    session.advancedSettings?.cognitiveBiasAudit || "exclude",
   );
 
-  const triggerSynthesize = useCallback(async (
-    customStyle = promptingStyle,
-    customFilter = outputFilter,
-    customBias = cognitiveBiasAudit
-  ) => {
-    setLoading(true);
-    try {
-      // An engagement sends only its id: the server holds the pile, so the browser does not
-      // re-upload every fragment, and the prompt corpus is not client-controlled.
-      const response = session.engagementId
-        ? await fetch(`/api/engagement/${session.engagementId}/synthesize`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              outputFilter: customFilter,
-              cognitiveBiasAudit: customBias,
-            }),
-          })
-        : await fetch("/api/session/synthesize", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              topic: session.topic,
-              intention: session.intention,
-              thoughts: session.thoughts,
-              advancedSettings: {
-                promptingStyle: customStyle,
+  const triggerSynthesize = useCallback(
+    async (
+      customStyle = promptingStyle,
+      customFilter = outputFilter,
+      customBias = cognitiveBiasAudit,
+    ) => {
+      setLoading(true);
+      try {
+        // An engagement sends only its id: the server holds the pile, so the browser does not
+        // re-upload every fragment, and the prompt corpus is not client-controlled.
+        const response = session.engagementId
+          ? await fetch(`/api/engagement/${session.engagementId}/synthesize`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
                 outputFilter: customFilter,
                 cognitiveBiasAudit: customBias,
-              },
-            }),
+              }),
+            })
+          : await fetch("/api/session/synthesize", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                topic: session.topic,
+                intention: session.intention,
+                thoughts: session.thoughts,
+                advancedSettings: {
+                  promptingStyle: customStyle,
+                  outputFilter: customFilter,
+                  cognitiveBiasAudit: customBias,
+                },
+              }),
+            });
+
+        if (!response.ok) throw new Error("HTTP error " + response.status);
+        const data = await response.json();
+
+        if (session.engagementId) {
+          // The server already persisted this version against the pile it was built from.
+          setLevelSet(data);
+          setSynthesizedAt(data.pileVersion);
+        } else {
+          onUpdateSession({
+            synthesizedSummary: data.summary,
+            synthesizedOutline: data.outline,
+            synthesizedActionItems: data.actionItems,
+            advancedSettings: {
+              promptingStyle: customStyle,
+              outputFilter: customFilter,
+              cognitiveBiasAudit: customBias,
+            },
+            status: "review",
           });
-
-      if (!response.ok) throw new Error("HTTP error " + response.status);
-      const data = await response.json();
-
-      if (session.engagementId) {
-        // The server already persisted this version against the pile it was built from.
-        setLevelSet(data);
-        setSynthesizedAt(data.pileVersion);
-      } else {
+        }
+      } catch (e) {
+        console.error(e);
+        if (session.engagementId) {
+          // Never write a placeholder into a shared client deliverable: it reads exactly like
+          // a real result, so nobody would know to regenerate it. Surface the failure instead.
+          setSynthesisError(
+            e instanceof Error ? e.message : "Could not generate the level set. Try again.",
+          );
+          return;
+        }
+        // Fallback local structures if server errors out
         onUpdateSession({
-          synthesizedSummary: data.summary,
-          synthesizedOutline: data.outline,
-          synthesizedActionItems: data.actionItems,
-          advancedSettings: {
-            promptingStyle: customStyle,
-            outputFilter: customFilter,
-            cognitiveBiasAudit: customBias,
-          },
+          synthesizedSummary: `We analyzed your brainstorming on '${session.topic}'. Your thoughts highlight key priorities matching your timeline constraints.`,
+          synthesizedOutline: `## 1. Core Focus: ${session.topic}\n\n- Primary surfaced thoughts\n- Emotional and analytical milestones\n\n## 2. Immediate Action Priorities\n\n- Unblock initial hurdles\n- Structure plan and steps`,
+          synthesizedActionItems: session.thoughts.slice(0, 3).map((t) => t.text.slice(0, 60)),
           status: "review",
         });
+      } finally {
+        setLoading(false);
       }
-    } catch (e) {
-      console.error(e);
-      if (session.engagementId) {
-        // Never write a placeholder into a shared client deliverable: it reads exactly like
-        // a real result, so nobody would know to regenerate it. Surface the failure instead.
-        setSynthesisError(
-          e instanceof Error ? e.message : "Could not generate the level set. Try again."
-        );
-        return;
-      }
-      // Fallback local structures if server errors out
-      onUpdateSession({
-        synthesizedSummary: `We analyzed your brainstorming on '${session.topic}'. Your thoughts highlight key priorities matching your timeline constraints.`,
-        synthesizedOutline: `## 1. Core Focus: ${session.topic}\n\n- Primary surfaced thoughts\n- Emotional and analytical milestones\n\n## 2. Immediate Action Priorities\n\n- Unblock initial hurdles\n- Structure plan and steps`,
-        synthesizedActionItems: session.thoughts.slice(0, 3).map((t) => t.text.slice(0, 60)),
-        status: "review",
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [session.topic, session.intention, session.thoughts, onUpdateSession, promptingStyle, outputFilter, cognitiveBiasAudit]);
+    },
+    [
+      session.topic,
+      session.intention,
+      session.thoughts,
+      onUpdateSession,
+      promptingStyle,
+      outputFilter,
+      cognitiveBiasAudit,
+    ],
+  );
 
   useEffect(() => {
     // Engagements never auto-generate. The deliverable is shared and expensive, so ten people
@@ -140,7 +153,12 @@ export default function ExportPanel({
     if (!session.synthesizedOutline || !session.synthesizedSummary) {
       triggerSynthesize();
     }
-  }, [session.engagementId, session.synthesizedOutline, session.synthesizedSummary, triggerSynthesize]);
+  }, [
+    session.engagementId,
+    session.synthesizedOutline,
+    session.synthesizedSummary,
+    triggerSynthesize,
+  ]);
 
   const handleCopyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -153,14 +171,15 @@ export default function ExportPanel({
     const stateBlob = btoa(encodeURIComponent(JSON.stringify(session)));
     const shareableUrl = `${window.location.origin}/?snapshot=${stateBlob}`;
     navigator.clipboard.writeText(shareableUrl);
-    alert("Shareable Base64 session URL copied to clipboard! Share it with anyone; they can read your exact outline instantly without an account.");
+    alert(
+      "Shareable Base64 session URL copied to clipboard! Share it with anyone; they can read your exact outline instantly without an account.",
+    );
   };
 
   const fullMarkdownSummary = `# ${session.topic}\n**Intention:** ${session.intention}\n**Surfaces Date:** ${new Date().toLocaleDateString()}\n\n## Core Executive Summary\n${session.synthesizedSummary || ""}\n\n${session.synthesizedOutline || ""}\n\n## Refined Action Items\n${(session.synthesizedActionItems || []).map((itm) => `- [ ] ${itm}`).join("\n")}`;
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8 md:py-12 space-y-6" id="export-panel">
-      
       {/* Upper Navigation Header */}
       <div className="flex justify-between items-center bg-white p-4.5 border-3 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] shrink-0">
         <button
@@ -179,7 +198,7 @@ export default function ExportPanel({
           >
             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
           </button>
-          
+
           <button
             onClick={onStartNewSession}
             className="px-4 py-2 border-2 border-black bg-black text-white hover:bg-[#F8F7F4] hover:text-black text-xs font-black font-display uppercase tracking-wider flex items-center gap-1.5 cursor-pointer transition shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
@@ -226,18 +245,19 @@ export default function ExportPanel({
         <div className="py-24 text-center text-zinc-650 flex flex-col items-center justify-center gap-4">
           <RefreshCw className="w-8 h-8 animate-spin text-black" />
           <div className="space-y-1">
-            <h3 className="font-display font-black text-xs uppercase text-zinc-900 tracking-wider">Synthesizing Outline Layout...</h3>
+            <h3 className="font-display font-black text-xs uppercase text-zinc-900 tracking-wider">
+              Synthesizing Outline Layout...
+            </h3>
             <p className="text-xs text-zinc-650 font-serif italic max-w-sm mt-1">
-              "Wait up; Gemini is processing all mapped nodes, sorting by clusters, and building a structured executive blueprint."
+              "Wait up; Gemini is processing all mapped nodes, sorting by clusters, and building a
+              structured executive blueprint."
             </p>
           </div>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          
           {/* Main Document Pane - Outline and summary */}
           <div className="lg:col-span-2 space-y-6 bg-white border-3 border-black p-6 md:p-8 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
-            
             {/* Header info */}
             <div>
               <span className="text-[9px] uppercase tracking-widest font-mono font-bold text-black flex items-center gap-1.5">
@@ -248,7 +268,8 @@ export default function ExportPanel({
                 {session.topic}
               </h1>
               <p className="text-[10px] text-zinc-500 mt-1.5 font-sans uppercase tracking-wider font-semibold">
-                INTENTION: "{session.intention}" • CREATED: {new Date(session.createdAt).toLocaleDateString()}
+                INTENTION: "{session.intention}" • CREATED:{" "}
+                {new Date(session.createdAt).toLocaleDateString()}
               </p>
             </div>
 
@@ -262,7 +283,7 @@ export default function ExportPanel({
               <span className="block text-[10px] font-bold uppercase tracking-wider text-zinc-500 font-mono mb-4">
                 Structured Markdown Outline
               </span>
-              
+
               <div className="prose prose-sm max-w-none text-zinc-900 space-y-4">
                 {showMarkdownSource ? (
                   <textarea
@@ -292,7 +313,11 @@ export default function ExportPanel({
                 onClick={() => handleCopyToClipboard(fullMarkdownSummary)}
                 className="text-xs uppercase font-bold tracking-wider font-display text-black hover:underline flex items-center gap-1 cursor-pointer"
               >
-                {copied ? <CheckCircle className="w-3.5 h-3.5 text-zinc-900" /> : <Clipboard className="w-3.5 h-3.5" />}
+                {copied ? (
+                  <CheckCircle className="w-3.5 h-3.5 text-zinc-900" />
+                ) : (
+                  <Clipboard className="w-3.5 h-3.5" />
+                )}
                 {copied ? "Copied Document!" : "[Copy Full Summary Markdown]"}
               </button>
             </div>
@@ -300,7 +325,6 @@ export default function ExportPanel({
 
           {/* Sidebar - Action list and export options */}
           <div className="space-y-6">
-            
             {/* Dynamic Re-Synthesis Modifier Controls */}
             <div className="bg-[#FFFDF0] border-3 border-black p-5 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] space-y-4">
               <div className="flex justify-between items-center mb-1">
@@ -309,7 +333,7 @@ export default function ExportPanel({
                   Re-Format Blueprint
                 </span>
               </div>
-              
+
               <div className="space-y-3">
                 {/* Tone Selector */}
                 <div>
@@ -338,8 +362,8 @@ export default function ExportPanel({
                         key={t.id}
                         onClick={() => setPromptingStyle(t.id as any)}
                         className={`text-[8px] font-mono py-1 border border-black cursor-pointer uppercase font-extrabold ${
-                          promptingStyle === t.id 
-                            ? "bg-black text-white font-black" 
+                          promptingStyle === t.id
+                            ? "bg-black text-white font-black"
                             : "bg-white text-black hover:bg-[#F8F7F4]"
                         }`}
                       >
@@ -376,12 +400,16 @@ export default function ExportPanel({
                         key={f.id}
                         onClick={() => setOutputFilter(f.id as any)}
                         className={`text-[8px] font-mono py-1 border border-black cursor-pointer uppercase font-extrabold leading-none ${
-                          outputFilter === f.id 
-                            ? "bg-black text-white font-black" 
+                          outputFilter === f.id
+                            ? "bg-black text-white font-black"
                             : "bg-white text-black hover:bg-[#F8F7F4]"
                         }`}
                       >
-                        {f.label === "Full Summary" ? "Full" : f.label === "Milestones" ? "Milestone" : "Checklist"}
+                        {f.label === "Full Summary"
+                          ? "Full"
+                          : f.label === "Milestones"
+                            ? "Milestone"
+                            : "Checklist"}
                       </button>
                     ))}
                   </div>
@@ -405,9 +433,15 @@ export default function ExportPanel({
                     </button>
                   </div>
                   <button
-                    onClick={() => setCognitiveBiasAudit(cognitiveBiasAudit === "include" ? "exclude" : "include")}
+                    onClick={() =>
+                      setCognitiveBiasAudit(
+                        cognitiveBiasAudit === "include" ? "exclude" : "include",
+                      )
+                    }
                     className={`text-[9px] font-mono px-2 py-0.5 border border-black cursor-pointer uppercase font-extrabold ${
-                      cognitiveBiasAudit === "include" ? "bg-black text-white" : "bg-white hover:bg-zinc-50 text-black"
+                      cognitiveBiasAudit === "include"
+                        ? "bg-black text-white"
+                        : "bg-white hover:bg-zinc-50 text-black"
                     }`}
                   >
                     {cognitiveBiasAudit === "include" ? "Audit on" : "Audit off"}
@@ -416,7 +450,9 @@ export default function ExportPanel({
 
                 {/* Regenerate Trigger */}
                 <button
-                  onClick={() => triggerSynthesize(promptingStyle, outputFilter, cognitiveBiasAudit)}
+                  onClick={() =>
+                    triggerSynthesize(promptingStyle, outputFilter, cognitiveBiasAudit)
+                  }
                   disabled={loading}
                   className="w-full py-2 border-2 border-black bg-black text-yellow-300 font-display font-black text-[10px] uppercase tracking-widest cursor-pointer hover:bg-zinc-100 hover:text-black transition-all flex items-center justify-center gap-1.5 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
                 >
@@ -439,11 +475,10 @@ export default function ExportPanel({
                     key={index}
                     className="flex p-3 bg-[#F8F7F4] border-2 border-black text-xs text-black items-start gap-2.5 hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
                   >
-                    <input
-                      type="checkbox"
-                      className="mt-0.5 accent-black"
-                    />
-                    <span className="leading-relaxed font-semibold font-mono text-[11px]">{action}</span>
+                    <input type="checkbox" className="mt-0.5 accent-black" />
+                    <span className="leading-relaxed font-semibold font-mono text-[11px]">
+                      {action}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -465,7 +500,9 @@ export default function ExportPanel({
                     <button
                       onClick={() => setSharingEnabled((prev) => !prev)}
                       className={`text-[9px] font-mono px-2 py-0.5 border border-black cursor-pointer uppercase font-extrabold transition-all ${
-                        sharingEnabled ? "bg-black text-white" : "bg-white hover:bg-zinc-50 text-black"
+                        sharingEnabled
+                          ? "bg-black text-white"
+                          : "bg-white hover:bg-zinc-50 text-black"
                       }`}
                     >
                       {sharingEnabled ? "Enabled" : "Disabled"}
@@ -474,7 +511,8 @@ export default function ExportPanel({
 
                   {!sharingEnabled ? (
                     <p className="text-[9px] font-mono text-zinc-500 leading-relaxed">
-                      Sharing is off. The shareable link encodes all session thoughts in plaintext — enable only if you're comfortable with that.
+                      Sharing is off. The shareable link encodes all session thoughts in plaintext —
+                      enable only if you're comfortable with that.
                     </p>
                   ) : (
                     <button
@@ -496,12 +534,14 @@ export default function ExportPanel({
                 </button>
               </div>
             </div>
-
           </div>
-
         </div>
       )}
-      <CompareSettingsModal isOpen={showCompareModal} onClose={() => setShowCompareModal(false)} defaultTab={compareModalTab} />
+      <CompareSettingsModal
+        isOpen={showCompareModal}
+        onClose={() => setShowCompareModal(false)}
+        defaultTab={compareModalTab}
+      />
     </div>
   );
 }

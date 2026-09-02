@@ -12,8 +12,16 @@ const MUTABLE_FIELDS = [
 ] as const;
 
 const SESSION_META_FIELDS = [
-  "activeMode", "modeHistory", "modeProgress", "status", "topic", "intention",
-  "synthesizedOutline", "synthesizedSummary", "synthesizedActionItems", "advancedSettings",
+  "activeMode",
+  "modeHistory",
+  "modeProgress",
+  "status",
+  "topic",
+  "intention",
+  "synthesizedOutline",
+  "synthesizedSummary",
+  "synthesizedActionItems",
+  "advancedSettings",
 ] as const;
 
 function changedFields(before: Thought, after: Thought): Partial<Thought> {
@@ -41,7 +49,7 @@ function changedFields(before: Thought, after: Thought): Partial<Thought> {
  */
 export async function pushSessionUpdate(
   current: Session,
-  updates: Partial<Session>
+  updates: Partial<Session>,
 ): Promise<Session> {
   const id = current.engagementId!;
 

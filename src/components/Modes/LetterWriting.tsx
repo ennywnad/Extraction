@@ -7,10 +7,22 @@ interface LetterWritingProps {
 }
 
 const LETTER_TEMPLATES = [
-  { key: "person", label: "Letter to a Key Person", desc: "Write honestly to someone involved without pressing send." },
+  {
+    key: "person",
+    label: "Letter to a Key Person",
+    desc: "Write honestly to someone involved without pressing send.",
+  },
   { key: "future", label: "Letter to Future Self", desc: "Dear me in one year..." },
-  { key: "past", label: "Letter from Past Self", desc: "What would past-me want present-me to remember?" },
-  { key: "situation", label: "Letter to the Situation", desc: "Address the job, relationship, or project directly." },
+  {
+    key: "past",
+    label: "Letter from Past Self",
+    desc: "What would past-me want present-me to remember?",
+  },
+  {
+    key: "situation",
+    label: "Letter to the Situation",
+    desc: "Address the job, relationship, or project directly.",
+  },
 ];
 
 export default function LetterWriting({ onAddThought }: LetterWritingProps) {
@@ -22,10 +34,10 @@ export default function LetterWriting({ onAddThought }: LetterWritingProps) {
 
   const handleSubmitLetter = () => {
     if (!bodyText.trim()) return;
-    
-    const recipientTitle = activeKey === "person" ? (recipient || "Stakeholder") : activeKey;
+
+    const recipientTitle = activeKey === "person" ? recipient || "Stakeholder" : activeKey;
     const rawThought = `Letter Fragment addressed to [${recipientTitle}]:\n\n${bodyText.trim()}`;
-    
+
     onAddThought(rawThought);
     setSubmitted(true);
   };
@@ -48,7 +60,8 @@ export default function LetterWriting({ onAddThought }: LetterWritingProps) {
         <div>
           <h3 className="font-semibold text-xs text-slate-800">Letter Writing Drill</h3>
           <p className="text-[11px] text-slate-500 leading-normal mt-0.5">
-            Address someone directly, bypass your fears, and write with complete, unfiltered honesty. We won't share this letter; the exercise aims purely to surface raw feelings.
+            Address someone directly, bypass your fears, and write with complete, unfiltered
+            honesty. We won't share this letter; the exercise aims purely to surface raw feelings.
           </p>
         </div>
       </div>
@@ -71,7 +84,9 @@ export default function LetterWriting({ onAddThought }: LetterWritingProps) {
                 }`}
               >
                 <span className="block text-[11px] font-bold">{item.label}</span>
-                <span className="block text-[8px] text-slate-400 mt-1 line-clamp-2 leading-normal">{item.desc}</span>
+                <span className="block text-[8px] text-slate-400 mt-1 line-clamp-2 leading-normal">
+                  {item.desc}
+                </span>
               </button>
             ))}
           </div>
@@ -79,7 +94,9 @@ export default function LetterWriting({ onAddThought }: LetterWritingProps) {
           <div className="space-y-4">
             {activeKey === "person" && (
               <div className="space-y-1.5 animate-fadeIn">
-                <span className="block text-xs font-semibold text-slate-600">Who is this letter addressed to?</span>
+                <span className="block text-xs font-semibold text-slate-600">
+                  Who is this letter addressed to?
+                </span>
                 <input
                   type="text"
                   placeholder="e.g., My manager, parent, business partner..."
@@ -91,7 +108,9 @@ export default function LetterWriting({ onAddThought }: LetterWritingProps) {
             )}
 
             <div className="space-y-1.5">
-              <span className="block text-xs font-semibold text-slate-600">Write your letter below:</span>
+              <span className="block text-xs font-semibold text-slate-600">
+                Write your letter below:
+              </span>
               <textarea
                 rows={6}
                 placeholder="Write with absolute, unshielded truth..."
@@ -124,7 +143,8 @@ export default function LetterWriting({ onAddThought }: LetterWritingProps) {
             <div>
               <h4 className="text-sm font-bold text-slate-800">Review & Post-Reflection</h4>
               <p className="text-[11px] text-slate-500 lead-relaxed">
-                Excellent. The letter content has been captured in your main thoughts pile. Take a small breath, look over what you wrote, and ask yourself:
+                Excellent. The letter content has been captured in your main thoughts pile. Take a
+                small breath, look over what you wrote, and ask yourself:
               </p>
             </div>
           </div>

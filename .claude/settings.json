@@ -27,6 +27,12 @@
         "hooks": [
           {
             "type": "command",
+            "command": "\"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel)}/.claude/hooks/format.sh\"",
+            "timeout": 60,
+            "statusMessage": "Formatting..."
+          },
+          {
+            "type": "command",
             "command": "\"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel)}/.claude/hooks/typecheck.sh\"",
             "timeout": 120,
             "statusMessage": "Typechecking..."

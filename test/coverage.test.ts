@@ -18,8 +18,7 @@ const fragment = (id: string, role: string): Thought => ({
   author: { email: `${role}@x.com`, name: role, role },
 });
 
-const sessionWith = (thoughts: Thought[]): Session =>
-  ({ id: "e", thoughts } as unknown as Session);
+const sessionWith = (thoughts: Thought[]): Session => ({ id: "e", thoughts }) as unknown as Session;
 
 describe("coverage", () => {
   it("reports an area nobody entered as dark with a count of zero", () => {
@@ -30,11 +29,11 @@ describe("coverage", () => {
   });
 
   it("counts distinct roles rather than fragments as voices", () => {
-    const session = sessionWith([
-      fragment("1", "Ops"), fragment("2", "Ops"), fragment("3", "IT"),
-    ]);
+    const session = sessionWith([fragment("1", "Ops"), fragment("2", "Ops"), fragment("3", "IT")]);
     const coverage = computeCoverage(session, AREAS, {
-      "1": "Processes", "2": "Processes", "3": "Processes",
+      "1": "Processes",
+      "2": "Processes",
+      "3": "Processes",
     });
     const processes = coverage.find((c) => c.area === "Processes")!;
     assert.equal(processes.fragments, 3);
@@ -42,20 +41,19 @@ describe("coverage", () => {
   });
 
   it("will not call an area defined on a single voice, however loud", () => {
-    const session = sessionWith(
-      Array.from({ length: 20 }, (_, i) => fragment(String(i), "Ops"))
-    );
+    const session = sessionWith(Array.from({ length: 20 }, (_, i) => fragment(String(i), "Ops")));
     const classification = Object.fromEntries(
-      Array.from({ length: 20 }, (_, i) => [String(i), "Processes"])
+      Array.from({ length: 20 }, (_, i) => [String(i), "Processes"]),
     );
-    const processes = computeCoverage(session, AREAS, classification)
-      .find((c) => c.area === "Processes")!;
+    const processes = computeCoverage(session, AREAS, classification).find(
+      (c) => c.area === "Processes",
+    )!;
     assert.equal(processes.status, "partial");
   });
 
   it("ignores classifications pointing at fragments that no longer exist", () => {
     const session = sessionWith([fragment("1", "Ops")]);
-    const coverage = computeCoverage(session, AREAS, { "1": "Processes", "ghost": "Systems" });
+    const coverage = computeCoverage(session, AREAS, { "1": "Processes", ghost: "Systems" });
     assert.equal(coverage.find((c) => c.area === "Systems")!.fragments, 0);
   });
 });

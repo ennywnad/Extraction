@@ -14,7 +14,8 @@ export default function TimelineMode({ thoughts, onUpdateThoughtTimeline }: Time
         <div>
           <h3 className="font-semibold text-xs text-slate-800">Timeline Mode</h3>
           <p className="text-[11px] text-slate-500 leading-normal mt-0.5">
-            Organize when each thought actually matters: Before (Unprocessed history/origin), Now (Immediate active weight), or After (Future hopes and worries).
+            Organize when each thought actually matters: Before (Unprocessed history/origin), Now
+            (Immediate active weight), or After (Future hopes and worries).
           </p>
         </div>
       </div>
@@ -22,23 +23,48 @@ export default function TimelineMode({ thoughts, onUpdateThoughtTimeline }: Time
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Timeline Columns block */}
         {[
-          { key: "before", label: "Before / The Past", desc: "Origin context, roots, history", color: "border-t-amber-400 bg-amber-500/10" },
-          { key: "now", label: "Now / The Present", desc: "Active situation, current actions", color: "border-t-rose-500 bg-rose-500/10" },
-          { key: "after", label: "After / The Future", desc: "Forecasts, hopes, future fears", color: "border-t-indigo-500 bg-indigo-500/10" }
+          {
+            key: "before",
+            label: "Before / The Past",
+            desc: "Origin context, roots, history",
+            color: "border-t-amber-400 bg-amber-500/10",
+          },
+          {
+            key: "now",
+            label: "Now / The Present",
+            desc: "Active situation, current actions",
+            color: "border-t-rose-500 bg-rose-500/10",
+          },
+          {
+            key: "after",
+            label: "After / The Future",
+            desc: "Forecasts, hopes, future fears",
+            color: "border-t-indigo-500 bg-indigo-500/10",
+          },
         ].map((col) => {
           const colThoughts = thoughts.filter((t) => t.timelineZone === col.key);
           return (
-            <div key={col.key} className={`border border-slate-100 p-4 rounded-2xl min-h-[300px] flex flex-col justify-between ${col.color}`}>
+            <div
+              key={col.key}
+              className={`border border-slate-100 p-4 rounded-2xl min-h-[300px] flex flex-col justify-between ${col.color}`}
+            >
               <div>
-                <span className="block text-xs font-bold text-slate-800 uppercase tracking-wider">{col.label}</span>
+                <span className="block text-xs font-bold text-slate-800 uppercase tracking-wider">
+                  {col.label}
+                </span>
                 <span className="block text-[10px] text-slate-500/80 mb-3">{col.desc}</span>
-                
+
                 <div className="space-y-2 overflow-y-auto max-h-[320px] pr-1 custom-scrollbar">
                   {colThoughts.length === 0 ? (
-                    <span className="block text-center py-10 text-[10px] text-slate-400/70 border border-dashed border-slate-200/50 rounded-lg bg-white/40">Empty zone</span>
+                    <span className="block text-center py-10 text-[10px] text-slate-400/70 border border-dashed border-slate-200/50 rounded-lg bg-white/40">
+                      Empty zone
+                    </span>
                   ) : (
                     colThoughts.map((t) => (
-                      <div key={t.id} className="p-2.5 bg-white border border-slate-150 rounded-xl text-[11px] text-slate-705 shadow-2xs leading-relaxed">
+                      <div
+                        key={t.id}
+                        className="p-2.5 bg-white border border-slate-150 rounded-xl text-[11px] text-slate-705 shadow-2xs leading-relaxed"
+                      >
                         {t.text}
                       </div>
                     ))
@@ -56,9 +82,14 @@ export default function TimelineMode({ thoughts, onUpdateThoughtTimeline }: Time
           Assign Temporal Slots
         </span>
         {thoughts.map((thought) => (
-          <div key={thought.id} className="p-3 bg-white border border-slate-150 rounded-xl flex flex-col sm:flex-row justify-between gap-4 items-start sm:items-center">
-            <p className="text-xs text-slate-700 leading-relaxed font-normal flex-1">"{thought.text}"</p>
-            
+          <div
+            key={thought.id}
+            className="p-3 bg-white border border-slate-150 rounded-xl flex flex-col sm:flex-row justify-between gap-4 items-start sm:items-center"
+          >
+            <p className="text-xs text-slate-700 leading-relaxed font-normal flex-1">
+              "{thought.text}"
+            </p>
+
             <div className="flex gap-1.5 shrink-0">
               {[
                 { zone: "before", label: "Before" },

@@ -1,1 +1,6 @@
-{"name":"Extraction","description":"A conversational thought extractor and outline builder that helps you make sense of scattered ideas, thoughts, and complex concepts.","requestFramePermissions":[],"majorCapabilities":["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]}
+{
+  "name": "Extraction",
+  "description": "A conversational thought extractor and outline builder that helps you make sense of scattered ideas, thoughts, and complex concepts.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

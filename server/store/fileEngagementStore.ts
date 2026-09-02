@@ -111,7 +111,7 @@ export class FileEngagementStore implements EngagementStore {
   async patchThought(
     id: string,
     thoughtId: string,
-    patch: Partial<Thought>
+    patch: Partial<Thought>,
   ): Promise<Thought | null> {
     return this.mutate((db) => {
       const thought = db[id]?.thoughts.find((t) => t.id === thoughtId);

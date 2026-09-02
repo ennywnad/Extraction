@@ -61,7 +61,6 @@ app.get("/api/whoami", requireIdentity, (req, res) => {
   });
 });
 
-
 // 1. RECOMMEND A MODE BASED ON WARMUP ANSWERS
 app.post("/api/session/recommend", async (req, res) => {
   const { topic, intention, clarity, nature, timeAvailable, intentType } = req.body;
@@ -72,7 +71,8 @@ app.post("/api/session/recommend", async (req, res) => {
     const recommended = clarity === "foggy" ? "free_stream" : "guided_drill";
     return res.json({
       recommendation: recommended,
-      rationale: "Fuzzy topic direction detected. Let's start with a low-pressure open flow or an adaptive interview.",
+      rationale:
+        "Fuzzy topic direction detected. Let's start with a low-pressure open flow or an adaptive interview.",
       alternativeModes: ["quick_fire", "swipe", "sentence_completion"],
       confidence: 90,
     });
@@ -97,14 +97,23 @@ Recommend the ideal starting mode. Provide a 1-sentence rationale starting with 
         responseSchema: {
           type: Type.OBJECT,
           properties: {
-            recommendation: { type: Type.STRING, description: "One of the modes in the provided list" },
-            rationale: { type: Type.STRING, description: "A highly specific 1-sentence explanation matching the answers" },
+            recommendation: {
+              type: Type.STRING,
+              description: "One of the modes in the provided list",
+            },
+            rationale: {
+              type: Type.STRING,
+              description: "A highly specific 1-sentence explanation matching the answers",
+            },
             alternativeModes: {
               type: Type.ARRAY,
               items: { type: Type.STRING },
               description: "3 other modes that fit well as secondary tracks",
             },
-            confidence: { type: Type.INTEGER, description: "Matching confidence percentage from 70 to 100" },
+            confidence: {
+              type: Type.INTEGER,
+              description: "Matching confidence percentage from 70 to 100",
+            },
           },
           required: ["recommendation", "rationale", "alternativeModes", "confidence"],
         },
@@ -136,7 +145,7 @@ app.post("/api/session/quick-fire", async (req, res) => {
         "What would you do if there were zero consequences?",
         "What are you compromising on right now?",
         "What is the most positive outcome you can envision?",
-        "What is the easiest possible step you could take today?"
+        "What is the easiest possible step you could take today?",
       ],
     });
   }
@@ -189,17 +198,22 @@ app.post("/api/session/drill-next", async (req, res) => {
     });
   }
 
-  let toneGuidance = "Keep the tone grounded, earnest, and brief. Adopt a balanced strategic coaching advisor persona.";
+  let toneGuidance =
+    "Keep the tone grounded, earnest, and brief. Adopt a balanced strategic coaching advisor persona.";
   if (advancedSettings) {
     if (advancedSettings.promptingStyle === "socratic") {
-      toneGuidance = "Adopt a highly Socratic, challenging, direct, and slightly provocative tone. Actively identify and push back gently on rationalizations, flag logical leaps or underlying contradictions, and ask demanding questions that require concrete evidence or clear rationale.";
+      toneGuidance =
+        "Adopt a highly Socratic, challenging, direct, and slightly provocative tone. Actively identify and push back gently on rationalizations, flag logical leaps or underlying contradictions, and ask demanding questions that require concrete evidence or clear rationale.";
     } else if (advancedSettings.promptingStyle === "empathetic") {
-      toneGuidance = "Adopt a highly supportive, gentle, warm, compassionate, and therapeutic tone. Focus purely on emotional unburdening, decompression, feelings, and validation. Give the user broad space to write freely without rigorous pushback.";
+      toneGuidance =
+        "Adopt a highly supportive, gentle, warm, compassionate, and therapeutic tone. Focus purely on emotional unburdening, decompression, feelings, and validation. Give the user broad space to write freely without rigorous pushback.";
     }
   }
 
   try {
-    const chatHistory = (history || []).map((h: any) => `Q: ${h.question}\nA: ${h.answer}`).join("\n\n");
+    const chatHistory = (history || [])
+      .map((h: any) => `Q: ${h.question}\nA: ${h.answer}`)
+      .join("\n\n");
     const formattedThoughts = (recentThoughts || []).map((t: any) => `- ${t.text}`).join("\n");
 
     const prompt = `You are a skilled diagnostic cognitive guide conducting an extraction interview drill.
@@ -228,8 +242,15 @@ Guidelines:
         responseSchema: {
           type: Type.OBJECT,
           properties: {
-            question: { type: Type.STRING, description: "The next single insightful question to ask" },
-            contextNote: { type: Type.STRING, description: "A brief 1-sentence note of what emotional/logical point is being examined" },
+            question: {
+              type: Type.STRING,
+              description: "The next single insightful question to ask",
+            },
+            contextNote: {
+              type: Type.STRING,
+              description:
+                "A brief 1-sentence note of what emotional/logical point is being examined",
+            },
           },
           required: ["question", "contextNote"],
         },
@@ -253,21 +274,26 @@ app.post("/api/session/drill-clarify", async (req, res) => {
     return res.json({
       reply: `I understand you're asking about this with respect to "${topic}". Think of how this constraint forms the core bottleneck of what you are building or solving.`,
       nextQuestion: "How does this concern change your immediate strategic roadmap or next step?",
-      contextNote: "Addressing user clarifying query"
+      contextNote: "Addressing user clarifying query",
     });
   }
 
-  let toneGuidance = "Keep the response grounded, thoughtful, and highly informative but brief. Focus on helping them unpack strategic blocks.";
+  let toneGuidance =
+    "Keep the response grounded, thoughtful, and highly informative but brief. Focus on helping them unpack strategic blocks.";
   if (advancedSettings) {
     if (advancedSettings.promptingStyle === "socratic") {
-      toneGuidance = "Keep a sharp, direct, provocative, and highly analytical tone, helping them challenge their own hesitation or underlying assumptions.";
+      toneGuidance =
+        "Keep a sharp, direct, provocative, and highly analytical tone, helping them challenge their own hesitation or underlying assumptions.";
     } else if (advancedSettings.promptingStyle === "empathetic") {
-      toneGuidance = "Maintain a warm, deeply validating, gentle, and non-judgmental holding space tone, validating any friction they express.";
+      toneGuidance =
+        "Maintain a warm, deeply validating, gentle, and non-judgmental holding space tone, validating any friction they express.";
     }
   }
 
   try {
-    const chatHistory = (history || []).map((h: any) => `Q: ${h.question}\nA: ${h.answer}`).join("\n\n");
+    const chatHistory = (history || [])
+      .map((h: any) => `Q: ${h.question}\nA: ${h.answer}`)
+      .join("\n\n");
     const formattedThoughts = (recentThoughts || []).map((t: any) => `- ${t.text}`).join("\n");
 
     const prompt = `You are an expert cognitive consultant. The user is in the middle of a strategic thought-extraction session.
@@ -302,9 +328,18 @@ Tone guidance to enforce:
         responseSchema: {
           type: Type.OBJECT,
           properties: {
-            reply: { type: Type.STRING, description: "Direct brief response clarifying or discussing the user's comment" },
-            nextQuestion: { type: Type.STRING, description: "The next single organic inquiry to guide them back into the drill" },
-            contextNote: { type: Type.STRING, description: "A brief 1-sentence diagnostic label of the focus point" },
+            reply: {
+              type: Type.STRING,
+              description: "Direct brief response clarifying or discussing the user's comment",
+            },
+            nextQuestion: {
+              type: Type.STRING,
+              description: "The next single organic inquiry to guide them back into the drill",
+            },
+            contextNote: {
+              type: Type.STRING,
+              description: "A brief 1-sentence diagnostic label of the focus point",
+            },
           },
           required: ["reply", "nextQuestion", "contextNote"],
         },
@@ -349,7 +384,10 @@ Formatting Guidelines:
           type: Type.OBJECT,
           properties: {
             optionA: { type: Type.STRING, description: "The first first-person framing phrase" },
-            optionB: { type: Type.STRING, description: "The opposing light-shifting first-person framing phrase" },
+            optionB: {
+              type: Type.STRING,
+              description: "The opposing light-shifting first-person framing phrase",
+            },
           },
           required: ["optionA", "optionB"],
         },
@@ -430,26 +468,33 @@ app.post("/api/session/synthesize", async (req, res) => {
     return res.json({
       summary: `You ran an extraction session on '${topic}'. You surfaced several key thoughts emphasizing your core goals.`,
       outline: `## 1. Core Focus: ${topic}\n\n- Surfaced ideas and key vectors\n- Temporal considerations\n\n## 2. Priority Action Items\n\n- Resolve initial blocks\n- Implement core structure`,
-      actionItems: (thoughts || []).slice(0, 3).map((t: any) => `Explore: ${t.text.slice(0, 50)}...`),
+      actionItems: (thoughts || [])
+        .slice(0, 3)
+        .map((t: any) => `Explore: ${t.text.slice(0, 50)}...`),
     });
   }
 
   // Define Synthesis Modifier Instructions
-  let filterInstructions = "Provide a comprehensive blueprint. This must include both a macro-level recap summary and micro-level detailed action checklists.";
+  let filterInstructions =
+    "Provide a comprehensive blueprint. This must include both a macro-level recap summary and micro-level detailed action checklists.";
   if (advancedSettings?.outputFilter === "actions") {
-    filterInstructions = "FILTER INSTRUCTION: The user has selected 'Action lists Only'. Do not write any long analytical summaries or conversational introductions in the 'summary' field. Focus the 'outline' and 'actionItems' purely on clear, actionable checklists, procedural recipes, and clear items. Reduce explanatory filler to a minimum.";
+    filterInstructions =
+      "FILTER INSTRUCTION: The user has selected 'Action lists Only'. Do not write any long analytical summaries or conversational introductions in the 'summary' field. Focus the 'outline' and 'actionItems' purely on clear, actionable checklists, procedural recipes, and clear items. Reduce explanatory filler to a minimum.";
   } else if (advancedSettings?.outputFilter === "roadmap") {
-    filterInstructions = "FILTER INSTRUCTION: The user has selected 'Milestones Only'. Avoid small, granular tasks or minute checklists. Synthesize high-level structural strategic milestones, general themes, development phases, and conceptual outlines. Keep the focus high-level rather than micro-tactical.";
+    filterInstructions =
+      "FILTER INSTRUCTION: The user has selected 'Milestones Only'. Avoid small, granular tasks or minute checklists. Synthesize high-level structural strategic milestones, general themes, development phases, and conceptual outlines. Keep the focus high-level rather than micro-tactical.";
   }
 
   let biasAuditInstructions = "";
   if (advancedSettings?.cognitiveBiasAudit === "include") {
-    biasAuditInstructions = "INTELLECTUAL BIAS DEBUGGER: Because the user requested a cognitive bias audit, analyze the provided thoughts for common human psychological fallback fallacies (such as confirmation bias, sunk-cost fallacy, avoidance, or black-and-white thinking). Actively append/include a dedicated brief diagnostics section inside the 'summary' output under the title 'Cognitive Bias Audit / Blind Spots' outlining these traps and how to address them.";
+    biasAuditInstructions =
+      "INTELLECTUAL BIAS DEBUGGER: Because the user requested a cognitive bias audit, analyze the provided thoughts for common human psychological fallback fallacies (such as confirmation bias, sunk-cost fallacy, avoidance, or black-and-white thinking). Actively append/include a dedicated brief diagnostics section inside the 'summary' output under the title 'Cognitive Bias Audit / Blind Spots' outlining these traps and how to address them.";
   }
 
   let synthesisTone = "supportive, clear, structured, and professional";
   if (advancedSettings?.promptingStyle === "socratic") {
-    synthesisTone = "direct, challenging, realistic, sharp, and strategic, flagging any potential avoidance or rationalizations";
+    synthesisTone =
+      "direct, challenging, realistic, sharp, and strategic, flagging any potential avoidance or rationalizations";
   } else if (advancedSettings?.promptingStyle === "empathetic") {
     synthesisTone = "compassionate, therapeutic, warm, validating, and supportive";
   }
@@ -481,8 +526,14 @@ Write in a supportively tuned, clear, structured professional tone. Do not use g
         responseSchema: {
           type: Type.OBJECT,
           properties: {
-            summary: { type: Type.STRING, description: "Compassionate, insightful 2-paragraph analysis" },
-            outline: { type: Type.STRING, description: "Detailed Markdown outline representing hierarchical logic" },
+            summary: {
+              type: Type.STRING,
+              description: "Compassionate, insightful 2-paragraph analysis",
+            },
+            outline: {
+              type: Type.STRING,
+              description: "Detailed Markdown outline representing hierarchical logic",
+            },
             actionItems: {
               type: Type.ARRAY,
               items: { type: Type.STRING },
@@ -527,10 +578,12 @@ async function startServer() {
   const server = app.listen(PORT, "0.0.0.0", () => {
     console.log(
       `Server running on port ${PORT} ` +
-        `(NODE_ENV=${process.env.NODE_ENV || "development"}, AUTH_MODE=${authConfig.mode})`
+        `(NODE_ENV=${process.env.NODE_ENV || "development"}, AUTH_MODE=${authConfig.mode})`,
     );
     if (authConfig.mode === "dev") {
-      console.log(`  dev identity: ${authConfig.devUser.email} (override with ?dev_user= or x-dev-user)`);
+      console.log(
+        `  dev identity: ${authConfig.devUser.email} (override with ?dev_user= or x-dev-user)`,
+      );
     }
   });
 

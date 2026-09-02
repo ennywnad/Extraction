@@ -1,0 +1,11 @@
+# Build output
+dist/
+dist-server/
+
+# planv1/ is the provenance record for group mode: a dated Claude Design
+# bundle plus the plans it produced, one of them explicitly superseded and
+# kept as-is. Reformatting a historical record defeats the point of keeping
+# it. See planv1/README.md.
+planv1/
+
+package-lock.json

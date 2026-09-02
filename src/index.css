@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&family=Playfair+Display:ital,wght@0,600;0,800;1,400;1,700&family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&family=Playfair+Display:ital,wght@0,600;0,800;1,400;1,700&family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;700&display=swap");
 @import "tailwindcss";
 
 @theme {
@@ -6,13 +6,13 @@
   --font-display: "Space Grotesk", sans-serif;
   --font-serif: "Playfair Display", Georgia, serif;
   --font-mono: "JetBrains Mono", monospace;
-  
-  --color-bento-bg: #F8F7F4;
-  --color-bento-card: #FFFFFF;
-  --color-bento-gray: #EFEFEF;
-  --color-bento-primary: #1A1A1A;
-  --color-bento-accent: #FF5722;
-  --color-bento-accent-light: #FDF2EE;
+
+  --color-bento-bg: #f8f7f4;
+  --color-bento-card: #ffffff;
+  --color-bento-gray: #efefef;
+  --color-bento-primary: #1a1a1a;
+  --color-bento-accent: #ff5722;
+  --color-bento-accent-light: #fdf2ee;
 }
 
 /* Custom global overrides to inject the gorgeous Bento grid look */
@@ -37,7 +37,7 @@ body {
 
 .bento-btn {
   background-color: var(--color-bento-primary);
-  color: #FFFFFF;
+  color: #ffffff;
   border: 2px solid var(--color-bento-primary);
   font-family: var(--font-display);
   font-weight: 700;
@@ -47,12 +47,12 @@ body {
 }
 
 .bento-btn:hover:not(:disabled) {
-  background-color: #FFFFFF;
+  background-color: #ffffff;
   color: var(--color-bento-primary);
 }
 
 .bento-btn-secondary {
-  background-color: #FFFFFF;
+  background-color: #ffffff;
   color: var(--color-bento-primary);
   border: 2px solid var(--color-bento-primary);
   font-family: var(--font-display);
@@ -64,7 +64,7 @@ body {
 
 .bento-btn-secondary:hover:not(:disabled) {
   background-color: var(--color-bento-primary);
-  color: #FFFFFF;
+  color: #ffffff;
 }
 
 /* Background grid motif */

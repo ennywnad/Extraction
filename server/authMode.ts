@@ -38,7 +38,7 @@ export function resolveAuthConfig(env: NodeJS.ProcessEnv = process.env): AuthCon
   if (mode === "dev" && !explicit) {
     console.warn(
       "WARNING: AUTH_MODE is unset; defaulting to dev identity because NODE_ENV is not " +
-        "production. Identities are asserted, not verified. Never expose this process."
+        "production. Identities are asserted, not verified. Never expose this process.",
     );
   }
 
@@ -51,7 +51,7 @@ export function resolveAuthConfig(env: NodeJS.ProcessEnv = process.env): AuthCon
     fatal(
       "AUTH_MODE=iap requires IAP_AUDIENCE " +
         "(/projects/PROJECT_NUMBER/locations/REGION/services/SERVICE_NAME). " +
-        "Set AUTH_MODE=dev for local development."
+        "Set AUTH_MODE=dev for local development.",
     );
   }
 

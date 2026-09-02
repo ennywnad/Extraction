@@ -25,7 +25,11 @@ export function persistSession(session: Session) {
   if (index >= 0) {
     sessions[index] = { ...session, updatedAt: new Date().toISOString() };
   } else {
-    sessions.push({ ...session, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+    sessions.push({
+      ...session,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
   }
   saveSessions(sessions);
 }

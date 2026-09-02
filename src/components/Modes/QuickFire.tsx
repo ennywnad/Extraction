@@ -34,7 +34,7 @@ export default function QuickFire({ topic, intention, onAddThought, thoughts }: 
         body: JSON.stringify({
           topic,
           intention,
-          pastThoughts: thoughts.slice(0, 10)
+          pastThoughts: thoughts.slice(0, 10),
         }),
       });
       if (response.ok) {
@@ -59,7 +59,7 @@ export default function QuickFire({ topic, intention, onAddThought, thoughts }: 
         "Who are you jealous of right now in relation to this?",
         "What's the worst-case scenario you're avoiding?",
         "What would you do if money wasn't a question?",
-        "Describe your level of excitement from 1 to 10."
+        "Describe your level of excitement from 1 to 10.",
       ]);
     } finally {
       setLoading(false);
@@ -72,7 +72,7 @@ export default function QuickFire({ topic, intention, onAddThought, thoughts }: 
       setInputValue("");
       setCompletedCount((prev) => prev + 1);
     }
-    
+
     if (currentIndex < prompts.length - 1) {
       setCurrentIndex((prev) => prev + 1);
     } else {
@@ -100,7 +100,8 @@ export default function QuickFire({ topic, intention, onAddThought, thoughts }: 
         <div className="flex-1">
           <h3 className="font-semibold text-xs text-slate-800">Quick Fire Mode</h3>
           <p className="text-[11px] text-slate-500 leading-normal mt-0.5">
-            Volley speed questions. Write immediate 1-7 word answers to unblock raw instinct! Skip what doesn't land.
+            Volley speed questions. Write immediate 1-7 word answers to unblock raw instinct! Skip
+            what doesn't land.
           </p>
         </div>
         <button
@@ -122,7 +123,9 @@ export default function QuickFire({ topic, intention, onAddThought, thoughts }: 
         <div className="space-y-6">
           {/* Progress gauge */}
           <div className="flex items-center justify-between text-[11px] text-slate-450 border-b border-slate-100 pb-2">
-            <span>Question {currentIndex + 1} of {prompts.length}</span>
+            <span>
+              Question {currentIndex + 1} of {prompts.length}
+            </span>
             <span>{completedCount} answered this session</span>
           </div>
 
@@ -149,10 +152,14 @@ export default function QuickFire({ topic, intention, onAddThought, thoughts }: 
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && !isTooLong && handleNext()}
                 className={`w-full text-sm border focus:ring-2 focus:ring-indigo-550/10 focus:border-indigo-500 rounded-xl px-4 py-3 bg-white ${
-                  isTooLong ? "border-amber-400 focus:ring-amber-500/10 focus:border-amber-500" : "border-slate-200"
+                  isTooLong
+                    ? "border-amber-400 focus:ring-amber-500/10 focus:border-amber-500"
+                    : "border-slate-200"
                 }`}
               />
-              <span className={`absolute right-4 top-3 text-[10px] font-bold ${isTooLong ? "text-amber-500" : "text-slate-400"}`}>
+              <span
+                className={`absolute right-4 top-3 text-[10px] font-bold ${isTooLong ? "text-amber-500" : "text-slate-400"}`}
+              >
                 {wordCount} / 7 words
               </span>
             </div>
@@ -166,7 +173,10 @@ export default function QuickFire({ topic, intention, onAddThought, thoughts }: 
                   className="flex items-center gap-1.5 text-xs text-amber-600 bg-amber-50 p-2.5 rounded-lg border border-amber-100 font-medium"
                 >
                   <AlertTriangle className="w-3.5 h-3.5" />
-                  <span>Velocity warning: Answer is {wordCount} words! Keep it under 7 words to maximize intuitive flow.</span>
+                  <span>
+                    Velocity warning: Answer is {wordCount} words! Keep it under 7 words to maximize
+                    intuitive flow.
+                  </span>
                 </motion.div>
               )}
             </AnimatePresence>

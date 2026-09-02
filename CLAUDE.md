@@ -6,13 +6,14 @@ solo (fragments in `localStorage`) and group (a shared pile on the server, behin
 
 ## Commands
 
-| Command | What it does |
-| :--- | :--- |
-| `npm run dev` | Server + Vite middleware on :3000. `AUTH_MODE=dev` identity. |
-| `npm run check` | **The verification loop.** `lint` then `test`. Run this before calling work done. |
-| `npm run lint` | `tsc --noEmit`. There is no ESLint and no Prettier — don't reach for either. |
-| `npm test` | `node:test` via tsx over `test/*.test.{ts,mjs}`. |
-| `npm run build` | Vite client build + esbuild server bundle to `dist-server/server.cjs`. |
+| Command          | What it does                                                                             |
+| :--------------- | :--------------------------------------------------------------------------------------- |
+| `npm run dev`    | Server + Vite middleware on :3000. `AUTH_MODE=dev` identity.                             |
+| `npm run check`  | **The verification loop.** `format:check`, `lint`, `test`. Run before calling work done. |
+| `npm run lint`   | `tsc --noEmit`. There is no ESLint — don't reach for one.                                |
+| `npm run format` | Prettier over the repo. A hook formats edited files, so you rarely run it by hand.       |
+| `npm test`       | `node:test` via tsx over `test/*.test.{ts,mjs}`.                                         |
+| `npm run build`  | Vite client build + esbuild server bundle to `dist-server/server.cjs`.                   |
 
 Healthy `npm run check` ends with:
 

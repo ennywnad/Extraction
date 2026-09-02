@@ -15,7 +15,7 @@ import {
   Plus,
   BookOpen,
   Mic,
-  MicOff
+  MicOff,
 } from "lucide-react";
 import { Session, Thought, ExtractionMode } from "../types";
 
@@ -52,14 +52,17 @@ export default function Workspace({
   const [newThoughtText, setNewThoughtText] = useState("");
   const [showDirectInput, setShowDirectInput] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<"all" | "action" | "insight" | "fear" | "goal">("all");
+  const [selectedCategory, setSelectedCategory] = useState<
+    "all" | "action" | "insight" | "fear" | "goal"
+  >("all");
 
   const [isRecordingDirect, setIsRecordingDirect] = useState(false);
   const recognitionDirectRef = React.useRef<any>(null);
 
   // Initialize Speech Recognition for Scratch note
   React.useEffect(() => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const SpeechRecognition =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (SpeechRecognition) {
       const rec = new SpeechRecognition();
       rec.continuous = true;
@@ -93,7 +96,9 @@ export default function Workspace({
 
   const toggleSpeechDirect = () => {
     if (!recognitionDirectRef.current) {
-      alert("Speech-to-text is not supported in this browser version or current container view. Please type.");
+      alert(
+        "Speech-to-text is not supported in this browser version or current container view. Please type.",
+      );
       return;
     }
 
@@ -136,7 +141,12 @@ export default function Workspace({
   const isMine = (thought: Thought) => !thought.author || thought.author.email === viewerEmail;
 
   const initialsOf = (name: string) =>
-    name.trim().split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("") || "?";
+    name
+      .trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((w) => w[0]?.toUpperCase() ?? "")
+      .join("") || "?";
 
   const handleAddDirectThought = () => {
     if (!newThoughtText.trim()) return;
@@ -154,48 +164,155 @@ export default function Workspace({
   };
 
   const modesList: { mode: ExtractionMode; label: string; desc: string; color: string }[] = [
-    { mode: "free_stream", label: "Free Stream", desc: "No prompts, unfiltered typing", color: "from-amber-400 to-orange-500" },
-    { mode: "quick_fire", label: "Quick Fire", desc: "Speed questions, brief answers", color: "from-red-500 to-pink-500" },
-    { mode: "guided_drill", label: "Guided Drill", desc: "Adaptive expert interview", color: "from-blue-500 to-indigo-600" },
-    { mode: "binary_frame", label: "Binary Bracket", desc: "Choose contrasting framings", color: "from-emerald-500 to-teal-600" },
-    { mode: "swipe", label: "Swipe Statements", desc: "Mark statements that resonate", color: "from-purple-500 to-indigo-500" },
-    { mode: "slider", label: "Intensity Map", desc: "Rate importance & urgency levels", color: "from-indigo-500 to-purple-600" },
-    { mode: "card_sort", label: "Cluster Sorting", desc: "Sort thoughts into folders", color: "from-teal-400 to-cyan-500" },
-    { mode: "timeline", label: "Temporal Map", desc: "Organize past, present & futures", color: "from-rose-400 to-red-500" },
-    { mode: "sentence_completion", label: "Sentence Starters", desc: "Uncover blocked views", color: "from-violet-500 to-fuchsia-600" },
-    { mode: "devils_advocate", label: "Advocate Shock", desc: "Deconstruct your defense", color: "from-amber-600 to-red-700" },
-    { mode: "letter_writing", label: "Letter Drill", desc: "Address the deep feelings", color: "from-orange-400 to-amber-600" },
-    { mode: "priority_pile", label: "Priority Eisenhower", desc: "Group urgent decision variables", color: "from-teal-600 to-emerald-700" }
+    {
+      mode: "free_stream",
+      label: "Free Stream",
+      desc: "No prompts, unfiltered typing",
+      color: "from-amber-400 to-orange-500",
+    },
+    {
+      mode: "quick_fire",
+      label: "Quick Fire",
+      desc: "Speed questions, brief answers",
+      color: "from-red-500 to-pink-500",
+    },
+    {
+      mode: "guided_drill",
+      label: "Guided Drill",
+      desc: "Adaptive expert interview",
+      color: "from-blue-500 to-indigo-600",
+    },
+    {
+      mode: "binary_frame",
+      label: "Binary Bracket",
+      desc: "Choose contrasting framings",
+      color: "from-emerald-500 to-teal-600",
+    },
+    {
+      mode: "swipe",
+      label: "Swipe Statements",
+      desc: "Mark statements that resonate",
+      color: "from-purple-500 to-indigo-500",
+    },
+    {
+      mode: "slider",
+      label: "Intensity Map",
+      desc: "Rate importance & urgency levels",
+      color: "from-indigo-500 to-purple-600",
+    },
+    {
+      mode: "card_sort",
+      label: "Cluster Sorting",
+      desc: "Sort thoughts into folders",
+      color: "from-teal-400 to-cyan-500",
+    },
+    {
+      mode: "timeline",
+      label: "Temporal Map",
+      desc: "Organize past, present & futures",
+      color: "from-rose-400 to-red-500",
+    },
+    {
+      mode: "sentence_completion",
+      label: "Sentence Starters",
+      desc: "Uncover blocked views",
+      color: "from-violet-500 to-fuchsia-600",
+    },
+    {
+      mode: "devils_advocate",
+      label: "Advocate Shock",
+      desc: "Deconstruct your defense",
+      color: "from-amber-600 to-red-700",
+    },
+    {
+      mode: "letter_writing",
+      label: "Letter Drill",
+      desc: "Address the deep feelings",
+      color: "from-orange-400 to-amber-600",
+    },
+    {
+      mode: "priority_pile",
+      label: "Priority Eisenhower",
+      desc: "Group urgent decision variables",
+      color: "from-teal-600 to-emerald-700",
+    },
   ];
 
   const matchesCategory = (text: string, cat: string): boolean => {
     if (cat === "all") return true;
     const lower = text.toLowerCase();
     if (cat === "action") {
-      return lower.includes("need to") || lower.includes("do ") || lower.includes("make") || lower.includes("implement") || lower.includes("set up") || lower.includes("build") || lower.includes("call") || lower.includes("send") || lower.includes("action") || lower.includes("checklist");
+      return (
+        lower.includes("need to") ||
+        lower.includes("do ") ||
+        lower.includes("make") ||
+        lower.includes("implement") ||
+        lower.includes("set up") ||
+        lower.includes("build") ||
+        lower.includes("call") ||
+        lower.includes("send") ||
+        lower.includes("action") ||
+        lower.includes("checklist")
+      );
     }
     if (cat === "insight") {
-      return lower.includes("realize") || lower.includes("why") || lower.includes("because") || lower.includes("concept") || lower.includes("idea") || lower.includes("learn") || lower.includes("understand") || lower.includes("insight");
+      return (
+        lower.includes("realize") ||
+        lower.includes("why") ||
+        lower.includes("because") ||
+        lower.includes("concept") ||
+        lower.includes("idea") ||
+        lower.includes("learn") ||
+        lower.includes("understand") ||
+        lower.includes("insight")
+      );
     }
     if (cat === "fear") {
-      return lower.includes("afraid") || lower.includes("fear") || lower.includes("scared") || lower.includes("worry") || lower.includes("risk") || lower.includes("doubt") || lower.includes("hesitat") || lower.includes("stuck") || lower.includes("friction") || lower.includes("challenge") || lower.includes("socratic") || lower.includes("provocative");
+      return (
+        lower.includes("afraid") ||
+        lower.includes("fear") ||
+        lower.includes("scared") ||
+        lower.includes("worry") ||
+        lower.includes("risk") ||
+        lower.includes("doubt") ||
+        lower.includes("hesitat") ||
+        lower.includes("stuck") ||
+        lower.includes("friction") ||
+        lower.includes("challenge") ||
+        lower.includes("socratic") ||
+        lower.includes("provocative")
+      );
     }
     if (cat === "goal") {
-      return lower.includes("goal") || lower.includes("target") || lower.includes("objective") || lower.includes("achieve") || lower.includes("milestone") || lower.includes("outcome") || lower.includes("aim") || lower.includes("value") || lower.includes("future");
+      return (
+        lower.includes("goal") ||
+        lower.includes("target") ||
+        lower.includes("objective") ||
+        lower.includes("achieve") ||
+        lower.includes("milestone") ||
+        lower.includes("outcome") ||
+        lower.includes("aim") ||
+        lower.includes("value") ||
+        lower.includes("future")
+      );
     }
     return true;
   };
 
   const filteredThoughts = session.thoughts.filter((t) => {
     const matchesTag = filterTags === "all" || t.mode === filterTags;
-    const matchesSearch = t.text.toLowerCase().includes(searchQuery.toLowerCase()) || (t.mode && t.mode.toLowerCase().includes(searchQuery.toLowerCase()));
+    const matchesSearch =
+      t.text.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (t.mode && t.mode.toLowerCase().includes(searchQuery.toLowerCase()));
     const matchesCat = matchesCategory(t.text, selectedCategory);
     return matchesTag && matchesSearch && matchesCat;
   });
 
   return (
-    <div className="flex flex-col h-[calc(100vh-10px)] max-h-[1400px] overflow-hidden bg-[#F8F7F4] font-sans" id="workspace-root">
-      
+    <div
+      className="flex flex-col h-[calc(100vh-10px)] max-h-[1400px] overflow-hidden bg-[#F8F7F4] font-sans"
+      id="workspace-root"
+    >
       {/* Dynamic Session Sticky Header Banner */}
       <header className="bg-white border-b-3 border-black px-6 py-4 shrink-0 flex flex-col md:flex-row gap-4 items-center justify-between">
         <div className="flex items-center gap-4 w-full md:w-auto">
@@ -211,7 +328,10 @@ export default function Workspace({
               {session.topic}
             </h2>
             <p className="text-[11px] text-zinc-500 truncate mt-0.5">
-              Intention: <strong className="text-black font-semibold font-serif italic">{session.intention}</strong>
+              Intention:{" "}
+              <strong className="text-black font-semibold font-serif italic">
+                {session.intention}
+              </strong>
             </p>
           </div>
         </div>
@@ -225,7 +345,7 @@ export default function Workspace({
             <Plus className="w-3.5 h-3.5" />
             Scratch Note
           </button>
-          
+
           <button
             onClick={onSynthesize}
             className="px-4 py-2 border-2 border-black bg-black text-white hover:bg-[#F8F7F4] hover:text-black text-xs font-black font-display uppercase tracking-wider flex items-center gap-2 cursor-pointer shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all"
@@ -264,7 +384,11 @@ export default function Workspace({
               }`}
               title="Record scratch note"
             >
-              {isRecordingDirect ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
+              {isRecordingDirect ? (
+                <MicOff className="w-3.5 h-3.5" />
+              ) : (
+                <Mic className="w-3.5 h-3.5" />
+              )}
             </button>
             <button
               onClick={handleAddDirectThought}
@@ -296,16 +420,14 @@ export default function Workspace({
               onClick={() => handleModeSwitch(m.mode)}
               title={m.desc}
               className={`px-3 py-1.5 border-2 border-black whitespace-nowrap cursor-pointer transition flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide ${
-                isActive
-                  ? "bg-black text-white"
-                  : "bg-white text-black hover:bg-zinc-50"
+                isActive ? "bg-black text-white" : "bg-white text-black hover:bg-zinc-50"
               }`}
             >
               <div className={`w-2 h-2 rounded-full bg-linear-to-r ${m.color}`} />
               {m.label}
-              {session.thoughts.filter(t => t.mode === m.mode).length > 0 && (
+              {session.thoughts.filter((t) => t.mode === m.mode).length > 0 && (
                 <span className="ml-1 text-[8px] bg-yellow-300 text-black px-1 leading-none rounded-none border border-black font-mono">
-                  {session.thoughts.filter(t => t.mode === m.mode).length}
+                  {session.thoughts.filter((t) => t.mode === m.mode).length}
                 </span>
               )}
             </button>
@@ -315,7 +437,6 @@ export default function Workspace({
 
       {/* Split Workspace Layout */}
       <div className="flex-1 flex overflow-hidden">
-        
         {/* Main Mode Interactive Playground area */}
         <main className="flex-1 p-6 overflow-y-auto bg-[#F8F7F4] flex flex-col justify-between">
           {/* Degradation has to be visible. Without this the modes quietly serve generic
@@ -326,8 +447,8 @@ export default function Workspace({
                 AI is unavailable
               </p>
               <p className="text-[11px] text-zinc-800 font-sans mt-0.5">
-                Prompts are falling back to a fixed list and are not tailored to this topic.
-                Check the Gemini configuration before running a session that matters.
+                Prompts are falling back to a fixed list and are not tailored to this topic. Check
+                the Gemini configuration before running a session that matters.
               </p>
             </div>
           )}
@@ -338,7 +459,6 @@ export default function Workspace({
 
         {/* Surfaced Thoughts Sidebar (Real-time pile) */}
         <aside className="w-80 md:w-96 border-l-3 border-black bg-white flex flex-col h-full overflow-hidden shrink-0">
-          
           {/* Sidebar title */}
           <div className="p-4 border-b-2 border-black bg-zinc-50 space-y-3 shrink-0">
             <div className="flex items-center justify-between">
@@ -350,7 +470,7 @@ export default function Workspace({
                   Surfaced Pile
                 </h3>
               </div>
-              
+
               {/* Filter tags config */}
               <div className="flex items-center gap-1.5">
                 <ListFilter className="w-3.5 h-3.5 text-black" />
@@ -386,7 +506,7 @@ export default function Workspace({
                 className="w-full text-[10px] font-mono p-1.5 pl-2.5 border-2 border-black bg-white focus:outline-none focus:bg-amber-50/20"
               />
               {searchQuery && (
-                <button 
+                <button
                   onClick={() => setSearchQuery("")}
                   className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs font-bold hover:text-black text-zinc-400"
                 >
@@ -399,10 +519,26 @@ export default function Workspace({
             <div className="flex flex-wrap gap-1">
               {[
                 { label: "All", id: "all", activeStyle: "bg-black text-white border-black" },
-                { label: "⚡ Actions", id: "action", activeStyle: "bg-[#FF6B6B] text-black border-black" },
-                { label: "💡 Insights", id: "insight", activeStyle: "bg-[#4DABF7] text-black border-black" },
-                { label: "⚠️ Fears", id: "fear", activeStyle: "bg-[#FFD43B] text-black border-black" },
-                { label: "🎯 Goals", id: "goal", activeStyle: "bg-[#51CF66] text-black border-black" },
+                {
+                  label: "⚡ Actions",
+                  id: "action",
+                  activeStyle: "bg-[#FF6B6B] text-black border-black",
+                },
+                {
+                  label: "💡 Insights",
+                  id: "insight",
+                  activeStyle: "bg-[#4DABF7] text-black border-black",
+                },
+                {
+                  label: "⚠️ Fears",
+                  id: "fear",
+                  activeStyle: "bg-[#FFD43B] text-black border-black",
+                },
+                {
+                  label: "🎯 Goals",
+                  id: "goal",
+                  activeStyle: "bg-[#51CF66] text-black border-black",
+                },
               ].map((cat) => {
                 const isSelected = selectedCategory === cat.id;
                 return (
@@ -410,7 +546,7 @@ export default function Workspace({
                     key={cat.id}
                     onClick={() => setSelectedCategory(cat.id as any)}
                     className={`text-[9px] font-mono uppercase tracking-tight font-extrabold px-1.5 py-0.5 border-2 border-black transition cursor-pointer shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] ${
-                      isSelected 
+                      isSelected
                         ? `${cat.activeStyle} shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] font-black`
                         : "bg-white hover:bg-zinc-50 text-black"
                     }`}
@@ -427,13 +563,19 @@ export default function Workspace({
             {filteredThoughts.length === 0 ? (
               <div className="text-center py-24 text-zinc-400 border-2 border-dashed border-zinc-300 p-4">
                 <Brain className="w-10 h-10 mx-auto opacity-50 stroke-1 mb-2 text-black" />
-                <p className="text-xs font-bold uppercase font-display text-black">Pile is empty.</p>
-                <p className="text-[10px] text-zinc-500 mt-1">Start answering prompts or type in Free Stream mode to stockpile concepts.</p>
+                <p className="text-xs font-bold uppercase font-display text-black">
+                  Pile is empty.
+                </p>
+                <p className="text-[10px] text-zinc-500 mt-1">
+                  Start answering prompts or type in Free Stream mode to stockpile concepts.
+                </p>
               </div>
             ) : (
               filteredThoughts.map((thought, idx) => {
-                const thoughtColorClass = modesList.find((m) => m.mode === thought.mode)?.color || "from-slate-400 to-slate-500";
-                
+                const thoughtColorClass =
+                  modesList.find((m) => m.mode === thought.mode)?.color ||
+                  "from-slate-400 to-slate-500";
+
                 return (
                   <motion.div
                     key={thought.id}
@@ -468,17 +610,23 @@ export default function Workspace({
                             className={`w-1.5 h-1.5 rounded-full bg-linear-to-r ${thoughtColorClass}`}
                             title={thought.mode.replaceAll("_", " ")}
                           />
-                          #{session.thoughts.length - session.thoughts.findIndex(t => t.id === thought.id)}
+                          #
+                          {session.thoughts.length -
+                            session.thoughts.findIndex((t) => t.id === thought.id)}
                         </span>
                       </div>
                     ) : (
                       <div className="flex justify-between items-center shrink-0 mb-2">
                         <span className="flex items-center gap-1.5 text-[9px] uppercase tracking-wider font-extrabold text-black font-mono">
-                          <div className={`w-1.5 h-1.5 rounded-full bg-linear-to-r ${thoughtColorClass}`} />
+                          <div
+                            className={`w-1.5 h-1.5 rounded-full bg-linear-to-r ${thoughtColorClass}`}
+                          />
                           {thought.mode.replaceAll("_", " ")}
                         </span>
                         <span className="text-[9px] text-zinc-400 font-mono">
-                          #{session.thoughts.length - session.thoughts.findIndex(t => t.id === thought.id)}
+                          #
+                          {session.thoughts.length -
+                            session.thoughts.findIndex((t) => t.id === thought.id)}
                         </span>
                       </div>
                     )}
@@ -512,18 +660,26 @@ export default function Workspace({
                         <p className="text-xs text-zinc-800 leading-normal font-sans whitespace-pre-wrap">
                           {thought.text}
                         </p>
-                        
+
                         {/* Display extra parameters based on tagging status */}
                         {thought.swipeStatus && (
                           <div className="mt-2 inline-flex items-center gap-1 bg-black text-white px-2 py-0.5 text-[8px] font-mono tracking-widest uppercase">
-                            STATUS: {thought.swipeStatus === "like" ? "RESONANT" : thought.swipeStatus === "dislike" ? "REJECTED" : "MAYBE"}
+                            STATUS:{" "}
+                            {thought.swipeStatus === "like"
+                              ? "RESONANT"
+                              : thought.swipeStatus === "dislike"
+                                ? "REJECTED"
+                                : "MAYBE"}
                           </div>
                         )}
 
                         {thought.intensity && (
                           <div className="mt-2 flex flex-wrap gap-1">
                             {Object.entries(thought.intensity).map(([k, v]) => (
-                              <span key={k} className="border border-black bg-zinc-50 text-black px-1.5 py-0.5 text-[8px] font-mono uppercase font-bold">
+                              <span
+                                key={k}
+                                className="border border-black bg-zinc-50 text-black px-1.5 py-0.5 text-[8px] font-mono uppercase font-bold"
+                              >
                                 {k}: {v}/10
                               </span>
                             ))}
@@ -544,7 +700,12 @@ export default function Workspace({
 
                         {thought.priorityZone && (
                           <div className="mt-2 inline-flex items-center gap-1 border border-black bg-zinc-100 px-1.5 py-0.5 text-[8px] font-mono uppercase font-bold">
-                            PRIORITY: {thought.priorityZone === "act" ? "ACT NOW" : thought.priorityZone === "watch" ? "WATCH" : "PASS"}
+                            PRIORITY:{" "}
+                            {thought.priorityZone === "act"
+                              ? "ACT NOW"
+                              : thought.priorityZone === "watch"
+                                ? "WATCH"
+                                : "PASS"}
                           </div>
                         )}
                       </div>
