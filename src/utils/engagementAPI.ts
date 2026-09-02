@@ -47,9 +47,7 @@ export async function whoami(): Promise<ViewerIdentity> {
 }
 
 export async function listEngagements(): Promise<EngagementSummary[]> {
-  const data = await json<{ engagements: EngagementSummary[] }>(
-    await fetch("/api/engagement")
-  );
+  const data = await json<{ engagements: EngagementSummary[] }>(await fetch("/api/engagement"));
   return data.engagements;
 }
 
@@ -63,7 +61,7 @@ export async function createEngagement(input: {
 
 export async function joinEngagement(id: string): Promise<Session> {
   const data = await json<{ engagement: Session; you: AuthorStamp }>(
-    await post(`/api/engagement/${id}/join`)
+    await post(`/api/engagement/${id}/join`),
   );
   return data.engagement;
 }
@@ -74,7 +72,7 @@ export async function joinEngagement(id: string): Promise<Session> {
  */
 export async function fetchEngagement(
   id: string,
-  etag?: string
+  etag?: string,
 ): Promise<{ session: Session; etag: string | null } | null> {
   const res = await fetch(`/api/engagement/${id}`, {
     headers: etag ? { "If-None-Match": etag } : {},
@@ -84,16 +82,13 @@ export async function fetchEngagement(
   return { session, etag: res.headers.get("ETag") };
 }
 
-export async function patchEngagement(
-  id: string,
-  updates: Partial<Session>
-): Promise<Session> {
+export async function patchEngagement(id: string, updates: Partial<Session>): Promise<Session> {
   return json<Session>(await patch(`/api/engagement/${id}`, updates));
 }
 
 export async function addThought(
   id: string,
-  thought: Partial<Thought> & { text: string }
+  thought: Partial<Thought> & { text: string },
 ): Promise<Thought> {
   return json<Thought>(await post(`/api/engagement/${id}/thoughts`, thought));
 }
@@ -101,7 +96,7 @@ export async function addThought(
 export async function patchThought(
   id: string,
   thoughtId: string,
-  updates: Partial<Thought>
+  updates: Partial<Thought>,
 ): Promise<Thought> {
   return json<Thought>(await patch(`/api/engagement/${id}/thoughts/${thoughtId}`, updates));
 }
@@ -118,13 +113,13 @@ export async function deleteThought(id: string, thoughtId: string): Promise<void
 
 export async function updateMyRosterEntry(
   id: string,
-  entry: { name?: string; role?: string }
+  entry: { name?: string; role?: string },
 ): Promise<AuthorStamp> {
   return json<AuthorStamp>(
     await fetch(`/api/engagement/${id}/roster/me`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(entry),
-    })
+    }),
   );
 }

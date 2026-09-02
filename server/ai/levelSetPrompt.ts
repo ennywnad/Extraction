@@ -47,7 +47,7 @@ assign "unclassified". Do not invent areas.`;
 export function levelSetPrompt(
   session: Session,
   coverageSummary: string,
-  settings?: { outputFilter?: string; cognitiveBiasAudit?: string }
+  settings?: { outputFilter?: string; cognitiveBiasAudit?: string },
 ): string {
   const filterNote =
     settings?.outputFilter === "actions"

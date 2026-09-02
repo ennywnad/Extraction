@@ -34,7 +34,9 @@ before(async () => {
     stdio: "ignore",
   });
   for (let i = 0; i < 60; i++) {
-    try { if ((await fetch(`${H}/healthz`)).ok) return; } catch {}
+    try {
+      if ((await fetch(`${H}/healthz`)).ok) return;
+    } catch {}
     await new Promise((r) => setTimeout(r, 250));
   }
   throw new Error("server did not start");
@@ -46,12 +48,16 @@ after(async () => {
 });
 
 const seed = async (topic, texts) => {
-  const eng = await (await as(A, "/api/engagement", {
-    method: "POST", body: JSON.stringify({ topic }),
-  })).json();
+  const eng = await (
+    await as(A, "/api/engagement", {
+      method: "POST",
+      body: JSON.stringify({ topic }),
+    })
+  ).json();
   for (const text of texts) {
     await as(A, `/api/engagement/${eng.id}/thoughts`, {
-      method: "POST", body: JSON.stringify({ text }),
+      method: "POST",
+      body: JSON.stringify({ text }),
     });
   }
   return eng;
@@ -59,11 +65,15 @@ const seed = async (topic, texts) => {
 
 describe("group synthesis", () => {
   it("refuses to synthesize an empty pile", async () => {
-    const eng = await (await as(A, "/api/engagement", {
-      method: "POST", body: JSON.stringify({ topic: "empty" }),
-    })).json();
+    const eng = await (
+      await as(A, "/api/engagement", {
+        method: "POST",
+        body: JSON.stringify({ topic: "empty" }),
+      })
+    ).json();
     const res = await as(A, `/api/engagement/${eng.id}/synthesize`, {
-      method: "POST", body: "{}",
+      method: "POST",
+      body: "{}",
     });
     assert.equal(res.status, 400);
   });
@@ -72,7 +82,8 @@ describe("group synthesis", () => {
     const eng = await seed("failure path", ["a fragment", "another fragment"]);
 
     const res = await as(A, `/api/engagement/${eng.id}/synthesize`, {
-      method: "POST", body: "{}",
+      method: "POST",
+      body: "{}",
     });
     assert.equal(res.status, 503, "no Gemini configured should surface as a failure");
 
@@ -104,8 +115,11 @@ describe("per-viewer prompting style", () => {
       }),
     });
     const after = await (await as(A, `/api/engagement/${eng.id}`)).json();
-    assert.equal(after.advancedSettings.promptingStyle, undefined,
-      "one member's tone choice must not change everyone else's questions");
+    assert.equal(
+      after.advancedSettings.promptingStyle,
+      undefined,
+      "one member's tone choice must not change everyone else's questions",
+    );
     assert.equal(after.advancedSettings.outputFilter, "actions");
     assert.equal(after.advancedSettings.cognitiveBiasAudit, "include");
   });

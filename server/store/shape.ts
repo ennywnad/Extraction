@@ -2,8 +2,17 @@ import { randomUUID } from "node:crypto";
 import type { AuthorStamp, ExtractionMode, Session } from "../../src/types.ts";
 
 export const VALID_MODES: ExtractionMode[] = [
-  "free_stream", "quick_fire", "guided_drill", "binary_frame", "swipe", "slider",
-  "card_sort", "timeline", "sentence_completion", "devils_advocate", "letter_writing",
+  "free_stream",
+  "quick_fire",
+  "guided_drill",
+  "binary_frame",
+  "swipe",
+  "slider",
+  "card_sort",
+  "timeline",
+  "sentence_completion",
+  "devils_advocate",
+  "letter_writing",
   "priority_pile",
 ];
 

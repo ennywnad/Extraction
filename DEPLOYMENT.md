@@ -67,13 +67,13 @@ access with no change to the app — offboarding is the client directory's job.
 
 ## Verify
 
-| Check | Expected |
-|---|---|
-| `curl $URL/healthz` with no credentials | `403` from IAP, before the request reaches the app |
-| Signed-in group member | `200`, app loads |
-| Signed-in non-member | `403` from IAP |
-| `/healthz` as a member | `{"ok":true,"aiEnabled":true}` |
-| `gcloud run services describe extraction --region=$REGION` | no secret mounts |
+| Check                                                      | Expected                                           |
+| ---------------------------------------------------------- | -------------------------------------------------- |
+| `curl $URL/healthz` with no credentials                    | `403` from IAP, before the request reaches the app |
+| Signed-in group member                                     | `200`, app loads                                   |
+| Signed-in non-member                                       | `403` from IAP                                     |
+| `/healthz` as a member                                     | `{"ok":true,"aiEnabled":true}`                     |
+| `gcloud run services describe extraction --region=$REGION` | no secret mounts                                   |
 
 `aiEnabled: false` means Gemini is not reachable and every AI route is silently returning
 canned static output. Do not run a workshop in that state.

@@ -73,7 +73,7 @@ async function classify(session: Session): Promise<Record<string, string>> {
 async function runSynthesis(
   session: Session,
   generatedBy: string,
-  settings?: { outputFilter?: string; cognitiveBiasAudit?: string }
+  settings?: { outputFilter?: string; cognitiveBiasAudit?: string },
 ): Promise<LevelSet> {
   const ai = getGemini();
   if (!ai) {
@@ -85,7 +85,9 @@ async function runSynthesis(
   const classification = await classify(session);
   const coverage = computeCoverage(session, LEVEL_SET_AREAS, classification);
   const coverageSummary = coverage
-    .map((c) => `- ${c.area}: ${c.status.toUpperCase()} (${c.fragments} fragments, ${c.voices} roles)`)
+    .map(
+      (c) => `- ${c.area}: ${c.status.toUpperCase()} (${c.fragments} fragments, ${c.voices} roles)`,
+    )
     .join("\n");
 
   const response = await generateContentWithFallback(ai, {
@@ -124,7 +126,7 @@ async function runSynthesis(
 export async function synthesizeEngagement(
   session: Session,
   generatedBy: string,
-  settings?: { outputFilter?: string; cognitiveBiasAudit?: string }
+  settings?: { outputFilter?: string; cognitiveBiasAudit?: string },
 ): Promise<{ levelSet: LevelSet; joined: boolean }> {
   const existing = inFlight.get(session.id);
   if (existing) return { levelSet: await existing, joined: true };

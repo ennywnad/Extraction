@@ -20,7 +20,7 @@ export function getGemini(): GoogleGenAI | null {
     const location = process.env.VERTEX_LOCATION?.trim();
     if (!project || !location) {
       console.error(
-        "GENAI_BACKEND=vertex requires FIRESTORE_PROJECT_ID and VERTEX_LOCATION; AI is disabled."
+        "GENAI_BACKEND=vertex requires FIRESTORE_PROJECT_ID and VERTEX_LOCATION; AI is disabled.",
       );
       return (client = null);
     }
@@ -49,7 +49,9 @@ export function getGemini(): GoogleGenAI | null {
  * deploy with rather than trusting this default.
  */
 function modelChain(): string[] {
-  const configured = process.env.GEMINI_MODELS?.split(",").map((m) => m.trim()).filter(Boolean);
+  const configured = process.env.GEMINI_MODELS?.split(",")
+    .map((m) => m.trim())
+    .filter(Boolean);
   return configured?.length ? configured : ["gemini-2.5-flash", "gemini-2.0-flash"];
 }
 

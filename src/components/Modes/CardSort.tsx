@@ -1,5 +1,14 @@
 import { useState } from "react";
-import { Folder, FolderPlus, Tag, Check, HelpCircle, Sparkles, FolderOpen, AlertCircle } from "lucide-react";
+import {
+  Folder,
+  FolderPlus,
+  Tag,
+  Check,
+  HelpCircle,
+  Sparkles,
+  FolderOpen,
+  AlertCircle,
+} from "lucide-react";
 import { Thought } from "../../types";
 
 interface CardSortProps {
@@ -40,13 +49,13 @@ export default function CardSort({ thoughts, onUpdateThoughtCluster }: CardSortP
         <div>
           <h3 className="font-semibold text-xs text-slate-800">Card Sort / Cluster Sorting</h3>
           <p className="text-[11px] text-slate-500 leading-normal mt-0.5">
-            Group scattered thoughts into logical thematic buckets. Creating clear buckets allows Gemini to structure the headings/subheadings in your final synthesized layout.
+            Group scattered thoughts into logical thematic buckets. Creating clear buckets allows
+            Gemini to structure the headings/subheadings in your final synthesized layout.
           </p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        
         {/* Left panel - Manage theme buckets */}
         <div className="lg:col-span-1 space-y-4 border-r border-slate-100 lg:pr-5">
           <span className="block text-[10px] uppercase font-bold tracking-wider text-slate-400">
@@ -104,8 +113,8 @@ export default function CardSort({ thoughts, onUpdateThoughtCluster }: CardSortP
                   filterTab === "all"
                     ? thoughts.length
                     : filterTab === "unsorted"
-                    ? thoughts.filter((t) => !t.clusterCategory).length
-                    : thoughts.filter((t) => t.clusterCategory === filterTab).length;
+                      ? thoughts.filter((t) => !t.clusterCategory).length
+                      : thoughts.filter((t) => t.clusterCategory === filterTab).length;
                 if (count === 0 && filterTab !== "all" && filterTab !== "unsorted") return null;
 
                 const isTabActive = activeCategoryFilter === filterTab;

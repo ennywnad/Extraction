@@ -17,7 +17,7 @@ import {
   Users,
   Laptop,
   Coins,
-  ClipboardList
+  ClipboardList,
 } from "lucide-react";
 import { Session, ExtractionMode } from "../types";
 import type { EngagementSummary } from "../utils/engagementAPI";
@@ -43,8 +43,8 @@ const PRESET_GROUPS = [
     starters: [
       "Evaluating a career pivot from corporate to freelancing, balancing risk against passion...",
       "Addressing team friction after a conflict regarding project scope and deadlines...",
-      "Structuring my daily agenda to avoid burnout on heavy delivery weeks..."
-    ]
+      "Structuring my daily agenda to avoid burnout on heavy delivery weeks...",
+    ],
   },
   {
     name: "Home",
@@ -53,8 +53,8 @@ const PRESET_GROUPS = [
     starters: [
       "Planning a major room renovation or physical reorganization for my workspace...",
       "Establishing clear boundaries between personal work-from-home hours and domestic life...",
-      "Managing household task distribution and chore schedules for the family..."
-    ]
+      "Managing household task distribution and chore schedules for the family...",
+    ],
   },
   {
     name: "Family",
@@ -63,8 +63,8 @@ const PRESET_GROUPS = [
     starters: [
       "Preparing for a difficult, direct conversation with my sibling/parent about boundaries...",
       "Balancing familial obligations with my personal goals and ambition to build a business...",
-      "Resolving a recurring misunderstanding regarding family communication patterns..."
-    ]
+      "Resolving a recurring misunderstanding regarding family communication patterns...",
+    ],
   },
   {
     name: "Tech",
@@ -73,8 +73,8 @@ const PRESET_GROUPS = [
     starters: [
       "Selecting the right coding stack, databases, and hosting options for my new web app...",
       "Architecting a scalable database schema structure to support multi-tenant workspaces...",
-      "Refactoring legacy code components to improve developer velocity and test reliability..."
-    ]
+      "Refactoring legacy code components to improve developer velocity and test reliability...",
+    ],
   },
   {
     name: "Economics",
@@ -83,8 +83,8 @@ const PRESET_GROUPS = [
     starters: [
       "Weighing cost vs. utility before buying a major premium purchase like a new car...",
       "Formulating a personal savings buffer strategy to prepare for potential market downtime...",
-      "Designing a freelance pricing structure and hourly market rate for consulting services..."
-    ]
+      "Designing a freelance pricing structure and hourly market rate for consulting services...",
+    ],
   },
   {
     name: "Project Planning",
@@ -93,9 +93,9 @@ const PRESET_GROUPS = [
     starters: [
       "Fleshing out a roadmap, milestones, and timeline steps for our Q3 product launch...",
       "Conducting a project retrospective to catalog lessons learned from the team's sprint...",
-      "Filing an LLC, registering tools, and launching an MVP catalog for my side project..."
-    ]
-  }
+      "Filing an LLC, registering tools, and launching an MVP catalog for my side project...",
+    ],
+  },
 ];
 
 export default function IntakeForm({
@@ -114,7 +114,9 @@ export default function IntakeForm({
   const [customIntention, setCustomIntention] = useState("");
   const [showRecommendationQuiz, setShowRecommendationQuiz] = useState(false);
   const [showCompareModal, setShowCompareModal] = useState(false);
-  const [compareModalTab, setCompareModalTab] = useState<"framing" | "intention" | "tone" | "filter" | "bias" | "quiz">("tone");
+  const [compareModalTab, setCompareModalTab] = useState<
+    "framing" | "intention" | "tone" | "filter" | "bias" | "quiz"
+  >("tone");
   const [activePresetGroup, setActivePresetGroup] = useState<string>("Work");
 
   // Warmup Quiz answers
@@ -124,9 +126,13 @@ export default function IntakeForm({
   const [intentType, setIntentType] = useState<"decide" | "process" | "capture" | "">("");
 
   // Advanced Settings
-  const [promptingStyle, setPromptingStyle] = useState<'standard' | 'socratic' | 'empathetic'>('standard');
-  const [outputFilter, setOutputFilter] = useState<'comprehensive' | 'actions' | 'roadmap'>('comprehensive');
-  const [cognitiveBiasAudit, setCognitiveBiasAudit] = useState<'include' | 'exclude'>('exclude');
+  const [promptingStyle, setPromptingStyle] = useState<"standard" | "socratic" | "empathetic">(
+    "standard",
+  );
+  const [outputFilter, setOutputFilter] = useState<"comprehensive" | "actions" | "roadmap">(
+    "comprehensive",
+  );
+  const [cognitiveBiasAudit, setCognitiveBiasAudit] = useState<"include" | "exclude">("exclude");
 
   const [confirmingDeleteId, setConfirmingDeleteId] = useState<string | null>(null);
   const [loadingRecommendation, setLoadingRecommendation] = useState(false);
@@ -136,7 +142,6 @@ export default function IntakeForm({
     alternativeModes: ExtractionMode[];
     confidence: number;
   } | null>(null);
-
 
   const handleAppendKeyword = (tag: string) => {
     setTopic((prev) => {
@@ -162,14 +167,16 @@ export default function IntakeForm({
       if (nature === "emotional") {
         return {
           recommendation: "free_stream",
-          rationale: "This mode is recommended because expressing foggy, emotional states works best without restrictive visual constraints or harsh structures first.",
+          rationale:
+            "This mode is recommended because expressing foggy, emotional states works best without restrictive visual constraints or harsh structures first.",
           alternativeModes: ["sentence_completion", "letter_writing", "swipe"],
           confidence: Math.min(99, baseConfidence),
         };
       } else {
         return {
           recommendation: "quick_fire",
-          rationale: "This mode is recommended because quick-fire prompts prompt instant reactions that can break analytical writer's block when you're feeling foggy.",
+          rationale:
+            "This mode is recommended because quick-fire prompts prompt instant reactions that can break analytical writer's block when you're feeling foggy.",
           alternativeModes: ["free_stream", "guided_drill", "sentence_completion"],
           confidence: Math.min(99, baseConfidence),
         };
@@ -178,21 +185,24 @@ export default function IntakeForm({
       if (intentType === "decide") {
         return {
           recommendation: "binary_frame",
-          rationale: "This mode is recommended because bracket/binary comparisons collapse diverging interpretations into a singular core value choice.",
+          rationale:
+            "This mode is recommended because bracket/binary comparisons collapse diverging interpretations into a singular core value choice.",
           alternativeModes: ["priority_pile", "slider", "devils_advocate"],
           confidence: Math.min(99, baseConfidence),
         };
       } else if (nature === "emotional") {
         return {
           recommendation: "guided_drill",
-          rationale: "This mode is recommended because structured adaptive questions carefully thread complex internal associations.",
+          rationale:
+            "This mode is recommended because structured adaptive questions carefully thread complex internal associations.",
           alternativeModes: ["letter_writing", "sentence_completion", "timeline"],
           confidence: Math.min(99, baseConfidence),
         };
       } else {
         return {
           recommendation: "guided_drill",
-          rationale: "This mode is recommended because a thorough drill allows you to lay down deep analytical blueprints systematically.",
+          rationale:
+            "This mode is recommended because a thorough drill allows you to lay down deep analytical blueprints systematically.",
           alternativeModes: ["card_sort", "slider", "timeline"],
           confidence: Math.min(99, baseConfidence),
         };
@@ -241,7 +251,7 @@ export default function IntakeForm({
   const handleLaunchWithMode = (mode: ExtractionMode) => {
     onStartSession({
       topic: topic || "Untitled Extraction Session",
-      intention: intention === "custom" ? customIntention : (intention || "Unclutter scatter"),
+      intention: intention === "custom" ? customIntention : intention || "Unclutter scatter",
       activeMode: mode,
       status: "active",
       warmupAnswers: {
@@ -274,7 +284,8 @@ export default function IntakeForm({
           E X T R A C T I O N
         </h1>
         <p className="mt-3 text-sm md:text-base text-zinc-700 max-w-xl mx-auto font-serif italic">
-          "Unburden, organize, and map out your thoughts. Let's move from scattered ideas to structural lists and outlines."
+          "Unburden, organize, and map out your thoughts. Let's move from scattered ideas to
+          structural lists and outlines."
         </p>
       </div>
 
@@ -284,7 +295,9 @@ export default function IntakeForm({
           <div>
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
               <h2 className="text-base md:text-lg font-black text-black uppercase tracking-wider font-display flex items-center gap-2.5">
-                <span className="bg-[#FF6B6B] text-black border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] px-2.5 py-0.5 text-xs font-mono font-black">01</span>
+                <span className="bg-[#FF6B6B] text-black border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] px-2.5 py-0.5 text-xs font-mono font-black">
+                  01
+                </span>
                 What is this session about?
               </h2>
               <button
@@ -298,7 +311,7 @@ export default function IntakeForm({
                 ℹ Framing Guide
               </button>
             </div>
-            
+
             {/* Group Tabs */}
             <div className="flex border-b-2 border-black overflow-x-auto gap-1 mb-4 scrollbar-none">
               {PRESET_GROUPS.map((g) => {
@@ -324,13 +337,18 @@ export default function IntakeForm({
 
             {/* Active Group Prompt Starters */}
             {(() => {
-              const activeGroup = PRESET_GROUPS.find((g) => g.name === activePresetGroup) || PRESET_GROUPS[0];
+              const activeGroup =
+                PRESET_GROUPS.find((g) => g.name === activePresetGroup) || PRESET_GROUPS[0];
               const Icon = activeGroup.icon;
               return (
-                <div className={`border-2 border-black p-4 mb-4 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] ${activeGroup.color} transition-all duration-150`}>
+                <div
+                  className={`border-2 border-black p-4 mb-4 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] ${activeGroup.color} transition-all duration-150`}
+                >
                   <div className="flex items-center gap-2 mb-3 pb-2 border-b border-black/10">
                     <Icon className="w-4 h-4 text-black shrink-0" />
-                    <span className="font-black text-[10px] uppercase tracking-wide text-black">{activeGroup.name} Starters (Click to load)</span>
+                    <span className="font-black text-[10px] uppercase tracking-wide text-black">
+                      {activeGroup.name} Starters (Click to load)
+                    </span>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     {activeGroup.starters.map((starter, sIdx) => (
@@ -339,12 +357,22 @@ export default function IntakeForm({
                         type="button"
                         onClick={() => {
                           setTopic(starter);
-                          if (activeGroup.name === "Work") setIntention("Make a tough choice with clear priority action items");
-                          if (activeGroup.name === "Home") setIntention("Organize raw thoughts into a structured markdown outline");
-                          if (activeGroup.name === "Family") setIntention("Decompress deep mental fog and find emotional peace");
-                          if (activeGroup.name === "Tech") setIntention("Organize raw thoughts into a structured markdown outline");
-                          if (activeGroup.name === "Economics") setIntention("Make a tough choice with clear priority action items");
-                          if (activeGroup.name === "Project Planning") setIntention("Make a tough choice with clear priority action items");
+                          if (activeGroup.name === "Work")
+                            setIntention("Make a tough choice with clear priority action items");
+                          if (activeGroup.name === "Home")
+                            setIntention(
+                              "Organize raw thoughts into a structured markdown outline",
+                            );
+                          if (activeGroup.name === "Family")
+                            setIntention("Decompress deep mental fog and find emotional peace");
+                          if (activeGroup.name === "Tech")
+                            setIntention(
+                              "Organize raw thoughts into a structured markdown outline",
+                            );
+                          if (activeGroup.name === "Economics")
+                            setIntention("Make a tough choice with clear priority action items");
+                          if (activeGroup.name === "Project Planning")
+                            setIntention("Make a tough choice with clear priority action items");
                         }}
                         className="text-left bg-white hover:bg-zinc-50 border border-black p-3 text-[10px] font-sans text-zinc-700 leading-relaxed cursor-pointer transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] min-h-[60px] flex flex-col justify-center font-medium"
                         title={starter}
@@ -380,7 +408,7 @@ export default function IntakeForm({
                   { label: "🎯 Decision Needed", val: "(Decision Needed)" },
                   { label: "📋 Process Mapping", val: "(Process Outline Goal)" },
                   { label: "💼 Work/Career", val: "(Work/Career Domain)" },
-                  { label: "🚀 Side Project", val: "(Side Project Outline)" }
+                  { label: "🚀 Side Project", val: "(Side Project Outline)" },
                 ].map((tag) => {
                   const isAlreadyIncluded = topic.includes(tag.val);
                   return (
@@ -406,7 +434,9 @@ export default function IntakeForm({
           <div>
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
               <h2 className="text-base md:text-lg font-black text-black uppercase tracking-wider font-display flex items-center gap-2.5">
-                <span className="bg-[#4DABF7] text-black border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] px-2.5 py-0.5 text-xs font-mono font-black">02</span>
+                <span className="bg-[#4DABF7] text-black border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] px-2.5 py-0.5 text-xs font-mono font-black">
+                  02
+                </span>
                 What do you want to get out of this?
               </h2>
               <button
@@ -422,10 +452,27 @@ export default function IntakeForm({
             </div>
             <div className="space-y-2">
               {[
-                { label: "Organize raw thoughts into a structured markdown outline", value: "Organize raw thoughts into a structured markdown outline", colorClass: "bg-[#E8F0FE]" },
-                { label: "Make a tough choice with clear priority action items", value: "Make a tough choice with clear priority action items", colorClass: "bg-[#FFE8CC]" },
-                { label: "Decompress deep mental fog and find emotional peace", value: "Decompress deep mental fog and find emotional peace", colorClass: "bg-[#E6F4EA]" },
-                { label: "custom", labelOverride: "Something else...", value: "custom", colorClass: "bg-zinc-100" },
+                {
+                  label: "Organize raw thoughts into a structured markdown outline",
+                  value: "Organize raw thoughts into a structured markdown outline",
+                  colorClass: "bg-[#E8F0FE]",
+                },
+                {
+                  label: "Make a tough choice with clear priority action items",
+                  value: "Make a tough choice with clear priority action items",
+                  colorClass: "bg-[#FFE8CC]",
+                },
+                {
+                  label: "Decompress deep mental fog and find emotional peace",
+                  value: "Decompress deep mental fog and find emotional peace",
+                  colorClass: "bg-[#E6F4EA]",
+                },
+                {
+                  label: "custom",
+                  labelOverride: "Something else...",
+                  value: "custom",
+                  colorClass: "bg-zinc-100",
+                },
               ].map((opt) => {
                 const isSelected = intention === opt.value;
                 return (
@@ -474,7 +521,9 @@ export default function IntakeForm({
           <div className="border-t-3 border-black pt-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 gap-2">
               <h2 className="text-base md:text-lg font-black text-black uppercase tracking-wider font-display flex items-center gap-2.5">
-                <span className="bg-[#51CF66] text-black border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] px-2.5 py-0.5 text-xs font-mono font-black">03</span>
+                <span className="bg-[#51CF66] text-black border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] px-2.5 py-0.5 text-xs font-mono font-black">
+                  03
+                </span>
                 Advanced Synthesis Controls
               </h2>
               <button
@@ -489,7 +538,8 @@ export default function IntakeForm({
               </button>
             </div>
             <p className="text-xs text-zinc-500 mb-5 font-sans leading-relaxed">
-              Define the cognitive style of the extraction session and configure how the final synthesized outputs should filter or organize concepts.
+              Define the cognitive style of the extraction session and configure how the final
+              synthesized outputs should filter or organize concepts.
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -512,9 +562,21 @@ export default function IntakeForm({
                 </div>
                 <div className="space-y-2">
                   {[
-                    { label: "Standard Guide", value: "standard", desc: "Balanced strategic coaching inquiries" },
-                    { label: "Socratic Pressure", value: "socratic", desc: "Prickly, challenges core assumptions" },
-                    { label: "Empathetic Vent", value: "empathetic", desc: "Gentle, non-judgmental holding space" },
+                    {
+                      label: "Standard Guide",
+                      value: "standard",
+                      desc: "Balanced strategic coaching inquiries",
+                    },
+                    {
+                      label: "Socratic Pressure",
+                      value: "socratic",
+                      desc: "Prickly, challenges core assumptions",
+                    },
+                    {
+                      label: "Empathetic Vent",
+                      value: "empathetic",
+                      desc: "Gentle, non-judgmental holding space",
+                    },
                   ].map((opt) => (
                     <label
                       key={opt.value}
@@ -532,9 +594,13 @@ export default function IntakeForm({
                           onChange={() => setPromptingStyle(opt.value as any)}
                           className="accent-black mr-1"
                         />
-                        <span className="text-xs font-black uppercase tracking-tight text-black">{opt.label}</span>
+                        <span className="text-xs font-black uppercase tracking-tight text-black">
+                          {opt.label}
+                        </span>
                       </div>
-                      <span className={`text-[9px] mt-1.5 leading-tight font-serif ${promptingStyle === opt.value ? "text-zinc-700 font-semibold italic" : "text-zinc-500"}`}>
+                      <span
+                        className={`text-[9px] mt-1.5 leading-tight font-serif ${promptingStyle === opt.value ? "text-zinc-700 font-semibold italic" : "text-zinc-500"}`}
+                      >
                         {opt.desc}
                       </span>
                     </label>
@@ -561,9 +627,21 @@ export default function IntakeForm({
                 </div>
                 <div className="space-y-2">
                   {[
-                    { label: "Full Blueprint", value: "comprehensive", desc: "Recap summary, outline & steps" },
-                    { label: "Action lists Only", value: "actions", desc: "Exclude summaries, checklist-only" },
-                    { label: "Milestones Only", value: "roadmap", desc: "Exclude mini steps, strategic themes only" },
+                    {
+                      label: "Full Blueprint",
+                      value: "comprehensive",
+                      desc: "Recap summary, outline & steps",
+                    },
+                    {
+                      label: "Action lists Only",
+                      value: "actions",
+                      desc: "Exclude summaries, checklist-only",
+                    },
+                    {
+                      label: "Milestones Only",
+                      value: "roadmap",
+                      desc: "Exclude mini steps, strategic themes only",
+                    },
                   ].map((opt) => (
                     <label
                       key={opt.value}
@@ -581,9 +659,13 @@ export default function IntakeForm({
                           onChange={() => setOutputFilter(opt.value as any)}
                           className="accent-black mr-1"
                         />
-                        <span className="text-xs font-black uppercase tracking-tight text-black">{opt.label}</span>
+                        <span className="text-xs font-black uppercase tracking-tight text-black">
+                          {opt.label}
+                        </span>
                       </div>
-                      <span className={`text-[9px] mt-1.5 leading-tight font-serif ${outputFilter === opt.value ? "text-zinc-700 font-semibold italic" : "text-zinc-500"}`}>
+                      <span
+                        className={`text-[9px] mt-1.5 leading-tight font-serif ${outputFilter === opt.value ? "text-zinc-700 font-semibold italic" : "text-zinc-500"}`}
+                      >
                         {opt.desc}
                       </span>
                     </label>
@@ -610,8 +692,16 @@ export default function IntakeForm({
                 </div>
                 <div className="space-y-2">
                   {[
-                    { label: "Omit Bias Check", value: "exclude", desc: "Purely organize structural ideas" },
-                    { label: "Audit Traps", value: "include", desc: "Diagnostics for cognitive fallback biases" },
+                    {
+                      label: "Omit Bias Check",
+                      value: "exclude",
+                      desc: "Purely organize structural ideas",
+                    },
+                    {
+                      label: "Audit Traps",
+                      value: "include",
+                      desc: "Diagnostics for cognitive fallback biases",
+                    },
                   ].map((opt) => (
                     <label
                       key={opt.value}
@@ -629,9 +719,13 @@ export default function IntakeForm({
                           onChange={() => setCognitiveBiasAudit(opt.value as any)}
                           className="accent-black mr-1"
                         />
-                        <span className="text-xs font-black uppercase tracking-tight text-black">{opt.label}</span>
+                        <span className="text-xs font-black uppercase tracking-tight text-black">
+                          {opt.label}
+                        </span>
                       </div>
-                      <span className={`text-[9px] mt-1.5 leading-tight font-serif ${cognitiveBiasAudit === opt.value ? "text-zinc-700 font-semibold italic" : "text-zinc-500"}`}>
+                      <span
+                        className={`text-[9px] mt-1.5 leading-tight font-serif ${cognitiveBiasAudit === opt.value ? "text-zinc-700 font-semibold italic" : "text-zinc-500"}`}
+                      >
                         {opt.desc}
                       </span>
                     </label>
@@ -671,7 +765,9 @@ export default function IntakeForm({
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-zinc-100 border-2 border-black p-4 gap-3">
                   <div>
                     <div className="flex items-center gap-2">
-                      <h3 className="font-display font-bold text-xs uppercase text-black">Warm-up Diagnostic Quiz</h3>
+                      <h3 className="font-display font-bold text-xs uppercase text-black">
+                        Warm-up Diagnostic Quiz
+                      </h3>
                       <button
                         type="button"
                         onClick={() => {
@@ -683,7 +779,9 @@ export default function IntakeForm({
                         [ℹ Compare Quiz]
                       </button>
                     </div>
-                    <p className="text-[10px] uppercase font-mono text-zinc-500 mt-1">Helps Gemini tune your structured templates.</p>
+                    <p className="text-[10px] uppercase font-mono text-zinc-500 mt-1">
+                      Helps Gemini tune your structured templates.
+                    </p>
                   </div>
                   <button
                     type="button"
@@ -701,7 +799,7 @@ export default function IntakeForm({
                       “Do you feel clear or foggy about this topic?”
                     </span>
                     <div className="flex gap-2">
-                       {[
+                      {[
                         { label: "Mainly Clear", val: "clear" },
                         { label: "Mainly Foggy", val: "foggy" },
                       ].map((o) => (
@@ -805,10 +903,14 @@ export default function IntakeForm({
                     Back
                   </button>
                   <button
-                    disabled={!clarity || !nature || !timeAvailable || !intentType || loadingRecommendation}
+                    disabled={
+                      !clarity || !nature || !timeAvailable || !intentType || loadingRecommendation
+                    }
                     onClick={handleFetchRecommendation}
                     className={`flex-1 flex justify-center items-center gap-1 py-2 border-2 border-black bg-black text-white hover:bg-white hover:text-black font-display font-bold text-xs uppercase tracking-wider transition-all cursor-pointer ${
-                      (!clarity || !nature || !timeAvailable || !intentType || loadingRecommendation) ? "opacity-50 cursor-not-allowed" : ""
+                      !clarity || !nature || !timeAvailable || !intentType || loadingRecommendation
+                        ? "opacity-50 cursor-not-allowed"
+                        : ""
                     }`}
                   >
                     {loadingRecommendation ? "Determining..." : "Get Recommend Mode"}
@@ -824,12 +926,16 @@ export default function IntakeForm({
                   >
                     <div className="flex justify-between items-start">
                       <div>
-                        <span className="text-[9px] uppercase font-bold tracking-wider text-zinc-500 font-mono">AI Recommended Mode</span>
+                        <span className="text-[9px] uppercase font-bold tracking-wider text-zinc-500 font-mono">
+                          AI Recommended Mode
+                        </span>
                         <h4 className="text-xs font-black text-black uppercase font-display tracking-wide mt-1">
                           {recommendationResult.recommendation.replaceAll("_", " ")}
                         </h4>
                       </div>
-                      <span className="bg-black text-white text-[9px] px-2 py-0.5 font-mono uppercase font-semibold">{recommendationResult.confidence}% Match</span>
+                      <span className="bg-black text-white text-[9px] px-2 py-0.5 font-mono uppercase font-semibold">
+                        {recommendationResult.confidence}% Match
+                      </span>
                     </div>
                     <p className="text-xs text-zinc-700 font-serif italic leading-relaxed">
                       "{recommendationResult.rationale}"
@@ -842,7 +948,7 @@ export default function IntakeForm({
                       >
                         Accept & Launch Recommended
                       </button>
-                      
+
                       <div className="flex gap-2">
                         {recommendationResult.alternativeModes.slice(0, 2).map((alt) => (
                           <button
@@ -877,8 +983,8 @@ export default function IntakeForm({
               )}
             </div>
             <p className="text-xs text-zinc-600 font-sans">
-              One shared pile for a whole room. Every fragment is stamped with who contributed
-              it, and the pile keeps growing after the workshop ends.
+              One shared pile for a whole room. Every fragment is stamped with who contributed it,
+              and the pile keeps growing after the workshop ends.
             </p>
 
             <div className="flex gap-2 flex-wrap">
@@ -941,7 +1047,9 @@ export default function IntakeForm({
             {pastSessions.length === 0 ? (
               <div className="text-center py-12 text-zinc-400 border-2 border-dashed border-zinc-300 p-4">
                 <Brain className="w-8 h-8 mx-auto stroke-1 opacity-50 mb-2" />
-                <p className="text-[11px] font-mono uppercase tracking-wider">No saved extractions yet.</p>
+                <p className="text-[11px] font-mono uppercase tracking-wider">
+                  No saved extractions yet.
+                </p>
               </div>
             ) : (
               pastSessions.map((session) => (
@@ -957,13 +1065,17 @@ export default function IntakeForm({
                       {session.topic}
                     </span>
                     <span className="block text-[10px] text-zinc-400 font-mono">
-                      {session.thoughts.length} SURFACED THOUGHTS • {new Date(session.updatedAt).toLocaleDateString()}
+                      {session.thoughts.length} SURFACED THOUGHTS •{" "}
+                      {new Date(session.updatedAt).toLocaleDateString()}
                     </span>
                   </button>
                   {confirmingDeleteId === session.id ? (
                     <div className="flex items-center gap-1 ml-1 shrink-0">
                       <button
-                        onClick={() => { onDeleteSession(session.id); setConfirmingDeleteId(null); }}
+                        onClick={() => {
+                          onDeleteSession(session.id);
+                          setConfirmingDeleteId(null);
+                        }}
                         className="text-[9px] font-mono font-black uppercase px-2 py-1 bg-black text-white border border-black cursor-pointer hover:bg-red-600 transition-all"
                       >
                         Delete
@@ -990,7 +1102,11 @@ export default function IntakeForm({
           </div>
         </div>
       </div>
-      <CompareSettingsModal isOpen={showCompareModal} onClose={() => setShowCompareModal(false)} defaultTab={compareModalTab} />
+      <CompareSettingsModal
+        isOpen={showCompareModal}
+        onClose={() => setShowCompareModal(false)}
+        defaultTab={compareModalTab}
+      />
     </div>
   );
 }

@@ -71,7 +71,7 @@ export class FirestoreEngagementStore implements EngagementStore {
           createdAt: data.createdAt,
           updatedAt: data.updatedAt,
         };
-      })
+      }),
     );
   }
 
@@ -113,7 +113,7 @@ export class FirestoreEngagementStore implements EngagementStore {
   async patchThought(
     id: string,
     thoughtId: string,
-    patch: Partial<Thought>
+    patch: Partial<Thought>,
   ): Promise<Thought | null> {
     const ref = this.doc(id).collection(THOUGHTS).doc(thoughtId);
     if (!(await ref.get()).exists) return null;
@@ -140,8 +140,10 @@ export class FirestoreEngagementStore implements EngagementStore {
     // Email addresses contain dots, which Firestore reads as field-path separators in a
     // string path. FieldPath segments are taken literally, so the key survives intact.
     await ref.update(
-      new FieldPath("roster", stamp.email), stamp,
-      "updatedAt", new Date().toISOString()
+      new FieldPath("roster", stamp.email),
+      stamp,
+      "updatedAt",
+      new Date().toISOString(),
     );
     return this.getEngagement(id);
   }

@@ -102,8 +102,14 @@ describe("field-level authorship", () => {
   it("refuses to let anyone delete another member's fragment", async () => {
     const eng = await newEngagement("delete gate");
     const t = await contribute(A, eng.id, "A's fragment");
-    assert.equal((await as(B, `/api/engagement/${eng.id}/thoughts/${t.id}`, { method: "DELETE" })).status, 403);
-    assert.equal((await as(A, `/api/engagement/${eng.id}/thoughts/${t.id}`, { method: "DELETE" })).status, 204);
+    assert.equal(
+      (await as(B, `/api/engagement/${eng.id}/thoughts/${t.id}`, { method: "DELETE" })).status,
+      403,
+    );
+    assert.equal(
+      (await as(A, `/api/engagement/${eng.id}/thoughts/${t.id}`, { method: "DELETE" })).status,
+      204,
+    );
   });
 });
 
@@ -119,7 +125,7 @@ describe("concurrent contribution", () => {
     // A drags a card. Every mode composes a whole new array from A's stale state, so the
     // array A works from does not contain B's fragment. Absence must never mean deletion.
     const composed = stale.thoughts.map((t) =>
-      t.id === t1.id ? { ...t, clusterCategory: "Process scope" } : t
+      t.id === t1.id ? { ...t, clusterCategory: "Process scope" } : t,
     );
     for (const t of composed) {
       await as(A, `/api/engagement/${eng.id}/thoughts/${t.id}`, {
@@ -129,7 +135,10 @@ describe("concurrent contribution", () => {
     }
 
     const final = await asJson(A, `/api/engagement/${eng.id}`);
-    assert.ok(final.thoughts.some((t) => t.id === t2.id), "B's fragment was destroyed");
+    assert.ok(
+      final.thoughts.some((t) => t.id === t2.id),
+      "B's fragment was destroyed",
+    );
     assert.equal(final.thoughts.find((t) => t.id === t1.id).clusterCategory, "Process scope");
   });
 });

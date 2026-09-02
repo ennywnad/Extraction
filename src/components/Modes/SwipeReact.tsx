@@ -1,6 +1,15 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Layers, ThumbsUp, ThumbsDown, HelpCircle, Check, RotateCcw, Sparkles, RefreshCw } from "lucide-react";
+import {
+  Layers,
+  ThumbsUp,
+  ThumbsDown,
+  HelpCircle,
+  Check,
+  RotateCcw,
+  Sparkles,
+  RefreshCw,
+} from "lucide-react";
 import { Thought } from "../../types";
 
 interface SwipeReactProps {
@@ -13,7 +22,9 @@ export default function SwipeReact({ topic, onAddThought, thoughts }: SwipeReact
   const [candidates, setCandidates] = useState<string[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [swipedList, setSwipedList] = useState<{ text: string; status: "like" | "dislike" | "maybe" }[]>([]);
+  const [swipedList, setSwipedList] = useState<
+    { text: string; status: "like" | "dislike" | "maybe" }[]
+  >([]);
 
   useEffect(() => {
     generateCandidates();
@@ -27,7 +38,11 @@ export default function SwipeReact({ topic, onAddThought, thoughts }: SwipeReact
 
     try {
       // Synthesize general core statements around the topic
-      const queryText = thoughts.map((t) => t.text).slice(0, 10).join("; ") || topic;
+      const queryText =
+        thoughts
+          .map((t) => t.text)
+          .slice(0, 10)
+          .join("; ") || topic;
       const response = await aiGenerateStatements(queryText);
       if (response && response.length > 0) {
         setCandidates(response);
@@ -53,7 +68,7 @@ export default function SwipeReact({ topic, onAddThought, thoughts }: SwipeReact
       const response = await fetch("/api/session/devils-advocate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ topic, recentThoughts: thoughts.slice(0, 5) })
+        body: JSON.stringify({ topic, recentThoughts: thoughts.slice(0, 5) }),
       });
       if (response.ok) {
         const data = await response.json();
@@ -64,7 +79,7 @@ export default function SwipeReact({ topic, onAddThought, thoughts }: SwipeReact
             `I'm putting too much emphasis on planning rather than immediate validation.`,
             `The financial risk represents potential loss of freedom, which is what scares me most.`,
             `I'm holding onto past patterns because they are safe, not because they are effective.`,
-            `If I let this go, I will feel a immediate surge of relief.`
+            `If I let this go, I will feel a immediate surge of relief.`,
           ];
         }
       }
@@ -81,14 +96,14 @@ export default function SwipeReact({ topic, onAddThought, thoughts }: SwipeReact
     `There's a version of this plan that requires much less effort, and I should start there.`,
     `I am over-weighting the negative possibilities and ignoring my historical resilience.`,
     `This issue is emotional, not logical, and no amount of analysis will solve it.`,
-    `The real question isn't 'how do I do this' but 'why do I feel obligated to do this.'`
+    `The real question isn't 'how do I do this' but 'why do I feel obligated to do this.'`,
   ];
 
   const handleSwipe = (status: "like" | "dislike" | "maybe") => {
     if (currentIndex >= candidates.length) return;
 
     const statementText = candidates[currentIndex];
-    
+
     // Save as a permanent thought in their main checklist with the swipeStatus tag!
     onAddThought(statementText, status);
 
@@ -115,9 +130,12 @@ export default function SwipeReact({ topic, onAddThought, thoughts }: SwipeReact
       <div className="bg-[#FFFDF0] border-2 border-black p-4.5 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-start gap-4 shrink-0">
         <Layers className="w-5 h-5 text-black shrink-0 mt-0.5" />
         <div className="flex-1">
-          <h3 className="font-bold text-xs uppercase text-black font-display tracking-tight">Swipe / React Statements</h3>
+          <h3 className="font-bold text-xs uppercase text-black font-display tracking-tight">
+            Swipe / React Statements
+          </h3>
           <p className="text-[11px] text-zinc-650 leading-normal mt-0.5 font-sans">
-            Calibrate statements generated dynamically based on your topic. Swipe or tap to indicate resonance.
+            Calibrate statements generated dynamically based on your topic. Swipe or tap to indicate
+            resonance.
           </p>
         </div>
         <button
@@ -132,13 +150,16 @@ export default function SwipeReact({ topic, onAddThought, thoughts }: SwipeReact
       {loading ? (
         <div className="flex-1 flex flex-col items-center justify-center py-12 gap-2">
           <RefreshCw className="w-6 h-6 animate-spin text-black" />
-          <span className="text-xs font-bold uppercase tracking-wider text-black font-mono">Synthesizing candidate statement deck...</span>
+          <span className="text-xs font-bold uppercase tracking-wider text-black font-mono">
+            Synthesizing candidate statement deck...
+          </span>
         </div>
       ) : currentIndex < candidates.length ? (
         <div className="flex-1 flex flex-col justify-between">
-          
           <div className="flex items-center justify-between text-[10px] uppercase font-bold tracking-wider text-zinc-600 font-mono">
-            <span>Card {currentIndex + 1} of {candidates.length}</span>
+            <span>
+              Card {currentIndex + 1} of {candidates.length}
+            </span>
             <span className="flex items-center gap-1 font-semibold text-[9px]">
               Keyboard: ← Reject | → Resonate | ↓ Maybe
             </span>
@@ -166,7 +187,6 @@ export default function SwipeReact({ topic, onAddThought, thoughts }: SwipeReact
 
           {/* Core Swipe Controls */}
           <div className="flex justify-center items-center gap-4 shrink-0 pb-2">
-            
             {/* Left Button - Reject */}
             <button
               onClick={() => handleSwipe("dislike")}
@@ -201,9 +221,12 @@ export default function SwipeReact({ topic, onAddThought, thoughts }: SwipeReact
           <div className="p-3.5 bg-[#E6F4EA] rounded-none text-black border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
             <Check className="w-8 h-8 font-black" />
           </div>
-          <h2 className="text-sm font-black text-black uppercase font-display tracking-tight">Resonating Wave Complete!</h2>
+          <h2 className="text-sm font-black text-black uppercase font-display tracking-tight">
+            Resonating Wave Complete!
+          </h2>
           <p className="text-xs text-zinc-650 max-w-sm font-serif italic">
-            "You processed all {candidates.length} statements. The accepted thoughts have been added directly to your surfaced thoughts sidepile."
+            "You processed all {candidates.length} statements. The accepted thoughts have been added
+            directly to your surfaced thoughts sidepile."
           </p>
           <button
             onClick={generateCandidates}

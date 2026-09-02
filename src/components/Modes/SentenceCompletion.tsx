@@ -12,7 +12,11 @@ const TEMPLATES: SentencePrompt[] = [
   { id: "3", prefix: "I think I'm more worried about than I'm admitting because..." },
   { id: "4", prefix: "The version of me I want to be would handle this by..." },
   { id: "5", prefix: "The real question isn't whether this works, it's..." },
-  { id: "6", prefix: "If I could tell the primary stakeholders one thing without consequences, it would be..." }
+  {
+    id: "6",
+    prefix:
+      "If I could tell the primary stakeholders one thing without consequences, it would be...",
+  },
 ];
 
 export default function SentenceCompletion({ onAddThought }: SentenceCompletionProps) {
@@ -47,7 +51,8 @@ export default function SentenceCompletion({ onAddThought }: SentenceCompletionP
         <div>
           <h3 className="font-semibold text-xs text-slate-800">Finish the Sentence</h3>
           <p className="text-[11px] text-slate-500 leading-normal mt-0.5">
-            Fill in the blank sentence starters tailored to bypass your verbal self-editor. Jump off from the template and let the response take care of itself.
+            Fill in the blank sentence starters tailored to bypass your verbal self-editor. Jump off
+            from the template and let the response take care of itself.
           </p>
         </div>
       </div>
@@ -55,14 +60,18 @@ export default function SentenceCompletion({ onAddThought }: SentenceCompletionP
       {currentIndex < prompts.length ? (
         <div className="space-y-5">
           <div className="p-6 bg-violet-50/20 border border-violet-100 rounded-2xl">
-            <span className="text-[10px] uppercase font-bold tracking-wider text-violet-500 block mb-2">Prompt {currentIndex + 1} of {prompts.length}</span>
+            <span className="text-[10px] uppercase font-bold tracking-wider text-violet-500 block mb-2">
+              Prompt {currentIndex + 1} of {prompts.length}
+            </span>
             <span className="text-base font-bold text-slate-800 font-sans">
               "{activePrompt.prefix}"
             </span>
           </div>
 
           <div className="space-y-2">
-            <span className="block text-xs font-semibold text-slate-600">Complete the prompt statement:</span>
+            <span className="block text-xs font-semibold text-slate-600">
+              Complete the prompt statement:
+            </span>
             <input
               type="text"
               placeholder="e.g., ...I'm sacrificing sleep and autonomy hoping things will solve themselves"
@@ -96,7 +105,9 @@ export default function SentenceCompletion({ onAddThought }: SentenceCompletionP
             <Check className="w-8 h-8" />
           </div>
           <h2 className="text-base font-bold text-slate-800">Templates Complete!</h2>
-          <p className="text-xs text-slate-500">All prompts resolved successfully. Proceed with outline synthesis!</p>
+          <p className="text-xs text-slate-500">
+            All prompts resolved successfully. Proceed with outline synthesis!
+          </p>
         </div>
       )}
     </div>

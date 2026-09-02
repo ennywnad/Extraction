@@ -25,8 +25,18 @@ import LetterWriting from "./components/Modes/LetterWriting";
 import PriorityPile from "./components/Modes/PriorityPile";
 
 const VALID_MODES: ExtractionMode[] = [
-  'free_stream', 'quick_fire', 'guided_drill', 'binary_frame', 'swipe', 'slider',
-  'card_sort', 'timeline', 'sentence_completion', 'devils_advocate', 'letter_writing', 'priority_pile'
+  "free_stream",
+  "quick_fire",
+  "guided_drill",
+  "binary_frame",
+  "swipe",
+  "slider",
+  "card_sort",
+  "timeline",
+  "sentence_completion",
+  "devils_advocate",
+  "letter_writing",
+  "priority_pile",
 ];
 
 function validateAndSanitizeSnapshot(data: any): Session | null {
@@ -34,11 +44,15 @@ function validateAndSanitizeSnapshot(data: any): Session | null {
 
   const id = typeof data.id === "string" && data.id ? data.id : crypto.randomUUID();
   const topic = typeof data.topic === "string" ? data.topic.slice(0, 500) : "Imported Session";
-  const intention = typeof data.intention === "string" ? data.intention.slice(0, 500) : "Unclutter scatter";
-  const isCustomIntention = typeof data.isCustomIntention === "boolean" ? data.isCustomIntention : false;
+  const intention =
+    typeof data.intention === "string" ? data.intention.slice(0, 500) : "Unclutter scatter";
+  const isCustomIntention =
+    typeof data.isCustomIntention === "boolean" ? data.isCustomIntention : false;
 
-  let status: Session['status'] = "active";
-  if (["intake", "intention", "recommendation", "active", "review", "exported"].includes(data.status)) {
+  let status: Session["status"] = "active";
+  if (
+    ["intake", "intention", "recommendation", "active", "review", "exported"].includes(data.status)
+  ) {
     status = data.status;
   }
 
@@ -51,14 +65,17 @@ function validateAndSanitizeSnapshot(data: any): Session | null {
   if (Array.isArray(data.thoughts)) {
     for (const t of data.thoughts) {
       if (t && typeof t === "object" && typeof t.text === "string" && t.text) {
-        let mode: Thought['mode'] = "free_stream";
-        if (VALID_MODES.includes(t.mode) || t.mode === 'system') {
+        let mode: Thought["mode"] = "free_stream";
+        if (VALID_MODES.includes(t.mode) || t.mode === "system") {
           mode = t.mode;
         }
         const thought: Thought = {
           id: typeof t.id === "string" && t.id ? t.id : crypto.randomUUID(),
           text: t.text.slice(0, 5000),
-          timestamp: typeof t.timestamp === "string" && !isNaN(Date.parse(t.timestamp)) ? t.timestamp : new Date().toISOString(),
+          timestamp:
+            typeof t.timestamp === "string" && !isNaN(Date.parse(t.timestamp))
+              ? t.timestamp
+              : new Date().toISOString(),
           mode: mode,
         };
         if (["like", "dislike", "maybe"].includes(t.swipeStatus)) {
@@ -69,7 +86,7 @@ function validateAndSanitizeSnapshot(data: any): Session | null {
           for (const key of ["urgency", "certainty", "emotion", "actionability"]) {
             const val = t.intensity[key];
             if (typeof val === "number" && val >= 1 && val <= 10) {
-              thought.intensity[key as keyof Thought['intensity']] = val;
+              thought.intensity[key as keyof Thought["intensity"]] = val;
             }
           }
         }
@@ -91,8 +108,18 @@ function validateAndSanitizeSnapshot(data: any): Session | null {
   }
 
   const modeProgress: Record<ExtractionMode, number> = {
-    free_stream: 0, quick_fire: 0, guided_drill: 0, binary_frame: 0, swipe: 0, slider: 0,
-    card_sort: 0, timeline: 0, sentence_completion: 0, devils_advocate: 0, letter_writing: 0, priority_pile: 0
+    free_stream: 0,
+    quick_fire: 0,
+    guided_drill: 0,
+    binary_frame: 0,
+    swipe: 0,
+    slider: 0,
+    card_sort: 0,
+    timeline: 0,
+    sentence_completion: 0,
+    devils_advocate: 0,
+    letter_writing: 0,
+    priority_pile: 0,
   };
   if (data.modeProgress && typeof data.modeProgress === "object") {
     for (const m of VALID_MODES) {
@@ -109,7 +136,10 @@ function validateAndSanitizeSnapshot(data: any): Session | null {
       if (mh && typeof mh === "object" && VALID_MODES.includes(mh.mode)) {
         modeHistory.push({
           mode: mh.mode,
-          timestamp: typeof mh.timestamp === "string" && !isNaN(Date.parse(mh.timestamp)) ? mh.timestamp : new Date().toISOString()
+          timestamp:
+            typeof mh.timestamp === "string" && !isNaN(Date.parse(mh.timestamp))
+              ? mh.timestamp
+              : new Date().toISOString(),
         });
       }
     }
@@ -118,27 +148,51 @@ function validateAndSanitizeSnapshot(data: any): Session | null {
     modeHistory.push({ mode: activeMode, timestamp: new Date().toISOString() });
   }
 
-  let warmupAnswers: Session['warmupAnswers'] = undefined;
+  let warmupAnswers: Session["warmupAnswers"] = undefined;
   if (data.warmupAnswers && typeof data.warmupAnswers === "object") {
     warmupAnswers = {
-      clarity: ["clear", "foggy", ""].includes(data.warmupAnswers.clarity) ? data.warmupAnswers.clarity : "",
-      nature: ["emotional", "analytical", ""].includes(data.warmupAnswers.nature) ? data.warmupAnswers.nature : "",
-      timeAvailable: ["<5", ">20", ""].includes(data.warmupAnswers.timeAvailable) ? data.warmupAnswers.timeAvailable : "",
-      intentType: ["decide", "process", "capture", ""].includes(data.warmupAnswers.intentType) ? data.warmupAnswers.intentType : ""
+      clarity: ["clear", "foggy", ""].includes(data.warmupAnswers.clarity)
+        ? data.warmupAnswers.clarity
+        : "",
+      nature: ["emotional", "analytical", ""].includes(data.warmupAnswers.nature)
+        ? data.warmupAnswers.nature
+        : "",
+      timeAvailable: ["<5", ">20", ""].includes(data.warmupAnswers.timeAvailable)
+        ? data.warmupAnswers.timeAvailable
+        : "",
+      intentType: ["decide", "process", "capture", ""].includes(data.warmupAnswers.intentType)
+        ? data.warmupAnswers.intentType
+        : "",
     };
   }
 
-  let advancedSettings: Session['advancedSettings'] = undefined;
+  let advancedSettings: Session["advancedSettings"] = undefined;
   if (data.advancedSettings && typeof data.advancedSettings === "object") {
     advancedSettings = {
-      promptingStyle: ["standard", "socratic", "empathetic"].includes(data.advancedSettings.promptingStyle) ? data.advancedSettings.promptingStyle : "standard",
-      outputFilter: ["comprehensive", "actions", "roadmap"].includes(data.advancedSettings.outputFilter) ? data.advancedSettings.outputFilter : "comprehensive",
-      cognitiveBiasAudit: ["include", "exclude"].includes(data.advancedSettings.cognitiveBiasAudit) ? data.advancedSettings.cognitiveBiasAudit : "exclude"
+      promptingStyle: ["standard", "socratic", "empathetic"].includes(
+        data.advancedSettings.promptingStyle,
+      )
+        ? data.advancedSettings.promptingStyle
+        : "standard",
+      outputFilter: ["comprehensive", "actions", "roadmap"].includes(
+        data.advancedSettings.outputFilter,
+      )
+        ? data.advancedSettings.outputFilter
+        : "comprehensive",
+      cognitiveBiasAudit: ["include", "exclude"].includes(data.advancedSettings.cognitiveBiasAudit)
+        ? data.advancedSettings.cognitiveBiasAudit
+        : "exclude",
     };
   }
 
-  const createdAt = typeof data.createdAt === "string" && !isNaN(Date.parse(data.createdAt)) ? data.createdAt : new Date().toISOString();
-  const updatedAt = typeof data.updatedAt === "string" && !isNaN(Date.parse(data.updatedAt)) ? data.updatedAt : new Date().toISOString();
+  const createdAt =
+    typeof data.createdAt === "string" && !isNaN(Date.parse(data.createdAt))
+      ? data.createdAt
+      : new Date().toISOString();
+  const updatedAt =
+    typeof data.updatedAt === "string" && !isNaN(Date.parse(data.updatedAt))
+      ? data.updatedAt
+      : new Date().toISOString();
 
   const session: Session = {
     id,
@@ -156,10 +210,14 @@ function validateAndSanitizeSnapshot(data: any): Session | null {
 
   if (warmupAnswers) session.warmupAnswers = warmupAnswers;
   if (advancedSettings) session.advancedSettings = advancedSettings;
-  if (typeof data.synthesizedOutline === "string") session.synthesizedOutline = data.synthesizedOutline;
-  if (typeof data.synthesizedSummary === "string") session.synthesizedSummary = data.synthesizedSummary;
+  if (typeof data.synthesizedOutline === "string")
+    session.synthesizedOutline = data.synthesizedOutline;
+  if (typeof data.synthesizedSummary === "string")
+    session.synthesizedSummary = data.synthesizedSummary;
   if (Array.isArray(data.synthesizedActionItems)) {
-    session.synthesizedActionItems = data.synthesizedActionItems.filter(item => typeof item === "string");
+    session.synthesizedActionItems = data.synthesizedActionItems.filter(
+      (item) => typeof item === "string",
+    );
   }
 
   return session;
@@ -180,14 +238,16 @@ export default function App() {
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => {
-      setToastMessage(prev => prev === msg ? null : prev);
+      setToastMessage((prev) => (prev === msg ? null : prev));
     }, 5000);
   };
 
   // Manage initial load and search parameter decoder snapshot
   useEffect(() => {
     const loaded = loadSessions(() =>
-      showToast("Warning: Session storage appears corrupted. Your past sessions could not be loaded.")
+      showToast(
+        "Warning: Session storage appears corrupted. Your past sessions could not be loaded.",
+      ),
     );
     setSessions(loaded);
 
@@ -227,7 +287,9 @@ export default function App() {
         if (validated) {
           // Open as currently active session
           setCurrentSession(validated);
-          showToast("Successfully imported shared session snapshot! View results or click back to dashboard to start a new one.");
+          showToast(
+            "Successfully imported shared session snapshot! View results or click back to dashboard to start a new one.",
+          );
         } else {
           showToast("Import failed: Shared session data is invalid or corrupted.");
         }
@@ -261,7 +323,9 @@ export default function App() {
         letter_writing: 0,
         priority_pile: 0,
       },
-      modeHistory: [{ mode: sessionData.activeMode || "free_stream", timestamp: new Date().toISOString() }],
+      modeHistory: [
+        { mode: sessionData.activeMode || "free_stream", timestamp: new Date().toISOString() },
+      ],
       warmupAnswers: sessionData.warmupAnswers,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -284,9 +348,7 @@ export default function App() {
       pushSessionUpdate(currentSession, updates)
         .then((fresh) => {
           engagementEtag.current = null; // the pile moved; force a full read next poll
-          setCurrentSession((prev) =>
-            prev?.engagementId === fresh.engagementId ? fresh : prev
-          );
+          setCurrentSession((prev) => (prev?.engagementId === fresh.engagementId ? fresh : prev));
         })
         .catch((e) => {
           console.error("Failed to sync engagement update", e);
@@ -317,7 +379,9 @@ export default function App() {
       setCurrentSession({ ...currentSession, thoughts: remaining });
       engagementAPI
         .deleteThought(currentSession.engagementId, id)
-        .then(() => { engagementEtag.current = null; })
+        .then(() => {
+          engagementEtag.current = null;
+        })
         .catch((e) => {
           console.error("Failed to delete fragment", e);
           showToast(e?.message || "Could not delete that fragment.");
@@ -384,25 +448,34 @@ export default function App() {
   const handleUpdateThoughtCluster = (id: string, category: string) => {
     if (!currentSession) return;
     handleUpdateSession({
-      thoughts: currentSession.thoughts.map((t) => (t.id === id ? { ...t, clusterCategory: category } : t)),
+      thoughts: currentSession.thoughts.map((t) =>
+        t.id === id ? { ...t, clusterCategory: category } : t,
+      ),
     });
   };
 
   const handleUpdateThoughtTimeline = (id: string, zone: "before" | "now" | "after") => {
     if (!currentSession) return;
     handleUpdateSession({
-      thoughts: currentSession.thoughts.map((t) => (t.id === id ? { ...t, timelineZone: zone } : t)),
+      thoughts: currentSession.thoughts.map((t) =>
+        t.id === id ? { ...t, timelineZone: zone } : t,
+      ),
     });
   };
 
   const handleUpdateThoughtPriority = (id: string, zone: "act" | "watch" | "discard") => {
     if (!currentSession) return;
     handleUpdateSession({
-      thoughts: currentSession.thoughts.map((t) => (t.id === id ? { ...t, priorityZone: zone } : t)),
+      thoughts: currentSession.thoughts.map((t) =>
+        t.id === id ? { ...t, priorityZone: zone } : t,
+      ),
     });
   };
 
-  const handleUpdateThoughtIntensity = (id: string, intensity: NonNullable<Thought["intensity"]>) => {
+  const handleUpdateThoughtIntensity = (
+    id: string,
+    intensity: NonNullable<Thought["intensity"]>,
+  ) => {
     if (!currentSession) return;
     handleUpdateSession({
       thoughts: currentSession.thoughts.map((t) => (t.id === id ? { ...t, intensity } : t)),
@@ -437,13 +510,13 @@ export default function App() {
       try {
         const result = await engagementAPI.fetchEngagement(
           engagementId,
-          engagementEtag.current ?? undefined
+          engagementEtag.current ?? undefined,
         );
         failures = 0;
         if (cancelled || !result) return; // null means 304: nothing changed
         engagementEtag.current = result.etag;
         setCurrentSession((prev) =>
-          prev?.engagementId === engagementId ? { ...prev, ...result.session } : prev
+          prev?.engagementId === engagementId ? { ...prev, ...result.session } : prev,
         );
       } catch (e) {
         // Back off rather than hammering a server that is struggling.
@@ -471,7 +544,9 @@ export default function App() {
 
     switch (currentSession.activeMode) {
       case "free_stream":
-        return <FreeStream topic={currentSession.topic} onAddThought={(txt) => handleAddThought(txt)} />;
+        return (
+          <FreeStream topic={currentSession.topic} onAddThought={(txt) => handleAddThought(txt)} />
+        );
       case "quick_fire":
         return (
           <QuickFire
@@ -559,7 +634,10 @@ export default function App() {
   return (
     <>
       {(() => {
-        if (currentSession && (currentSession.status === "review" || currentSession.status === "exported")) {
+        if (
+          currentSession &&
+          (currentSession.status === "review" || currentSession.status === "exported")
+        ) {
           return (
             <ExportPanel
               session={currentSession}
@@ -604,7 +682,12 @@ export default function App() {
       {toastMessage && (
         <div className="fixed bottom-4 right-4 z-50 bg-[#FFF3BF] border-3 border-black p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center justify-between gap-4 max-w-sm">
           <p className="text-xs font-mono font-bold text-black">{toastMessage}</p>
-          <button onClick={() => setToastMessage(null)} className="font-bold text-xs hover:text-red-500 cursor-pointer">×</button>
+          <button
+            onClick={() => setToastMessage(null)}
+            className="font-bold text-xs hover:text-red-500 cursor-pointer"
+          >
+            ×
+          </button>
         </div>
       )}
     </>

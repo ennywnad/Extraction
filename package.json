@@ -9,8 +9,10 @@
     "start": "node dist-server/server.cjs",
     "clean": "rm -rf dist dist-server server.js",
     "lint": "tsc --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "test": "tsx --test test/*.test.ts test/*.test.mjs",
-    "check": "npm run lint && npm test"
+    "check": "npm run format:check && npm run lint && npm test"
   },
   "dependencies": {
     "@google-cloud/firestore": "^9.0.1",
@@ -31,6 +33,7 @@
     "@types/node": "^22.14.0",
     "autoprefixer": "^10.4.21",
     "esbuild": "^0.25.0",
+    "prettier": "3.9.6",
     "tailwindcss": "^4.1.14",
     "tsx": "^4.21.0",
     "typescript": "~5.8.2",

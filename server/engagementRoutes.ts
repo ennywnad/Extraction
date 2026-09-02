@@ -25,8 +25,16 @@ const SHARED_FIELDS = [
 const AUTHOR_ONLY_FIELDS = ["text"] as const;
 
 const META_FIELDS = [
-  "activeMode", "modeHistory", "modeProgress", "status", "topic", "intention",
-  "synthesizedOutline", "synthesizedSummary", "synthesizedActionItems", "advancedSettings",
+  "activeMode",
+  "modeHistory",
+  "modeProgress",
+  "status",
+  "topic",
+  "intention",
+  "synthesizedOutline",
+  "synthesizedSummary",
+  "synthesizedActionItems",
+  "advancedSettings",
 ] as const;
 
 const str = (v: unknown, max: number): string | undefined =>
@@ -34,11 +42,13 @@ const str = (v: unknown, max: number): string | undefined =>
 
 function displayNameFor(email: string): string {
   const local = email.split("@")[0] ?? email;
-  return local
-    .split(/[._-]+/)
-    .filter(Boolean)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ") || email;
+  return (
+    local
+      .split(/[._-]+/)
+      .filter(Boolean)
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(" ") || email
+  );
 }
 
 /** Validates the fragment fields a client is allowed to set, ignoring anything else. */
@@ -76,8 +86,10 @@ function sanitizeMetaPatch(body: any) {
     if (!(key in (body ?? {}))) continue;
     const value = body[key];
     if (key === "activeMode" && !VALID_MODES.includes(value)) continue;
-    if (key === "status" &&
-        !["intake", "intention", "recommendation", "active", "review", "exported"].includes(value)) {
+    if (
+      key === "status" &&
+      !["intake", "intention", "recommendation", "active", "review", "exported"].includes(value)
+    ) {
       continue;
     }
     if (key === "advancedSettings" && value && typeof value === "object") {
@@ -177,7 +189,10 @@ export function createEngagementRouter() {
     const session = await loadOr404(req.params.id, res);
     if (!session) return;
     const stamp = await ensureMember(session, identityOf(req).email);
-    res.json({ engagement: await (await getEngagementStore()).getEngagement(session.id), you: stamp });
+    res.json({
+      engagement: await (await getEngagementStore()).getEngagement(session.id),
+      you: stamp,
+    });
   });
 
   router.patch("/:id", async (req, res) => {

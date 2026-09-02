@@ -13,7 +13,7 @@ const PASSIVE_GUIDES = [
   "What are you not saying yet?",
   "Say more about the hardest part of this.",
   "Is there a feeling in your gut that doesn't have a word yet?",
-  "What would you say if nobody was judging you?"
+  "What would you say if nobody was judging you?",
 ];
 
 export default function FreeStream({ topic, onAddThought }: FreeStreamProps) {
@@ -34,7 +34,7 @@ export default function FreeStream({ topic, onAddThought }: FreeStreamProps) {
   const resetIdleTimer = () => {
     if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
     setShowGuide(false);
-    
+
     idleTimerRef.current = setTimeout(() => {
       // Pick a random guide
       const nextIdx = Math.floor(Math.random() * PASSIVE_GUIDES.length);
@@ -62,7 +62,7 @@ export default function FreeStream({ topic, onAddThought }: FreeStreamProps) {
         const simulatedPhrases = [
           `Actually, looking at this, my primary block is that I'm overthinking the outcome rather than focusing on the initial framework.`,
           `There's a subtle dread when thinking about Monday morning because of the lack of autonomy in my current project stack.`,
-          `I want to do this, but I'm worried about what happens if I waste money on a side concept that fails in a month.`
+          `I want to do this, but I'm worried about what happens if I waste money on a side concept that fails in a month.`,
         ];
         const randomPhrase = simulatedPhrases[Math.floor(Math.random() * simulatedPhrases.length)];
         setText((prev) => (prev ? prev + " " + randomPhrase : randomPhrase));
@@ -79,7 +79,9 @@ export default function FreeStream({ topic, onAddThought }: FreeStreamProps) {
         <div>
           <h3 className="font-semibold text-xs text-slate-800">Free Stream Mode</h3>
           <p className="text-[11px] text-slate-500 leading-normal mt-0.5">
-            This is a blank slate. Write whatever comes to mind about <strong className="text-slate-700 font-medium">{topic}</strong>. No formatting, no censoring, no interruptions.
+            This is a blank slate. Write whatever comes to mind about{" "}
+            <strong className="text-slate-700 font-medium">{topic}</strong>. No formatting, no
+            censoring, no interruptions.
           </p>
         </div>
       </div>
@@ -105,7 +107,7 @@ export default function FreeStream({ topic, onAddThought }: FreeStreamProps) {
             >
               <MicOff className="w-3.5 h-3.5 shrink-0" />
               <span>Listening (Talking out loud)...</span>
-              
+
               {/* Bouncing waves */}
               <div className="flex gap-0.5 items-center">
                 {[1, 2, 3, 4].map((i) => (
@@ -115,7 +117,7 @@ export default function FreeStream({ topic, onAddThought }: FreeStreamProps) {
                     style={{
                       height: "10px",
                       animationDelay: `${i * 0.15}s`,
-                      animationDuration: "0.8s"
+                      animationDuration: "0.8s",
                     }}
                   />
                 ))}
@@ -144,9 +146,7 @@ export default function FreeStream({ topic, onAddThought }: FreeStreamProps) {
             className="flex items-center gap-2.5 p-3 bg-amber-50 border border-amber-100 text-amber-800 rounded-xl"
           >
             <AlertCircle className="w-4 h-4 shrink-0" />
-            <span className="text-xs font-medium italic">
-              "{PASSIVE_GUIDES[guideIndex]}"
-            </span>
+            <span className="text-xs font-medium italic">"{PASSIVE_GUIDES[guideIndex]}"</span>
           </motion.div>
         )}
       </AnimatePresence>
