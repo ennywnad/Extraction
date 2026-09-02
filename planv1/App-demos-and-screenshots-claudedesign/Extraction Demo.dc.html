@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;family=Space+Grotesk:wght@500;700&amp;family=JetBrains+Mono:wght@400;700&amp;display=swap" rel="stylesheet" />
+<style>
+body { margin:0; background:#1A1A1A; font-family:"Inter",ui-sans-serif,system-ui,sans-serif; }
+a { color:#FFFEE0; }
+a:hover { color:#fff; }
+</style>
+</helmet>
+<div style="width:1440px; background:#1A1A1A">
+
+  <div style="background:#1A1A1A; color:#fff; padding:14px 24px 0; display:flex; flex-direction:column; gap:12px">
+    <div style="display:flex; align-items:baseline; justify-content:space-between">
+      <div style="display:flex; align-items:baseline; gap:12px">
+        <span style="font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:13px; text-transform:uppercase; letter-spacing:0.18em">⊞ Extraction — Interactive Demo</span>
+        <span style="font-family:'JetBrains Mono',monospace; font-size:10px; color:#a1a1aa; text-transform:uppercase; letter-spacing:0.08em">Canned session · no API key required</span>
+      </div>
+      <span style="font-family:'JetBrains Mono',monospace; font-size:10px; color:#fde047; text-transform:uppercase; letter-spacing:0.08em">{{ hintText }}</span>
+    </div>
+
+    <div style="display:flex; gap:4px; overflow-x:auto; padding-bottom:0">
+      <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="9">
+        <sc-if value="{{ t.active }}" hint-placeholder-val="{{ false }}">
+          <button onClick="{{ t.onClick }}" style="padding:8px 14px; border:2px solid #fff; border-bottom:0; background:#F8F7F4; color:#000; font-family:'Space Grotesk',sans-serif; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; white-space:nowrap; cursor:pointer">{{ t.label }}</button>
+        </sc-if>
+        <sc-if value="{{ t.inactive }}" hint-placeholder-val="{{ true }}">
+          <button onClick="{{ t.onClick }}" style="padding:8px 14px; border:2px solid #52525b; border-bottom:0; background:#27272a; color:#d4d4d8; font-family:'Space Grotesk',sans-serif; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; white-space:nowrap; cursor:pointer; transform:translateY(2px)">{{ t.label }}</button>
+        </sc-if>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="border-top:2px solid #fff; background:#F8F7F4; min-height:900px">
+    <dc-import name="ExtractionScreens" screen="{{ screen }}" hint-size="1440px,900px"></dc-import>
+  </div>
+
+  <div style="background:#1A1A1A; color:#71717a; padding:16px 24px; font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.08em; display:flex; justify-content:space-between; border-top:2px solid #3f3f46">
+    <span>Recreated from ennywnad/Extraction @ main · src/components</span>
+    <span>Live: scratch note → surfaced pile · drag cards between Eisenhower piles</span>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  static TABS = [
+    { id: "intake", label: "01 Intake" },
+    { id: "compare", label: "02 Compare Settings" },
+    { id: "guided", label: "03 Guided Drill" },
+    { id: "swipe", label: "04 Swipe Deck" },
+    { id: "cluster", label: "05 Cluster Sort" },
+    { id: "timeline", label: "06 Temporal Map" },
+    { id: "intensity", label: "07 Intensity Map" },
+    { id: "priority", label: "08 Eisenhower" },
+    { id: "export", label: "09 Blueprint" }
+  ];
+
+  static HINTS = {
+    guided: "Try it: hit Scratch Note, type, press Enter",
+    swipe: "Try it: hit Scratch Note, type, press Enter",
+    cluster: "Try it: hit Scratch Note, type, press Enter",
+    timeline: "Try it: hit Scratch Note, type, press Enter",
+    intensity: "Try it: hit Scratch Note, type, press Enter",
+    priority: "Try it: drag a card into a pile, or tap Act / Watch / Leave It",
+    intake: "Static screen — recreated from IntakeForm.tsx",
+    compare: "Static screen — recreated from CompareSettingsModal.tsx",
+    export: "Static screen — recreated from ExportPanel.tsx"
+  };
+
+  state = { screen: "intake" };
+
+  renderVals() {
+    const screen = this.state.screen;
+    return {
+      screen,
+      hintText: Component.HINTS[screen] || "",
+      tabs: Component.TABS.map((t) => ({
+        label: t.label,
+        active: t.id === screen,
+        inactive: t.id !== screen,
+        onClick: () => this.setState({ screen: t.id })
+      }))
+    };
+  }
+}
+</script>
+</body>
+</html>

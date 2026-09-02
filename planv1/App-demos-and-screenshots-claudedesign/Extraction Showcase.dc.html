@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;family=Playfair+Display:ital,wght@0,600;1,400&amp;family=Space+Grotesk:wght@500;700&amp;family=JetBrains+Mono:wght@400;700&amp;display=swap" rel="stylesheet" />
+<style>
+body { margin:0; background:#F8F7F4; color:#1A1A1A; font-family:"Inter",ui-sans-serif,system-ui,sans-serif; }
+a { color:#1A1A1A; text-decoration:underline; text-decoration-thickness:2px; text-underline-offset:2px; }
+a:hover { color:#FF5722; }
+</style>
+</helmet>
+<div style="width:1440px; background:#F8F7F4; overflow:hidden">
+
+  <div style="background:#1A1A1A; color:#F8F7F4; padding:64px 48px 56px">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:48px">
+      <div style="max-width:760px">
+        <span style="font-family:'JetBrains Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.28em; color:#fde047">⊞ Cognitive chamber &amp; strategic consultant</span>
+        <h1 style="margin:16px 0 0; font-family:'Space Grotesk',sans-serif; font-size:76px; line-height:0.94; font-weight:700; text-transform:uppercase; letter-spacing:-0.03em">Extraction,<br />in nine screens</h1>
+        <p style="margin:24px 0 0; font-size:19px; line-height:1.6; color:#d4d4d8; max-width:660px; text-wrap:pretty">A walkthrough of one session: an engagement architect, alone the night before a client kickoff, working out what the room actually has to produce. Scattered fragments in, an executive blueprint out.</p>
+      </div>
+      <div style="flex-shrink:0; width:400px; border:3px solid #F8F7F4; padding:24px; display:flex; flex-direction:column; gap:14px">
+        <div style="font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.14em; color:#a1a1aa">At a glance</div>
+        <div style="display:flex; justify-content:space-between; font-size:13px; border-bottom:1px solid #3f3f46; padding-bottom:10px"><span style="color:#a1a1aa">Extraction modes</span><strong style="font-family:'Space Grotesk',sans-serif">12</strong></div>
+        <div style="display:flex; justify-content:space-between; font-size:13px; border-bottom:1px solid #3f3f46; padding-bottom:10px"><span style="color:#a1a1aa">Stack</span><strong style="font-family:'Space Grotesk',sans-serif">React 19 · Vite · Express</strong></div>
+        <div style="display:flex; justify-content:space-between; font-size:13px; border-bottom:1px solid #3f3f46; padding-bottom:10px"><span style="color:#a1a1aa">AI</span><strong style="font-family:'Space Grotesk',sans-serif">Gemini, server-proxied</strong></div>
+        <div style="display:flex; justify-content:space-between; font-size:13px"><span style="color:#a1a1aa">Storage</span><strong style="font-family:'Space Grotesk',sans-serif">Local, in-browser</strong></div>
+      </div>
+    </div>
+
+    <sc-if value="{{ showRunBlock }}" hint-placeholder-val="{{ true }}">
+      <div style="margin-top:48px; display:flex; gap:16px; align-items:stretch">
+        <div style="flex:1; background:#000; border:2px solid #3f3f46; padding:18px 20px; font-family:'JetBrains Mono',monospace; font-size:13px; color:#51CF66; line-height:1.9">
+          <div style="color:#71717a">$ echo "GEMINI_API_KEY=..." &gt; .env</div>
+          <div>$ npm install</div>
+          <div>$ npm run dev<span style="color:#71717a"> # binds to :3000</span></div>
+        </div>
+        <div style="width:400px; background:#FFFEE0; color:#000; border:2px solid #F8F7F4; padding:18px 20px; font-size:13px; line-height:1.6">
+          <strong style="font-family:'Space Grotesk',sans-serif; text-transform:uppercase; font-size:11px; letter-spacing:0.1em; display:block; margin-bottom:8px">No key, no problem</strong>
+          Every mode falls back to local logic when the API is unreachable, so the interface stays usable offline.
+        </div>
+      </div>
+    </sc-if>
+  </div>
+
+  <div style="padding:56px 48px 16px">
+    <div style="display:flex; align-items:baseline; gap:16px; border-bottom:3px solid #000; padding-bottom:14px">
+      <span style="font-family:'Space Grotesk',sans-serif; font-size:40px; font-weight:700; line-height:1">01</span>
+      <h2 style="margin:0; font-family:'Space Grotesk',sans-serif; font-size:26px; font-weight:700; text-transform:uppercase; letter-spacing:-0.01em">Frame the session</h2>
+      <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#71717a; text-transform:uppercase; letter-spacing:0.12em; margin-left:auto">src/components/IntakeForm.tsx</span>
+    </div>
+  </div>
+
+  <div style="padding:32px 48px; display:flex; gap:34px; align-items:flex-start">
+    <div data-shot="intake"  style="position:relative; width:850px; height:1000px; border:3px solid #000; box-shadow:8px 8px 0px 0px rgba(0,0,0,1); overflow:hidden; background:#F8F7F4; flex-shrink:0">
+      <div style="width:1440px; height:1720px; transform:scale(0.5903); transform-origin:top left">
+        <dc-import name="ExtractionScreens" screen="intake" hint-size="1440px,1720px"></dc-import>
+      </div>
+      <sc-if value="{{ showPins }}" hint-placeholder-val="{{ true }}">
+        <div>
+          <div style="position:absolute; left:55px; top:290px; width:24px; height:24px; background:#000; border:2px solid #fff; color:#fff; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center">1</div>
+          <div style="position:absolute; left:55px; top:400px; width:24px; height:24px; background:#000; border:2px solid #fff; color:#fff; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center">2</div>
+          <div style="position:absolute; left:55px; top:583px; width:24px; height:24px; background:#000; border:2px solid #fff; color:#fff; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center">3</div>
+          <div style="position:absolute; left:55px; top:760px; width:24px; height:24px; background:#000; border:2px solid #fff; color:#fff; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center">4</div>
+          <div style="position:absolute; left:742px; top:250px; width:24px; height:24px; background:#000; border:2px solid #fff; color:#fff; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center">5</div>
+        </div>
+      </sc-if>
+    </div>
+
+    <div style="flex:1; display:flex; flex-direction:column; gap:20px; padding-top:8px">
+      <div>
+        <span style="font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.16em; color:#71717a">Step one</span>
+        <h3 style="margin:6px 0 0; font-family:'Space Grotesk',sans-serif; font-size:24px; font-weight:700; text-transform:uppercase; letter-spacing:-0.01em">State the problem, then the payoff</h3>
+      </div>
+      <p style="margin:0; font-size:15px; line-height:1.65; color:#3f3f46; text-wrap:pretty">The dashboard is the whole setup: what the session is about, what you want out of it, and how hard you want the AI to push. Nothing is stored on a server — past sessions live in the browser.</p>
+      <div style="display:flex; flex-direction:column; gap:14px; border-top:2px solid #000; padding-top:18px">
+        <div style="display:flex; gap:12px; align-items:flex-start">
+          <span style="flex-shrink:0; width:22px; height:22px; background:#000; color:#fff; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center">1</span>
+          <p style="margin:0; font-size:14px; line-height:1.55; color:#27272a">Six domain tabs — Work, Home, Family, Tech, Economics, Project Planning — each loading three ready-made prompt starters.</p>
+        </div>
+        <div style="display:flex; gap:12px; align-items:flex-start">
+          <span style="flex-shrink:0; width:22px; height:22px; background:#000; color:#fff; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center">2</span>
+          <p style="margin:0; font-size:14px; line-height:1.55; color:#27272a">Your topic, plus one-tap context keywords that append constraints like <em>(Decision Needed)</em> straight into the text.</p>
+        </div>
+        <div style="display:flex; gap:12px; align-items:flex-start">
+          <span style="flex-shrink:0; width:22px; height:22px; background:#000; color:#fff; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center">3</span>
+          <p style="margin:0; font-size:14px; line-height:1.55; color:#27272a">Intention: organize an outline, force a decision, or decompress. It biases every prompt the engine writes afterwards.</p>
+        </div>
+        <div style="display:flex; gap:12px; align-items:flex-start">
+          <span style="flex-shrink:0; width:22px; height:22px; background:#000; color:#fff; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center">4</span>
+          <p style="margin:0; font-size:14px; line-height:1.55; color:#27272a">Advanced controls: guidance tone, output filtering, and whether to run a cognitive bias audit over the finished pile.</p>
+        </div>
+        <div style="display:flex; gap:12px; align-items:flex-start">
+          <span style="flex-shrink:0; width:22px; height:22px; background:#000; color:#fff; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center">5</span>
+          <p style="margin:0; font-size:14px; line-height:1.55; color:#27272a">Previous sessions, reopenable with their full thought history and synthesized outline.</p>
+        </div>
+      </div>
+      <div style="margin-top:6px; background:#FFFEE0; border:2px solid #000; padding:16px; box-shadow:3px 3px 0px 0px rgba(0,0,0,1)">
+        <p style="margin:0; font-size:13px; line-height:1.6; color:#000"><strong style="font-family:'Space Grotesk',sans-serif; text-transform:uppercase; font-size:11px; letter-spacing:0.08em">Or skip the choosing —</strong> "Guide Me" runs a four-question warm-up diagnostic (clear or foggy · emotional or analytical · time available · decide, process, or capture) and recommends a mode with a confidence score and two alternates.</p>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding:32px 48px 56px; display:flex; gap:34px; align-items:flex-start">
+    <div style="flex:1; display:flex; flex-direction:column; gap:20px; padding-top:8px">
+      <div>
+        <span style="font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.16em; color:#71717a">Step two · CompareSettingsModal.tsx</span>
+        <h3 style="margin:6px 0 0; font-family:'Space Grotesk',sans-serif; font-size:24px; font-weight:700; text-transform:uppercase; letter-spacing:-0.01em">See what each setting does before you pick</h3>
+      </div>
+      <p style="margin:0; font-size:15px; line-height:1.65; color:#3f3f46; text-wrap:pretty">Every control on the dashboard has an <em>ℹ Compare</em> affordance. It opens a six-tab guide that runs one fixed sample topic through each option, so the difference is shown rather than described.</p>
+      <div style="display:flex; flex-direction:column; gap:14px; border-top:2px solid #000; padding-top:18px">
+        <div style="display:flex; gap:12px; align-items:flex-start">
+          <span style="flex-shrink:0; width:22px; height:22px; background:#000; color:#fff; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center">1</span>
+          <p style="margin:0; font-size:14px; line-height:1.55; color:#27272a">Tabs for topic framing, intention, guidance tone, output filtering, bias auditing, and the warm-up quiz profiles.</p>
+        </div>
+        <div style="display:flex; gap:12px; align-items:flex-start">
+          <span style="flex-shrink:0; width:22px; height:22px; background:#000; color:#fff; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center">2</span>
+          <p style="margin:0; font-size:14px; line-height:1.55; color:#27272a">Side-by-side columns per option, each with the interview nudge it would actually ask you.</p>
+        </div>
+        <div style="display:flex; gap:12px; align-items:flex-start">
+          <span style="flex-shrink:0; width:22px; height:22px; background:#000; color:#fff; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center">3</span>
+          <p style="margin:0; font-size:14px; line-height:1.55; color:#27272a">And the shape of the markdown it would produce — Socratic audits read very differently from an empathetic mirror.</p>
+        </div>
+      </div>
+    </div>
+
+    <div data-shot="compare"  style="position:relative; width:850px; height:620px; border:3px solid #000; box-shadow:8px 8px 0px 0px rgba(0,0,0,1); overflow:hidden; background:#F8F7F4; flex-shrink:0">
+      <div style="width:1440px; height:1050px; transform:scale(0.5903); transform-origin:top left">
+        <dc-import name="ExtractionScreens" screen="compare" hint-size="1440px,1050px"></dc-import>
+      </div>
+      <sc-if value="{{ showPins }}" hint-placeholder-val="{{ true }}">
+        <div>
+          <div style="position:absolute; left:295px; top:162px; width:24px; height:24px; background:#000; border:2px solid #fff; color:#fff; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center">1</div>
+          <div style="position:absolute; left:425px; top:255px; width:24px; height:24px; background:#000; border:2px solid #fff; color:#fff; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center">2</div>
+          <div style="position:absolute; left:425px; top:420px; width:24px; height:24px; background:#000; border:2px solid #fff; color:#fff; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center">3</div>
+        </div>
+      </sc-if>
+    </div>
+  </div>
+  <div style="padding:24px 48px 16px; background:#EFEFEF; border-top:3px solid #000; border-bottom:3px solid #000">
+    <div style="display:flex; align-items:baseline; gap:16px; padding:24px 0">
+      <span style="font-family:'Space Grotesk',sans-serif; font-size:40px; font-weight:700; line-height:1">02</span>
+      <h2 style="margin:0; font-family:'Space Grotesk',sans-serif; font-size:26px; font-weight:700; text-transform:uppercase; letter-spacing:-0.01em">Extract — five of the twelve modes</h2>
+      <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#52525b; text-transform:uppercase; letter-spacing:0.12em; margin-left:auto">src/components/Modes/</span>
+    </div>
+    <p style="margin:0 0 24px; font-size:15px; line-height:1.65; color:#3f3f46; max-width:900px; text-wrap:pretty">The workspace shell never changes: session header, a mode tape you can jump between mid-thought, and the Surfaced Pile on the right that fills up as you go. Only the middle panel swaps.</p>
+  </div>
+
+  <div style="padding:40px 48px 32px; display:flex; gap:34px; align-items:flex-start">
+    <div data-shot="guided"  style="position:relative; width:850px; height:531px; border:3px solid #000; box-shadow:8px 8px 0px 0px rgba(0,0,0,1); overflow:hidden; background:#F8F7F4; flex-shrink:0">
+      <div style="width:1440px; height:900px; transform:scale(0.5903); transform-origin:top left">
+        <dc-import name="ExtractionScreens" screen="guided" hint-size="1440px,900px"></dc-import>
+      </div>
+      <sc-if value="{{ showPins }}" hint-placeholder-val="{{ true }}">
+        <div>
+          <div style="position:absolute; left:520px; top:62px; width:24px; height:24px; background:#000; border:2px solid #fff; color:#fff; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center">1</div>
+          <div style="position:absolute; left:195px; top:200px; width:24px; height:24px; background:#000; border:2px solid #fff; color:#fff; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center">2</div>
+          <div style="position:absolute; left:250px; top:442px; width:24px; height:24px; background:#000; border:2px solid #fff; color:#fff; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center">3</div>
+          <div style="position:absolute; left:598px; top:100px; width:24px; height:24px; background:#000; border:2px solid #fff; color:#fff; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center">4</div>
+        </div>
+      </sc-if>
+    </div>
+    <div style="flex:1; display:flex; flex-direction:column; gap:20px; padding-top:8px">
+      <div>
+        <span style="font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.16em; color:#71717a">Step three · GuidedDrill.tsx</span>
+        <h3 style="margin:6px 0 0; font-family:'Space Grotesk',sans-serif; font-size:24px; font-weight:700; text-transform:uppercase; letter-spacing:-0.01em">Guided drill — argue with the interviewer</h3>
+      </div>
+      <p style="margin:0; font-size:15px; line-height:1.65; color:#3f3f46; text-wrap:pretty">An adaptive interview that writes its next question from your last answer. The difference from a normal chatbot: you can stop answering and interrogate the interviewer instead, then get handed back to the thread.</p>
+      <div style="display:flex; flex-direction:column; gap:14px; border-top:2px solid #000; padding-top:18px">
+        <div style="display:flex; gap:12px; align-items:flex-start">
+          <span style="flex-shrink:0; width:22px; height:22px; background:#000; color:#fff; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center">1</span>
+          <p style="margin:0; font-size:14px; line-height:1.55; color:#27272a">The mode tape. Switch to any of the twelve modes without losing the pile; the yellow chip counts what each mode produced.</p>
+        </div>
+        <div style="display:flex; gap:12px; align-items:flex-start">
+          <span style="flex-shrink:0; width:22px; height:22px; background:#000; color:#fff; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center">2</span>
+          <p style="margin:0; font-size:14px; line-height:1.55; color:#27272a">A dialogue pivot: he stopped answering and asked <em>"why does it matter who said a thing?"</em> — the guide answered in the dashed bubble, then re-aimed the thread.</p>
+        </div>
+        <div style="display:flex; gap:12px; align-items:flex-start">
+          <span style="flex-shrink:0; width:22px; height:22px; background:#000; color:#fff; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center">3</span>
+          <p style="margin:0; font-size:14px; line-height:1.55; color:#27272a">Toggle between answering and chatting; the mic button dictates either one via the browser's speech recognition.</p>
+        </div>
+        <div style="display:flex; gap:12px; align-items:flex-start">
+          <span style="flex-shrink:0; width:22px; height:22px; background:#000; color:#fff; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center">4</span>
+          <p style="margin:0; font-size:14px; line-height:1.55; color:#27272a">Every exchange lands in the Surfaced Pile as an editable Q/A fragment, searchable and filterable by mode or category.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding:32px 48px; display:flex; gap:34px; align-items:flex-start">
+    <div style="flex:1; display:flex; flex-direction:column; gap:20px; padding-top:8px">
+      <div>
+        <span style="font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.16em; color:#71717a">Step four · SwipeReact.tsx</span>
+        <h3 style="margin:6px 0 0; font-family:'Space Grotesk',sans-serif; font-size:24px; font-weight:700; text-transform:uppercase; letter-spacing:-0.01em">Swipe deck — react instead of compose</h3>
+      </div>
+      <p style="margin:0; font-size:15px; line-height:1.65; color:#3f3f46; text-wrap:pretty">When writing is the blocker, the engine writes candidate beliefs about your topic and you only judge them. Arrow keys work: left rejects, right resonates, down is a maybe.</p>
+      <div style="display:flex; flex-direction:column; gap:14px; border-top:2px solid #000; padding-top:18px">
+        <div style="display:flex; gap:12px; align-items:flex-start">
+          <span style="flex-shrink:0; width:22px; height:22px; background:#000; color:#fff; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center">1</span>
+          <p style="margin:0; font-size:14px; line-height:1.55; color:#27272a">Seven statements per deck, synthesized from the pile you already have — re-synthesize for a fresh set at any time.</p>
+        </div>
+        <div style="display:flex; gap:12px; align-items:flex-start">
+          <span style="flex-shrink:0; width:22px; height:22px; background:#000; color:#fff; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center">2</span>
+          <p style="margin:0; font-size:14px; line-height:1.55; color:#27272a">One card at a time, deliberately large. The judgement is the work; nothing else competes for attention.</p>
+        </div>
+        <div style="display:flex; gap:12px; align-items:flex-start">
+          <span style="flex-shrink:0; width:22px; height:22px; background:#000; color:#fff; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center">3</span>
+          <p style="margin:0; font-size:14px; line-height:1.55; color:#27272a">Swiped cards keep their verdict in the pile as <span style="font-family:'JetBrains Mono',monospace; font-size:12px; background:#000; color:#fff; padding:1px 5px">STATUS: RESONANT</span> — the synthesis weights them accordingly.</p>
+        </div>
+      </div>
+    </div>
+    <div data-shot="swipe"  style="position:relative; width:850px; height:531px; border:3px solid #000; box-shadow:8px 8px 0px 0px rgba(0,0,0,1); overflow:hidden; background:#F8F7F4; flex-shrink:0">
+      <div style="width:1440px; height:900px; transform:scale(0.5903); transform-origin:top left">
+        <dc-import name="ExtractionScreens" screen="swipe" hint-size="1440px,900px"></dc-import>
+      </div>
+      <sc-if value="{{ showPins }}" hint-placeholder-val="{{ true }}">
+        <div>
+          <div style="position:absolute; left:480px; top:165px; width:24px; height:24px; background:#000; border:2px solid #fff; color:#fff; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center">1</div>
+          <div style="position:absolute; left:160px; top:300px; width:24px; height:24px; background:#000; border:2px solid #fff; color:#fff; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center">2</div>
+          <div style="position:absolute; left:649px; top:272px; width:24px; height:24px; background:#000; border:2px solid #fff; color:#fff; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center">3</div>
+        </div>
+      </sc-if>
+    </div>
+  </div>
+
+  <div style="padding:32px 48px; display:flex; gap:34px; align-items:flex-start">
+    <div data-shot="cluster"  style="position:relative; width:850px; height:531px; border:3px solid #000; box-shadow:8px 8px 0px 0px rgba(0,0,0,1); overflow:hidden; background:#F8F7F4; flex-shrink:0">
+      <div style="width:1440px; height:900px; transform:scale(0.5903); transform-origin:top left">
+        <dc-import name="ExtractionScreens" screen="cluster" hint-size="1440px,900px"></dc-import>
+      </div>
+      <sc-if value="{{ showPins }}" hint-placeholder-val="{{ true }}">
+        <div>
+          <div style="position:absolute; left:150px; top:200px; width:24px; height:24px; background:#000; border:2px solid #fff; color:#fff; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center">1</div>
+          <div style="position:absolute; left:520px; top:250px; width:24px; height:24px; background:#000; border:2px solid #fff; color:#fff; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center">2</div>
+        </div>
+      </sc-if>
+    </div>
+    <div style="flex:1; display:flex; flex-direction:column; gap:20px; padding-top:8px">
+      <div>
+        <span style="font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.16em; color:#71717a">Step five · CardSort.tsx</span>
+        <h3 style="margin:6px 0 0; font-family:'Space Grotesk',sans-serif; font-size:24px; font-weight:700; text-transform:uppercase; letter-spacing:-0.01em">Cluster sort — name the buckets yourself</h3>
+      </div>
+      <p style="margin:0; font-size:15px; line-height:1.65; color:#3f3f46; text-wrap:pretty">Sorting is not busywork here: the buckets you create become the headings of the synthesized outline, so you decide the document's skeleton before the engine writes it.</p>
+      <div style="display:flex; flex-direction:column; gap:14px; border-top:2px solid #000; padding-top:18px">
+        <div style="display:flex; gap:12px; align-items:flex-start">
+          <span style="flex-shrink:0; width:22px; height:22px; background:#000; color:#fff; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center">1</span>
+          <p style="margin:0; font-size:14px; line-height:1.55; color:#27272a">Four buckets to start — Primary Goals, Mental Barriers, Action Tasks, Loose Details — add or delete your own.</p>
+        </div>
+        <div style="display:flex; gap:12px; align-items:flex-start">
+          <span style="flex-shrink:0; width:22px; height:22px; background:#000; color:#fff; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center">2</span>
+          <p style="margin:0; font-size:14px; line-height:1.55; color:#27272a">Assign per fragment, with tabs to see only what's unsorted. Counts update live in the left rail.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding:32px 48px; display:flex; gap:34px; align-items:flex-start">
+    <div style="flex:1; display:flex; flex-direction:column; gap:20px; padding-top:8px">
+      <div>
+        <span style="font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.16em; color:#71717a">Step six · TimelineMode.tsx</span>
+        <h3 style="margin:6px 0 0; font-family:'Space Grotesk',sans-serif; font-size:24px; font-weight:700; text-transform:uppercase; letter-spacing:-0.01em">Temporal map — before, now, after</h3>
+      </div>
+      <p style="margin:0; font-size:15px; line-height:1.65; color:#3f3f46; text-wrap:pretty">The same pile, re-read as a chronology. Origin context on the left, live pressure in the middle, forecasts and future fears on the right. Useful for separating what already happened from what you're only anticipating.</p>
+      <div style="display:flex; flex-direction:column; gap:14px; border-top:2px solid #000; padding-top:18px">
+        <div style="display:flex; gap:12px; align-items:flex-start">
+          <span style="flex-shrink:0; width:22px; height:22px; background:#000; color:#fff; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center">1</span>
+          <p style="margin:0; font-size:14px; line-height:1.55; color:#27272a">Three colour-keyed zones fill as you assign; an empty zone is itself a signal.</p>
+        </div>
+        <div style="display:flex; gap:12px; align-items:flex-start">
+          <span style="flex-shrink:0; width:22px; height:22px; background:#000; color:#fff; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center">2</span>
+          <p style="margin:0; font-size:14px; line-height:1.55; color:#27272a">Assignment happens in one pass down the list below — no dragging required.</p>
+        </div>
+      </div>
+    </div>
+    <div data-shot="timeline"  style="position:relative; width:850px; height:531px; border:3px solid #000; box-shadow:8px 8px 0px 0px rgba(0,0,0,1); overflow:hidden; background:#F8F7F4; flex-shrink:0">
+      <div style="width:1440px; height:900px; transform:scale(0.5903); transform-origin:top left">
+        <dc-import name="ExtractionScreens" screen="timeline" hint-size="1440px,900px"></dc-import>
+      </div>
+      <sc-if value="{{ showPins }}" hint-placeholder-val="{{ true }}">
+        <div>
+          <div style="position:absolute; left:330px; top:250px; width:24px; height:24px; background:#000; border:2px solid #fff; color:#fff; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center">1</div>
+          <div style="position:absolute; left:470px; top:385px; width:24px; height:24px; background:#000; border:2px solid #fff; color:#fff; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center">2</div>
+        </div>
+      </sc-if>
+    </div>
+  </div>
+
+  <div style="padding:32px 48px 48px; display:flex; gap:34px; align-items:flex-start">
+    <div data-shot="intensity"  style="position:relative; width:850px; height:531px; border:3px solid #000; box-shadow:8px 8px 0px 0px rgba(0,0,0,1); overflow:hidden; background:#F8F7F4; flex-shrink:0">
+      <div style="width:1440px; height:900px; transform:scale(0.5903); transform-origin:top left">
+        <dc-import name="ExtractionScreens" screen="intensity" hint-size="1440px,900px"></dc-import>
+      </div>
+      <sc-if value="{{ showPins }}" hint-placeholder-val="{{ true }}">
+        <div>
+          <div style="position:absolute; left:150px; top:250px; width:24px; height:24px; background:#000; border:2px solid #fff; color:#fff; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center">1</div>
+          <div style="position:absolute; left:470px; top:300px; width:24px; height:24px; background:#000; border:2px solid #fff; color:#fff; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center">2</div>
+          <div style="position:absolute; left:470px; top:440px; width:24px; height:24px; background:#000; border:2px solid #fff; color:#fff; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center">3</div>
+        </div>
+      </sc-if>
+    </div>
+    <div style="flex:1; display:flex; flex-direction:column; gap:20px; padding-top:8px">
+      <div>
+        <span style="font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.16em; color:#71717a">Step seven · SliderMap.tsx</span>
+        <h3 style="margin:6px 0 0; font-family:'Space Grotesk',sans-serif; font-size:24px; font-weight:700; text-transform:uppercase; letter-spacing:-0.01em">Intensity map — weigh what you surfaced</h3>
+      </div>
+      <p style="margin:0; font-size:15px; line-height:1.65; color:#3f3f46; text-wrap:pretty">Ten fragments all look equally important on a list. Rating them along four dimensions produces the heat map the synthesis uses to decide what leads the outline.</p>
+      <div style="display:flex; flex-direction:column; gap:14px; border-top:2px solid #000; padding-top:18px">
+        <div style="display:flex; gap:12px; align-items:flex-start">
+          <span style="flex-shrink:0; width:22px; height:22px; background:#000; color:#fff; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center">1</span>
+          <p style="margin:0; font-size:14px; line-height:1.55; color:#27272a">Pick a fragment; rated ones carry their scores back into the list as a preview.</p>
+        </div>
+        <div style="display:flex; gap:12px; align-items:flex-start">
+          <span style="flex-shrink:0; width:22px; height:22px; background:#000; color:#fff; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center">2</span>
+          <p style="margin:0; font-size:14px; line-height:1.55; color:#27272a">Urgency, certainty, emotional charge, willingness to act — each 1 to 10, each anchored with plain-language ends.</p>
+        </div>
+        <div style="display:flex; gap:12px; align-items:flex-start">
+          <span style="flex-shrink:0; width:22px; height:22px; background:#000; color:#fff; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center">3</span>
+          <p style="margin:0; font-size:14px; line-height:1.55; color:#27272a">High urgency plus high emotion gets flagged as a tension spot — the thing you're most likely avoiding.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div style="padding:24px 48px 16px; background:#EFEFEF; border-top:3px solid #000; border-bottom:3px solid #000">
+    <div style="display:flex; align-items:baseline; gap:16px; padding:24px 0">
+      <span style="font-family:'Space Grotesk',sans-serif; font-size:40px; font-weight:700; line-height:1">03</span>
+      <h2 style="margin:0; font-family:'Space Grotesk',sans-serif; font-size:26px; font-weight:700; text-transform:uppercase; letter-spacing:-0.01em">Decide, then walk away with a document</h2>
+      <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#52525b; text-transform:uppercase; letter-spacing:0.12em; margin-left:auto">PriorityPile.tsx · ExportPanel.tsx</span>
+    </div>
+  </div>
+
+  <div style="padding:40px 48px 32px; display:flex; gap:34px; align-items:flex-start">
+    <div style="flex:1; display:flex; flex-direction:column; gap:20px; padding-top:8px">
+      <div>
+        <span style="font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.16em; color:#71717a">Step eight · PriorityPile.tsx</span>
+        <h3 style="margin:6px 0 0; font-family:'Space Grotesk',sans-serif; font-size:24px; font-weight:700; text-transform:uppercase; letter-spacing:-0.01em">Priority Eisenhower — three piles, no more</h3>
+      </div>
+      <p style="margin:0; font-size:15px; line-height:1.65; color:#3f3f46; text-wrap:pretty">The last filter before synthesis. Act on it, watch it, or admit it's noise. Deliberately coarse: three piles force a call where a five-point scale lets you defer.</p>
+      <div style="display:flex; flex-direction:column; gap:14px; border-top:2px solid #000; padding-top:18px">
+        <div style="display:flex; gap:12px; align-items:flex-start">
+          <span style="flex-shrink:0; width:22px; height:22px; background:#000; color:#fff; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center">1</span>
+          <p style="margin:0; font-size:14px; line-height:1.55; color:#27272a">Zones fill as you sort; the "Leave It" pile is as informative as the other two.</p>
+        </div>
+        <div style="display:flex; gap:12px; align-items:flex-start">
+          <span style="flex-shrink:0; width:22px; height:22px; background:#000; color:#fff; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center">2</span>
+          <p style="margin:0; font-size:14px; line-height:1.55; color:#27272a">Rank the whole pile in one downward pass. Whatever lands in "Act On This" becomes the action checklist.</p>
+        </div>
+      </div>
+      <div style="margin-top:6px; background:#D2E3FC; border:2px solid #000; padding:16px; box-shadow:3px 3px 0px 0px rgba(0,0,0,1)">
+        <p style="margin:0; font-size:13px; line-height:1.6; color:#000"><strong style="font-family:'Space Grotesk',sans-serif; text-transform:uppercase; font-size:11px; letter-spacing:0.08em">This one is live —</strong> in the interactive demo you can drag a card straight into a pile, or tap Act / Watch / Leave It.</p>
+      </div>
+    </div>
+    <div data-shot="priority"  style="position:relative; width:850px; height:531px; border:3px solid #000; box-shadow:8px 8px 0px 0px rgba(0,0,0,1); overflow:hidden; background:#F8F7F4; flex-shrink:0">
+      <div style="width:1440px; height:900px; transform:scale(0.5903); transform-origin:top left">
+        <dc-import name="ExtractionScreens" screen="priority" hint-size="1440px,900px"></dc-import>
+      </div>
+      <sc-if value="{{ showPins }}" hint-placeholder-val="{{ true }}">
+        <div>
+          <div style="position:absolute; left:200px; top:175px; width:24px; height:24px; background:#000; border:2px solid #fff; color:#fff; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center">1</div>
+          <div style="position:absolute; left:470px; top:385px; width:24px; height:24px; background:#000; border:2px solid #fff; color:#fff; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center">2</div>
+        </div>
+      </sc-if>
+    </div>
+  </div>
+
+  <div style="padding:32px 48px 56px; display:flex; gap:34px; align-items:flex-start">
+    <div data-shot="export"  style="position:relative; width:850px; height:680px; border:3px solid #000; box-shadow:8px 8px 0px 0px rgba(0,0,0,1); overflow:hidden; background:#F8F7F4; flex-shrink:0">
+      <div style="width:1440px; height:1150px; transform:scale(0.5903); transform-origin:top left">
+        <dc-import name="ExtractionScreens" screen="export" hint-size="1440px,1150px"></dc-import>
+      </div>
+      <sc-if value="{{ showPins }}" hint-placeholder-val="{{ true }}">
+        <div>
+          <div style="position:absolute; left:75px; top:205px; width:24px; height:24px; background:#000; border:2px solid #fff; color:#fff; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center">1</div>
+          <div style="position:absolute; left:75px; top:415px; width:24px; height:24px; background:#000; border:2px solid #fff; color:#fff; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center">2</div>
+          <div style="position:absolute; left:760px; top:155px; width:24px; height:24px; background:#000; border:2px solid #fff; color:#fff; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center">3</div>
+          <div style="position:absolute; left:760px; top:340px; width:24px; height:24px; background:#000; border:2px solid #fff; color:#fff; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center">4</div>
+          <div style="position:absolute; left:760px; top:515px; width:24px; height:24px; background:#000; border:2px solid #fff; color:#fff; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center">5</div>
+        </div>
+      </sc-if>
+    </div>
+    <div style="flex:1; display:flex; flex-direction:column; gap:20px; padding-top:8px">
+      <div>
+        <span style="font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.16em; color:#71717a">Step nine · ExportPanel.tsx</span>
+        <h3 style="margin:6px 0 0; font-family:'Space Grotesk',sans-serif; font-size:24px; font-weight:700; text-transform:uppercase; letter-spacing:-0.01em">The executive blueprint</h3>
+      </div>
+      <p style="margin:0; font-size:15px; line-height:1.65; color:#3f3f46; text-wrap:pretty">Ten scattered fragments come back as a decision, a structured outline, and a checklist — and it is re-formattable without losing the pile, so one session can produce three different documents.</p>
+      <div style="display:flex; flex-direction:column; gap:14px; border-top:2px solid #000; padding-top:18px">
+        <div style="display:flex; gap:12px; align-items:flex-start">
+          <span style="flex-shrink:0; width:22px; height:22px; background:#000; color:#fff; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center">1</span>
+          <p style="margin:0; font-size:14px; line-height:1.55; color:#27272a">A narrative read of where you actually landed, in the session's own words.</p>
+        </div>
+        <div style="display:flex; gap:12px; align-items:flex-start">
+          <span style="flex-shrink:0; width:22px; height:22px; background:#000; color:#fff; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center">2</span>
+          <p style="margin:0; font-size:14px; line-height:1.55; color:#27272a">The markdown outline, viewable as rendered text or raw source, copyable in one click.</p>
+        </div>
+        <div style="display:flex; gap:12px; align-items:flex-start">
+          <span style="flex-shrink:0; width:22px; height:22px; background:#000; color:#fff; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center">3</span>
+          <p style="margin:0; font-size:14px; line-height:1.55; color:#27272a">Re-Format Blueprint: swap tone, swap focus, toggle the bias audit, regenerate. The thought history is untouched.</p>
+        </div>
+        <div style="display:flex; gap:12px; align-items:flex-start">
+          <span style="flex-shrink:0; width:22px; height:22px; background:#000; color:#fff; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center">4</span>
+          <p style="margin:0; font-size:14px; line-height:1.55; color:#27272a">Action items as real checkboxes, drawn from the pile you marked as actionable.</p>
+        </div>
+        <div style="display:flex; gap:12px; align-items:flex-start">
+          <span style="flex-shrink:0; width:22px; height:22px; background:#000; color:#fff; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center">5</span>
+          <p style="margin:0; font-size:14px; line-height:1.55; color:#27272a">Print, or share via a self-contained link. Sharing is off by default — the link encodes the session in plaintext, and the UI says so.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <sc-if value="{{ showModeGrid }}" hint-placeholder-val="{{ true }}">
+    <div style="background:#1A1A1A; color:#F8F7F4; padding:56px 48px">
+      <div style="display:flex; align-items:baseline; gap:16px; border-bottom:2px solid #52525b; padding-bottom:14px; margin-bottom:28px">
+        <h2 style="margin:0; font-family:'Space Grotesk',sans-serif; font-size:24px; font-weight:700; text-transform:uppercase; letter-spacing:-0.01em">All twelve modes</h2>
+        <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#a1a1aa; text-transform:uppercase; letter-spacing:0.12em; margin-left:auto">Seven not shown above</span>
+      </div>
+      <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:16px">
+        <div style="border:2px solid #F8F7F4; padding:16px"><div style="font-family:'Space Grotesk',sans-serif; font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:6px">Free Stream</div><p style="margin:0; font-size:12px; line-height:1.55; color:#a1a1aa">No prompts. Unfiltered typing, mic optional.</p></div>
+        <div style="border:2px solid #F8F7F4; padding:16px"><div style="font-family:'Space Grotesk',sans-serif; font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:6px">Quick Fire</div><p style="margin:0; font-size:12px; line-height:1.55; color:#a1a1aa">Speed prompts, one-line answers, instant clear.</p></div>
+        <div style="border:2px solid #fde047; padding:16px; background:rgba(253,224,71,0.08)"><div style="font-family:'Space Grotesk',sans-serif; font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:6px">Guided Drill</div><p style="margin:0; font-size:12px; line-height:1.55; color:#d4d4d8">Adaptive interview with a dialogue pivot.</p></div>
+        <div style="border:2px solid #F8F7F4; padding:16px"><div style="font-family:'Space Grotesk',sans-serif; font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:6px">Binary Bracket</div><p style="margin:0; font-size:12px; line-height:1.55; color:#a1a1aa">Choose between contrasting framings of the same issue.</p></div>
+        <div style="border:2px solid #fde047; padding:16px; background:rgba(253,224,71,0.08)"><div style="font-family:'Space Grotesk',sans-serif; font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:6px">Swipe Statements</div><p style="margin:0; font-size:12px; line-height:1.55; color:#d4d4d8">Judge generated beliefs instead of writing your own.</p></div>
+        <div style="border:2px solid #fde047; padding:16px; background:rgba(253,224,71,0.08)"><div style="font-family:'Space Grotesk',sans-serif; font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:6px">Intensity Map</div><p style="margin:0; font-size:12px; line-height:1.55; color:#d4d4d8">Rate urgency, certainty, charge, actionability.</p></div>
+        <div style="border:2px solid #fde047; padding:16px; background:rgba(253,224,71,0.08)"><div style="font-family:'Space Grotesk',sans-serif; font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:6px">Cluster Sorting</div><p style="margin:0; font-size:12px; line-height:1.55; color:#d4d4d8">Bucket fragments; buckets become outline headings.</p></div>
+        <div style="border:2px solid #fde047; padding:16px; background:rgba(253,224,71,0.08)"><div style="font-family:'Space Grotesk',sans-serif; font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:6px">Temporal Map</div><p style="margin:0; font-size:12px; line-height:1.55; color:#d4d4d8">Split past origin, present pressure, future forecast.</p></div>
+        <div style="border:2px solid #F8F7F4; padding:16px"><div style="font-family:'Space Grotesk',sans-serif; font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:6px">Sentence Starters</div><p style="margin:0; font-size:12px; line-height:1.55; color:#a1a1aa">Complete stems to surface what you avoid saying.</p></div>
+        <div style="border:2px solid #F8F7F4; padding:16px"><div style="font-family:'Space Grotesk',sans-serif; font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:6px">Advocate Shock</div><p style="margin:0; font-size:12px; line-height:1.55; color:#a1a1aa">The engine attacks your position on purpose.</p></div>
+        <div style="border:2px solid #F8F7F4; padding:16px"><div style="font-family:'Space Grotesk',sans-serif; font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:6px">Letter Drill</div><p style="margin:0; font-size:12px; line-height:1.55; color:#a1a1aa">Write to a person, not a form. Loosens feeling.</p></div>
+        <div style="border:2px solid #fde047; padding:16px; background:rgba(253,224,71,0.08)"><div style="font-family:'Space Grotesk',sans-serif; font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:6px">Priority Eisenhower</div><p style="margin:0; font-size:12px; line-height:1.55; color:#d4d4d8">Act, watch, or leave it. Three piles, one call.</p></div>
+      </div>
+      <div style="margin-top:32px; display:flex; gap:16px; align-items:stretch">
+        <div style="flex:1; border:2px solid #52525b; padding:20px">
+          <div style="font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.14em; color:#fde047; margin-bottom:8px">Where the key lives</div>
+          <p style="margin:0; font-size:13px; line-height:1.6; color:#d4d4d8">The Gemini key stays server-side behind an Express proxy at <span style="font-family:'JetBrains Mono',monospace; font-size:12px; color:#fff">/api/session/*</span>, rate-limited, never prefixed with <span style="font-family:'JetBrains Mono',monospace; font-size:12px; color:#fff">VITE_</span> — so it is never exposed to the browser.</p>
+        </div>
+        <div style="flex:1; border:2px solid #52525b; padding:20px">
+          <div style="font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.14em; color:#fde047; margin-bottom:8px">Where the thoughts live</div>
+          <p style="margin:0; font-size:13px; line-height:1.6; color:#d4d4d8">Sessions persist in the browser only. Nothing is uploaded, there are no accounts, and sharing is opt-in per session.</p>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <div style="background:#F8F7F4; padding:32px 48px; border-top:3px solid #000; display:flex; justify-content:space-between; align-items:center; font-family:'JetBrains Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.12em; color:#52525b">
+    <span>Screens recreated from ennywnad/Extraction @ main</span>
+    <span>Sample session: kickoff preparation · Northwind Group is a placeholder client</span>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;showPins&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Showcase&quot;},&quot;showRunBlock&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Showcase&quot;},&quot;showModeGrid&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Showcase&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      showPins: this.props.showPins ?? true,
+      showRunBlock: this.props.showRunBlock ?? true,
+      showModeGrid: this.props.showModeGrid ?? true
+    };
+  }
+}
+</script>
+</body>
+</html>

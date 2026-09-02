@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;family=Playfair+Display:ital,wght@0,600;1,400&amp;family=Space+Grotesk:wght@500;700&amp;family=JetBrains+Mono:wght@400;700&amp;display=swap" rel="stylesheet" />
+<style>
+body { margin:0; background:#F8F7F4; color:#1A1A1A; font-family:"Inter",ui-sans-serif,system-ui,sans-serif; }
+a { color:#1A1A1A; text-decoration:underline; text-decoration-thickness:2px; text-underline-offset:2px; }
+a:hover { color:#FF5722; }
+</style>
+</helmet>
+<div style="width:1440px; background:#F8F7F4; overflow:hidden">
+
+  <sc-if value="{{ showConceptBanner }}" hint-placeholder-val="{{ true }}">
+    <div style="background:#FFD43B; border-bottom:3px solid #000; padding:12px 48px; display:flex; align-items:center; justify-content:space-between; gap:16px">
+      <span style="font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.16em">⚠ Concept · none of this is built yet</span>
+      <span style="font-family:'JetBrains Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.08em">Shipped today: single-user, one browser, no accounts</span>
+    </div>
+  </sc-if>
+
+  <div style="background:#1A1A1A; color:#F8F7F4; padding:64px 48px 56px">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:48px">
+      <div style="max-width:800px">
+        <span style="font-family:'JetBrains Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.28em; color:#fde047">⊞ Extraction · group mode</span>
+        <h1 style="margin:16px 0 0; font-family:'Space Grotesk',sans-serif; font-size:78px; line-height:0.94; font-weight:700; text-transform:uppercase; letter-spacing:-0.03em">Level Set</h1>
+        <p style="margin:24px 0 0; font-size:19px; line-height:1.6; color:#d4d4d8; max-width:700px; text-wrap:pretty">A kickoff room full of stakeholders, one shared pile, and a single question: <em>have we defined the universe of what we're being asked to do?</em> Not who is right — what is still dark.</p>
+        <p style="margin:20px 0 0; font-size:15px; line-height:1.6; color:#a1a1aa; max-width:700px">Everything here is a proposal for a hosted, authenticated instance. It reuses the twelve extraction modes unchanged; what changes is who can reach the pile and whether a fragment remembers who said it.</p>
+      </div>
+      <div style="flex-shrink:0; width:380px; border:3px solid #F8F7F4; padding:24px; display:flex; flex-direction:column; gap:14px">
+        <div style="font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.14em; color:#a1a1aa">The sample engagement</div>
+        <div style="display:flex; justify-content:space-between; font-size:13px; border-bottom:1px solid #3f3f46; padding-bottom:10px"><span style="color:#a1a1aa">Client</span><strong style="font-family:'Space Grotesk',sans-serif">Northwind Group</strong></div>
+        <div style="display:flex; justify-content:space-between; font-size:13px; border-bottom:1px solid #3f3f46; padding-bottom:10px"><span style="color:#a1a1aa">Shape</span><strong style="font-family:'Space Grotesk',sans-serif">2 workshops, a week apart</strong></div>
+        <div style="display:flex; justify-content:space-between; font-size:13px; border-bottom:1px solid #3f3f46; padding-bottom:10px"><span style="color:#a1a1aa">Voices</span><strong style="font-family:'Space Grotesk',sans-serif">6 stakeholders + 4 SMEs</strong></div>
+        <div style="display:flex; justify-content:space-between; font-size:13px; border-bottom:1px solid #3f3f46; padding-bottom:10px"><span style="color:#a1a1aa">Pile</span><strong style="font-family:'Space Grotesk',sans-serif">47 → 132 → 198</strong></div>
+        <div style="display:flex; justify-content:space-between; font-size:13px"><span style="color:#a1a1aa">Outcome</span><strong style="font-family:'Space Grotesk',sans-serif">9 areas defined, 1 dark</strong></div>
+      </div>
+    </div>
+
+    <div style="margin-top:44px; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px">
+      <div style="border:2px solid #52525b; padding:20px">
+        <div style="font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.14em; color:#fde047; margin-bottom:8px">The problem</div>
+        <p style="margin:0; font-size:13px; line-height:1.6; color:#d4d4d8">Kickoffs produce a whiteboard photo and six private mental models. Two weeks later everyone is delivering against a different one.</p>
+      </div>
+      <div style="border:2px solid #52525b; padding:20px">
+        <div style="font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.14em; color:#fde047; margin-bottom:8px">The move</div>
+        <p style="margin:0; font-size:13px; line-height:1.6; color:#d4d4d8">One pile everybody writes into — in the room and for the week after. The modes tease out what people wouldn't volunteer.</p>
+      </div>
+      <div style="border:2px solid #52525b; padding:20px">
+        <div style="font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.14em; color:#fde047; margin-bottom:8px">The deliverable</div>
+        <p style="margin:0; font-size:13px; line-height:1.6; color:#d4d4d8">An explicit map of the ask: what is defined, what is partial, what nobody has touched — and the questions and assumptions behind each.</p>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding:56px 48px 0">
+    <div style="display:flex; align-items:baseline; gap:16px; border-bottom:3px solid #000; padding-bottom:14px">
+      <span style="font-family:'Space Grotesk',sans-serif; font-size:40px; font-weight:700; line-height:1">01</span>
+      <h2 style="margin:0; font-family:'Space Grotesk',sans-serif; font-size:26px; font-weight:700; text-transform:uppercase; letter-spacing:-0.01em">A fragment remembers who said it</h2>
+      <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#71717a; text-transform:uppercase; letter-spacing:0.12em; margin-left:auto">One change to the pile card</span>
+    </div>
+  </div>
+
+  <div style="padding:32px 48px 56px; display:flex; gap:40px; align-items:flex-start">
+    <div style="flex:1; display:flex; flex-direction:column; gap:20px">
+      <p style="margin:0; font-size:15px; line-height:1.65; color:#3f3f46; text-wrap:pretty">Today a fragment carries a mode and an index. In group mode it also carries an author and their role — stamped from the verified identity, not typed in. That single addition is what makes every other panel on this page possible.</p>
+      <div style="display:flex; flex-direction:column; gap:14px; border-top:2px solid #000; padding-top:18px">
+        <div style="display:flex; gap:12px; align-items:flex-start">
+          <span style="flex-shrink:0; width:22px; height:22px; background:#000; color:#fff; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center">1</span>
+          <p style="margin:0; font-size:14px; line-height:1.55; color:#27272a"><strong>Role, not just name.</strong> "Business ops lead" is why the fragment matters; the name alone isn't. Roles also drive the coverage map.</p>
+        </div>
+        <div style="display:flex; gap:12px; align-items:flex-start">
+          <span style="flex-shrink:0; width:22px; height:22px; background:#000; color:#fff; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center">2</span>
+          <p style="margin:0; font-size:14px; line-height:1.55; color:#27272a"><strong>The mode dot stays.</strong> Knowing a fragment came out of a Guided Drill rather than a free dump tells you how much it was pushed on.</p>
+        </div>
+        <div style="display:flex; gap:12px; align-items:flex-start">
+          <span style="flex-shrink:0; width:22px; height:22px; background:#000; color:#fff; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center">3</span>
+          <p style="margin:0; font-size:14px; line-height:1.55; color:#27272a"><strong>Nobody edits anyone.</strong> Contributions are append-only. A facilitator can merge duplicates, and the survivor keeps every author.</p>
+        </div>
+      </div>
+      <div style="background:#FFFEE0; border:2px solid #000; padding:16px; box-shadow:3px 3px 0px 0px rgba(0,0,0,1)">
+        <p style="margin:0; font-size:13px; line-height:1.6; color:#000"><strong style="font-family:'Space Grotesk',sans-serif; text-transform:uppercase; font-size:11px; letter-spacing:0.08em">Why it matters for level-setting —</strong> attribution turns the pile from a list of notes into evidence of who has and hasn't entered each part of the problem.</p>
+      </div>
+    </div>
+
+    <div style="width:440px; flex-shrink:0; background:#F8F7F4; border:3px solid #000; box-shadow:6px 6px 0px 0px rgba(0,0,0,1); padding:16px; display:flex; flex-direction:column; gap:14px">
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:8px">
+        <span style="font-family:'Space Grotesk',sans-serif; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:#000">Surfaced pile · group mode</span>
+        <span style="font-family:'JetBrains Mono',monospace; font-size:8px; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; background:#FFD43B; border:1px solid #000; padding:2px 6px">Concept</span>
+      </div>
+
+      <div style="padding:14px; background:#fff; border:2px solid #000">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; gap:8px">
+          <span style="display:flex; align-items:center; gap:6px; min-width:0">
+            <span style="width:22px; height:22px; flex-shrink:0; background:#000; color:#fff; font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700; display:flex; align-items:center; justify-content:center">SL</span>
+            <span style="display:flex; flex-direction:column; min-width:0">
+              <span style="font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:0.04em; font-family:'JetBrains Mono',monospace; color:#000; white-space:nowrap">S. Lindqvist</span>
+              <span style="font-size:8px; font-family:'JetBrains Mono',monospace; color:#71717a; text-transform:uppercase; letter-spacing:0.04em; white-space:nowrap">Business ops lead</span>
+            </span>
+          </span>
+          <span style="display:flex; align-items:center; gap:6px; flex-shrink:0">
+            <span style="width:6px; height:6px; border-radius:9999px; background:linear-gradient(to right, #3b82f6, #4f46e5)"></span>
+            <span style="font-size:9px; color:#a1a1aa; font-family:'JetBrains Mono',monospace">#38</span>
+          </span>
+        </div>
+        <p style="margin:0; font-size:12px; color:#27272a; line-height:1.5">Claims intake isn't one process — branch, broker and portal each carry their own exception path. Any target design has to say which one it means.</p>
+      </div>
+
+      <div style="padding:14px; background:#fff; border:2px solid #000">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; gap:8px">
+          <span style="display:flex; align-items:center; gap:6px; min-width:0">
+            <span style="width:22px; height:22px; flex-shrink:0; background:#000; color:#fff; font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700; display:flex; align-items:center; justify-content:center">RM</span>
+            <span style="display:flex; flex-direction:column; min-width:0">
+              <span style="font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:0.04em; font-family:'JetBrains Mono',monospace; color:#000; white-space:nowrap">R. Mehta</span>
+              <span style="font-size:8px; font-family:'JetBrains Mono',monospace; color:#71717a; text-transform:uppercase; letter-spacing:0.04em; white-space:nowrap">IT &amp; platform lead</span>
+            </span>
+          </span>
+          <span style="display:flex; align-items:center; gap:6px; flex-shrink:0">
+            <span style="width:6px; height:6px; border-radius:9999px; background:linear-gradient(to right, #fbbf24, #f97316)"></span>
+            <span style="font-size:9px; color:#a1a1aa; font-family:'JetBrains Mono',monospace">#31</span>
+          </span>
+        </div>
+        <p style="margin:0; font-size:12px; color:#27272a; line-height:1.5">The mainframe adapter is the real constraint. Anything we design has to survive it for at least two more years.</p>
+      </div>
+
+      <div style="padding:14px; background:#fff; border:2px solid #000">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; gap:8px">
+          <span style="display:flex; align-items:center; gap:6px; min-width:0">
+            <span style="width:22px; height:22px; flex-shrink:0; background:#000; color:#fff; font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700; display:flex; align-items:center; justify-content:center">AN</span>
+            <span style="display:flex; flex-direction:column; min-width:0">
+              <span style="font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:0.04em; font-family:'JetBrains Mono',monospace; color:#000; white-space:nowrap">A. Njoku</span>
+              <span style="font-size:8px; font-family:'JetBrains Mono',monospace; color:#71717a; text-transform:uppercase; letter-spacing:0.04em; white-space:nowrap">Security &amp; compliance</span>
+            </span>
+          </span>
+          <span style="display:flex; align-items:center; gap:6px; flex-shrink:0">
+            <span style="width:6px; height:6px; border-radius:9999px; background:linear-gradient(to right, #a855f7, #6366f1)"></span>
+            <span style="font-size:9px; color:#a1a1aa; font-family:'JetBrains Mono',monospace">#24</span>
+          </span>
+        </div>
+        <p style="margin:0; font-size:12px; color:#27272a; line-height:1.5">Residency is not negotiable for claims data. That constrains the target platform, not just the controls on top of it.</p>
+        <div style="margin-top:8px; display:inline-block; background:#000; color:#fff; padding:3px 8px; font-size:8px; font-family:'JetBrains Mono',monospace; letter-spacing:0.1em; text-transform:uppercase; white-space:nowrap">STATUS: RESONANT</div>
+      </div>
+
+      <div style="padding:12px 14px; background:#fff; border:2px dashed #000">
+        <span style="display:block; font-family:'JetBrains Mono',monospace; font-size:8px; font-weight:800; text-transform:uppercase; letter-spacing:0.06em; color:#52525b; margin-bottom:5px">Merged by facilitator · 3 authors kept</span>
+        <p style="margin:0; font-size:11px; line-height:1.5; color:#27272a">Three overlapping fragments about broker onboarding collapsed into one, provenance intact.</p>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding:24px 48px 16px; background:#EFEFEF; border-top:3px solid #000; border-bottom:3px solid #000">
+    <div style="display:flex; align-items:baseline; gap:16px; padding:24px 0">
+      <span style="font-family:'Space Grotesk',sans-serif; font-size:40px; font-weight:700; line-height:1">02</span>
+      <h2 style="margin:0; font-family:'Space Grotesk',sans-serif; font-size:26px; font-weight:700; text-transform:uppercase; letter-spacing:-0.01em">The pile thickens</h2>
+      <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#52525b; text-transform:uppercase; letter-spacing:0.12em; margin-left:auto">Two workshops · one week of async between</span>
+    </div>
+    <p style="margin:0 0 24px; font-size:15px; line-height:1.65; color:#3f3f46; max-width:900px; text-wrap:pretty">The point of a shared instance is that the artefact keeps growing when the room empties. Same sidebar, three moments — then the same week as a log of who did what.</p>
+  </div>
+
+  <div style="padding:40px 48px 24px">
+    <div style="display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:20px">
+
+      <div style="border:3px solid #000; background:#fff; box-shadow:5px 5px 0px 0px rgba(0,0,0,1); display:flex; flex-direction:column">
+        <div style="padding:14px 16px; border-bottom:2px solid #000; background:#fafafa">
+          <span style="display:block; font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:0.12em; color:#71717a">Workshop 01 · in the room</span>
+          <span style="display:flex; align-items:baseline; gap:8px; margin-top:6px">
+            <span style="font-family:'Space Grotesk',sans-serif; font-size:38px; font-weight:700; line-height:1">47</span>
+            <span style="font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; color:#52525b">fragments</span>
+          </span>
+        </div>
+        <div style="padding:14px; display:flex; flex-direction:column; gap:10px; background:#F8F7F4; flex:1">
+          <div style="background:#fff; border:2px solid #000; padding:10px">
+            <div style="display:flex; align-items:center; gap:6px; margin-bottom:6px">
+              <span style="width:18px; height:18px; background:#000; color:#fff; font-family:'JetBrains Mono',monospace; font-size:8px; font-weight:700; display:flex; align-items:center; justify-content:center">SL</span>
+              <span style="font-family:'JetBrains Mono',monospace; font-size:8px; font-weight:800; text-transform:uppercase; white-space:nowrap">S. Lindqvist</span>
+            </div>
+            <p style="margin:0; font-size:10px; line-height:1.5; color:#27272a">Claims intake isn't one process — branch, broker and portal each carry their own exception path.</p>
+          </div>
+          <div style="background:#fff; border:2px solid #000; padding:10px">
+            <div style="display:flex; align-items:center; gap:6px; margin-bottom:6px">
+              <span style="width:18px; height:18px; background:#000; color:#fff; font-family:'JetBrains Mono',monospace; font-size:8px; font-weight:700; display:flex; align-items:center; justify-content:center">RM</span>
+              <span style="font-family:'JetBrains Mono',monospace; font-size:8px; font-weight:800; text-transform:uppercase; white-space:nowrap">R. Mehta</span>
+            </div>
+            <p style="margin:0; font-size:10px; line-height:1.5; color:#27272a">The mainframe adapter is the real constraint.</p>
+          </div>
+        </div>
+        <div style="padding:10px 14px; border-top:2px solid #000; background:#f4f4f5; font-family:'JetBrains Mono',monospace; font-size:9px; text-transform:uppercase; letter-spacing:0.06em; color:#52525b">6 voices · 4 areas thin · 1 dark</div>
+      </div>
+
+      <div style="border:3px solid #000; background:#fff; box-shadow:5px 5px 0px 0px rgba(0,0,0,1); display:flex; flex-direction:column">
+        <div style="padding:14px 16px; border-bottom:2px solid #000; background:#FFF3BF">
+          <span style="display:block; font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:0.12em; color:#52525b">The week between · async</span>
+          <span style="display:flex; align-items:baseline; gap:8px; margin-top:6px">
+            <span style="font-family:'Space Grotesk',sans-serif; font-size:38px; font-weight:700; line-height:1">132</span>
+            <span style="font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; color:#52525b">+85</span>
+          </span>
+        </div>
+        <div style="padding:14px; display:flex; flex-direction:column; gap:10px; background:#F8F7F4; flex:1">
+          <div style="background:#fff; border:2px solid #000; padding:10px">
+            <div style="display:flex; align-items:center; gap:6px; margin-bottom:6px">
+              <span style="width:18px; height:18px; background:#000; color:#fff; font-family:'JetBrains Mono',monospace; font-size:8px; font-weight:700; display:flex; align-items:center; justify-content:center">AN</span>
+              <span style="font-family:'JetBrains Mono',monospace; font-size:8px; font-weight:800; text-transform:uppercase; white-space:nowrap">A. Njoku</span>
+            </div>
+            <p style="margin:0; font-size:10px; line-height:1.5; color:#27272a">Residency is not negotiable for claims data. That constrains the target platform, not just the controls.</p>
+          </div>
+          <div style="background:#fff; border:2px dashed #000; padding:10px">
+            <span style="display:block; font-family:'JetBrains Mono',monospace; font-size:8px; font-weight:800; text-transform:uppercase; color:#52525b; margin-bottom:5px">Merged by facilitator</span>
+            <p style="margin:0; font-size:10px; line-height:1.5; color:#27272a">Nine overlapping fragments collapsed; every author kept on the survivor.</p>
+          </div>
+        </div>
+        <div style="padding:10px 14px; border-top:2px solid #000; background:#f4f4f5; font-family:'JetBrains Mono',monospace; font-size:9px; text-transform:uppercase; letter-spacing:0.06em; color:#52525b">10 voices · 4 SMEs invited</div>
+      </div>
+
+      <div style="border:3px solid #000; background:#fff; box-shadow:5px 5px 0px 0px rgba(0,0,0,1); display:flex; flex-direction:column">
+        <div style="padding:14px 16px; border-bottom:2px solid #000; background:#CEEAD6">
+          <span style="display:block; font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:0.12em; color:#52525b">Workshop 02 · challenge</span>
+          <span style="display:flex; align-items:baseline; gap:8px; margin-top:6px">
+            <span style="font-family:'Space Grotesk',sans-serif; font-size:38px; font-weight:700; line-height:1">198</span>
+            <span style="font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; color:#52525b">+66</span>
+          </span>
+        </div>
+        <div style="padding:14px; display:flex; flex-direction:column; gap:10px; background:#F8F7F4; flex:1">
+          <div style="background:#fff; border:2px solid #000; padding:10px">
+            <div style="display:flex; align-items:center; gap:6px; margin-bottom:6px">
+              <span style="width:18px; height:18px; background:#000; color:#fff; font-family:'JetBrains Mono',monospace; font-size:8px; font-weight:700; display:flex; align-items:center; justify-content:center">DO</span>
+              <span style="font-family:'JetBrains Mono',monospace; font-size:8px; font-weight:800; text-transform:uppercase; white-space:nowrap">D. Okafor</span>
+            </div>
+            <p style="margin:0; font-size:10px; line-height:1.5; color:#27272a">Success has to be measurable by the end of phase one, or I can't hold the funding.</p>
+          </div>
+          <div style="background:#FFFEE0; border:2px solid #000; padding:10px">
+            <span style="display:block; font-family:'JetBrains Mono',monospace; font-size:8px; font-weight:800; text-transform:uppercase; color:#52525b; margin-bottom:5px">Still dark · on the record</span>
+            <p style="margin:0; font-size:10px; line-height:1.5; color:#27272a">Commercials &amp; funding envelope: zero fragments from anyone, across both workshops.</p>
+          </div>
+        </div>
+        <div style="padding:10px 14px; border-top:2px solid #000; background:#f4f4f5; font-family:'JetBrains Mono',monospace; font-size:9px; text-transform:uppercase; letter-spacing:0.06em; color:#52525b">10 voices · 9 defined · 1 dark</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding:16px 48px 56px">
+    <div style="background:#fff; border:3px solid #000; box-shadow:6px 6px 0px 0px rgba(0,0,0,1); padding:28px">
+      <div style="display:flex; align-items:baseline; justify-content:space-between; gap:16px; margin-bottom:20px">
+        <h3 style="margin:0; font-family:'Space Grotesk',sans-serif; font-size:18px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em">Engagement log</h3>
+        <span style="font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.08em; color:#71717a">Every entry is an event in the pile's history</span>
+      </div>
+
+      <div style="display:flex; align-items:flex-end; gap:5px; height:72px; padding-bottom:10px; border-bottom:2px solid #000; margin-bottom:22px">
+        <span style="flex:1; height:24%; background:#D2E3FC; border:1px solid #000"></span>
+        <span style="flex:1; height:31%; background:#D2E3FC; border:1px solid #000"></span>
+        <span style="flex:1; height:38%; background:#4DABF7; border:1px solid #000"></span>
+        <span style="flex:1; height:52%; background:#4DABF7; border:1px solid #000"></span>
+        <span style="flex:1; height:61%; background:#4DABF7; border:1px solid #000"></span>
+        <span style="flex:1; height:67%; background:#51CF66; border:1px solid #000"></span>
+        <span style="flex:1; height:74%; background:#51CF66; border:1px solid #000"></span>
+        <span style="flex:1; height:86%; background:#51CF66; border:1px solid #000"></span>
+        <span style="flex:1; height:100%; background:#000"></span>
+        <span style="flex-shrink:0; padding-left:10px; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; align-self:flex-end">198</span>
+      </div>
+
+      <div style="display:flex; flex-direction:column">
+        <div style="display:flex; gap:18px">
+          <div style="width:92px; flex-shrink:0; text-align:right; padding-top:1px">
+            <span style="display:block; font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em">Tue 09:30</span>
+            <span style="display:block; font-family:'JetBrains Mono',monospace; font-size:9px; color:#a1a1aa; text-transform:uppercase">Workshop 01</span>
+          </div>
+          <div style="flex-shrink:0; display:flex; flex-direction:column; align-items:center; width:14px">
+            <span style="width:14px; height:14px; background:#000"></span>
+            <span style="flex:1; width:2px; background:#000"></span>
+          </div>
+          <div style="flex:1; padding-bottom:20px">
+            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap">
+              <span style="font-size:13px; font-weight:700">Kickoff · all six stakeholders in the room</span>
+              <span style="border:1px solid #000; background:#51CF66; padding:1px 7px; font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700; white-space:nowrap">+47</span>
+            </div>
+            <p style="margin:5px 0 0; font-size:12px; line-height:1.55; color:#52525b">Free Stream on the projector, then Guided Drill per area. Nobody edits anyone; everything lands in one pile.</p>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:18px">
+          <div style="width:92px; flex-shrink:0; text-align:right; padding-top:1px">
+            <span style="display:block; font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em">Tue 16:00</span>
+          </div>
+          <div style="flex-shrink:0; display:flex; flex-direction:column; align-items:center; width:14px">
+            <span style="width:12px; height:12px; background:#fff; border:2px solid #000; border-radius:9999px"></span>
+            <span style="flex:1; width:2px; background:#000"></span>
+          </div>
+          <div style="flex:1; padding-bottom:20px">
+            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap">
+              <span style="font-size:13px; font-weight:700">Facilitator dedupes and merges</span>
+              <span style="border:1px solid #000; background:#EFEFEF; padding:1px 7px; font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700; white-space:nowrap">−9 merged</span>
+            </div>
+            <p style="margin:5px 0 0; font-size:12px; line-height:1.55; color:#52525b">Duplicates collapsed so counts mean something. Provenance stays on the survivor — nothing is quietly deleted.</p>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:18px">
+          <div style="width:92px; flex-shrink:0; text-align:right; padding-top:1px">
+            <span style="display:block; font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em">Wed</span>
+          </div>
+          <div style="flex-shrink:0; display:flex; flex-direction:column; align-items:center; width:14px">
+            <span style="width:12px; height:12px; background:#FFD43B; border:2px solid #000"></span>
+            <span style="flex:1; width:2px; background:#000"></span>
+          </div>
+          <div style="flex:1; padding-bottom:20px">
+            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap">
+              <span style="font-size:13px; font-weight:700">Coverage map exposes the gaps</span>
+              <span style="border:1px solid #000; background:#FFD43B; padding:1px 7px; font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700; white-space:nowrap">3 owners named</span>
+            </div>
+            <p style="margin:5px 0 0; font-size:12px; line-height:1.55; color:#52525b">Security &amp; residency, risks &amp; dependencies, timeline — each assigned an owner with a date before workshop two.</p>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:18px">
+          <div style="width:92px; flex-shrink:0; text-align:right; padding-top:1px">
+            <span style="display:block; font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em">Wed–Fri</span>
+            <span style="display:block; font-family:'JetBrains Mono',monospace; font-size:9px; color:#a1a1aa; text-transform:uppercase">Async</span>
+          </div>
+          <div style="flex-shrink:0; display:flex; flex-direction:column; align-items:center; width:14px">
+            <span style="width:12px; height:12px; background:#4DABF7; border:2px solid #000"></span>
+            <span style="flex:1; width:2px; background:#000"></span>
+          </div>
+          <div style="flex:1; padding-bottom:20px">
+            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap">
+              <span style="font-size:13px; font-weight:700">Four SMEs invited into thin areas only</span>
+              <span style="border:1px solid #000; background:#51CF66; padding:1px 7px; font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700; white-space:nowrap">+85</span>
+            </div>
+            <p style="margin:5px 0 0; font-size:12px; line-height:1.55; color:#52525b">Scoped invites: each SME can read the whole pile but is prompted only on their area, so they aren't asked to re-litigate settled ground.</p>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:18px">
+          <div style="width:92px; flex-shrink:0; text-align:right; padding-top:1px">
+            <span style="display:block; font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em">Sun</span>
+          </div>
+          <div style="flex-shrink:0; display:flex; flex-direction:column; align-items:center; width:14px">
+            <span style="width:12px; height:12px; background:#fff; border:2px solid #000; border-radius:9999px"></span>
+            <span style="flex:1; width:2px; background:#000"></span>
+          </div>
+          <div style="flex:1; padding-bottom:20px">
+            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap">
+              <span style="font-size:13px; font-weight:700">Draft level-set circulated for challenge</span>
+              <span style="border:1px solid #000; background:#EFEFEF; padding:1px 7px; font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700; white-space:nowrap">Bias audit on</span>
+            </div>
+            <p style="margin:5px 0 0; font-size:12px; line-height:1.55; color:#52525b">Regenerated with the cognitive bias audit enabled, so the group reads its own blind spots before meeting again.</p>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:18px">
+          <div style="width:92px; flex-shrink:0; text-align:right; padding-top:1px">
+            <span style="display:block; font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em">Tue 09:30</span>
+            <span style="display:block; font-family:'JetBrains Mono',monospace; font-size:9px; color:#a1a1aa; text-transform:uppercase">Workshop 02</span>
+          </div>
+          <div style="flex-shrink:0; display:flex; flex-direction:column; align-items:center; width:14px">
+            <span style="width:14px; height:14px; background:#000"></span>
+          </div>
+          <div style="flex:1">
+            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap">
+              <span style="font-size:13px; font-weight:700">Level set agreed · one area still dark</span>
+              <span style="border:1px solid #000; background:#51CF66; padding:1px 7px; font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700; white-space:nowrap">+66</span>
+            </div>
+            <p style="margin:5px 0 0; font-size:12px; line-height:1.55; color:#52525b">Nine of ten areas defined with named owners. Commercials remains dark and is escalated rather than assumed.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div style="padding:24px 48px 16px; background:#EFEFEF; border-top:3px solid #000; border-bottom:3px solid #000">
+    <div style="display:flex; align-items:baseline; gap:16px; padding:24px 0">
+      <span style="font-family:'Space Grotesk',sans-serif; font-size:40px; font-weight:700; line-height:1">03</span>
+      <h2 style="margin:0; font-family:'Space Grotesk',sans-serif; font-size:26px; font-weight:700; text-transform:uppercase; letter-spacing:-0.01em">Defining the universe</h2>
+      <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#52525b; text-transform:uppercase; letter-spacing:0.12em; margin-left:auto">The spine of the deliverable</span>
+    </div>
+    <p style="margin:0 0 24px; font-size:15px; line-height:1.65; color:#3f3f46; max-width:900px; text-wrap:pretty">A level set isn't a summary of what was said. It is an explicit statement of the boundary: every area of the ask, how well it is understood, and who owns closing what remains. The most valuable cell in it is the empty one.</p>
+  </div>
+
+  <div style="padding:40px 48px 24px">
+    <div style="display:flex; align-items:baseline; justify-content:space-between; gap:16px; margin-bottom:16px">
+      <h3 style="margin:0; font-family:'Space Grotesk',sans-serif; font-size:18px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em">What's lit, what's dark</h3>
+      <span style="font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.08em; color:#71717a">After workshop 02 · 198 fragments · 10 voices</span>
+    </div>
+
+    <div style="background:#1A1A1A; border:3px solid #000; box-shadow:6px 6px 0px 0px rgba(0,0,0,1); padding:28px">
+      <div style="display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px">
+
+        <div style="border:2px solid #F8F7F4; background:#F8F7F4; color:#000; padding:14px; min-height:92px; display:flex; flex-direction:column; justify-content:space-between; grid-column:span 2">
+          <span style="font-size:13px; font-weight:700; line-height:1.25">Business processes in scope</span>
+          <span style="display:flex; align-items:baseline; justify-content:space-between; gap:8px"><span style="font-family:'Space Grotesk',sans-serif; font-size:26px; font-weight:700; line-height:1">43</span><span style="font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700; text-transform:uppercase">Defined</span></span>
+        </div>
+
+        <div style="border:2px solid #F8F7F4; background:#F8F7F4; color:#000; padding:14px; min-height:92px; display:flex; flex-direction:column; justify-content:space-between; grid-column:span 2">
+          <span style="font-size:13px; font-weight:700; line-height:1.25">Current-state systems &amp; integrations</span>
+          <span style="display:flex; align-items:baseline; justify-content:space-between; gap:8px"><span style="font-family:'Space Grotesk',sans-serif; font-size:26px; font-weight:700; line-height:1">38</span><span style="font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700; text-transform:uppercase">Defined</span></span>
+        </div>
+
+        <div style="border:2px solid #F8F7F4; background:#F8F7F4; color:#000; padding:14px; min-height:92px; display:flex; flex-direction:column; justify-content:space-between">
+          <span style="font-size:12px; font-weight:700; line-height:1.25">Operating model &amp; ownership</span>
+          <span style="display:flex; align-items:baseline; justify-content:space-between; gap:6px"><span style="font-family:'Space Grotesk',sans-serif; font-size:23px; font-weight:700; line-height:1">24</span><span style="font-family:'JetBrains Mono',monospace; font-size:8px; font-weight:700; text-transform:uppercase">Defined</span></span>
+        </div>
+
+        <div style="border:2px solid #F8F7F4; background:#F8F7F4; color:#000; padding:14px; min-height:92px; display:flex; flex-direction:column; justify-content:space-between">
+          <span style="font-size:12px; font-weight:700; line-height:1.25">Data &amp; reporting</span>
+          <span style="display:flex; align-items:baseline; justify-content:space-between; gap:6px"><span style="font-family:'Space Grotesk',sans-serif; font-size:23px; font-weight:700; line-height:1">21</span><span style="font-family:'JetBrains Mono',monospace; font-size:8px; font-weight:700; text-transform:uppercase">Defined</span></span>
+        </div>
+
+        <div style="border:2px solid #F8F7F4; background:#F8F7F4; color:#000; padding:14px; min-height:92px; display:flex; flex-direction:column; justify-content:space-between">
+          <span style="font-size:12px; font-weight:700; line-height:1.25">People, roles, change impact</span>
+          <span style="display:flex; align-items:baseline; justify-content:space-between; gap:6px"><span style="font-family:'Space Grotesk',sans-serif; font-size:23px; font-weight:700; line-height:1">19</span><span style="font-family:'JetBrains Mono',monospace; font-size:8px; font-weight:700; text-transform:uppercase">Defined</span></span>
+        </div>
+
+        <div style="border:2px solid #F8F7F4; background:#F8F7F4; color:#000; padding:14px; min-height:92px; display:flex; flex-direction:column; justify-content:space-between">
+          <span style="font-size:12px; font-weight:700; line-height:1.25">Success measures</span>
+          <span style="display:flex; align-items:baseline; justify-content:space-between; gap:6px"><span style="font-family:'Space Grotesk',sans-serif; font-size:23px; font-weight:700; line-height:1">17</span><span style="font-family:'JetBrains Mono',monospace; font-size:8px; font-weight:700; text-transform:uppercase">Defined</span></span>
+        </div>
+
+        <div style="border:2px solid #F8F7F4; background:#F8F7F4; color:#000; padding:14px; min-height:92px; display:flex; flex-direction:column; justify-content:space-between; grid-column:span 2">
+          <span style="font-size:13px; font-weight:700; line-height:1.25">Security, compliance &amp; residency</span>
+          <span style="display:flex; align-items:baseline; justify-content:space-between; gap:8px"><span style="font-family:'Space Grotesk',sans-serif; font-size:26px; font-weight:700; line-height:1">16</span><span style="font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700; text-transform:uppercase">Defined</span></span>
+        </div>
+
+        <div style="border:2px solid #FFD43B; background:rgba(253,224,71,0.2); padding:14px; min-height:92px; display:flex; flex-direction:column; justify-content:space-between">
+          <span style="font-size:12px; font-weight:700; line-height:1.25; color:#FFF3BF">Risks &amp; dependencies</span>
+          <span style="display:flex; align-items:baseline; justify-content:space-between; gap:6px"><span style="font-family:'Space Grotesk',sans-serif; font-size:23px; font-weight:700; line-height:1; color:#FFD43B">11</span><span style="font-family:'JetBrains Mono',monospace; font-size:8px; font-weight:700; text-transform:uppercase; color:#FFD43B">Partial</span></span>
+        </div>
+
+        <div style="border:2px solid #FFD43B; background:rgba(253,224,71,0.2); padding:14px; min-height:92px; display:flex; flex-direction:column; justify-content:space-between">
+          <span style="font-size:12px; font-weight:700; line-height:1.25; color:#FFF3BF">Timeline &amp; milestones</span>
+          <span style="display:flex; align-items:baseline; justify-content:space-between; gap:6px"><span style="font-family:'Space Grotesk',sans-serif; font-size:23px; font-weight:700; line-height:1; color:#FFD43B">9</span><span style="font-family:'JetBrains Mono',monospace; font-size:8px; font-weight:700; text-transform:uppercase; color:#FFD43B">Partial</span></span>
+        </div>
+
+        <div style="border:2px dashed #71717a; background:#000; padding:16px 18px; min-height:92px; display:flex; align-items:center; justify-content:space-between; gap:20px; grid-column:span 4">
+          <span style="display:flex; flex-direction:column; gap:4px">
+            <span style="font-size:14px; font-weight:700; line-height:1.25; color:#a1a1aa">Commercials &amp; funding envelope</span>
+            <span style="font-size:12px; line-height:1.5; color:#71717a">Not raised by anyone, in either workshop</span>
+          </span>
+          <span style="display:flex; align-items:baseline; gap:12px; flex-shrink:0"><span style="font-family:'Space Grotesk',sans-serif; font-size:34px; font-weight:700; line-height:1; color:#71717a">0</span><span style="font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.14em; color:#71717a">Dark</span></span>
+        </div>
+      </div>
+
+      <div style="margin-top:20px; padding-top:16px; border-top:2px solid #52525b; display:flex; align-items:center; justify-content:space-between; gap:16px">
+        <span style="font-size:13px; line-height:1.55; color:#d4d4d8">Ten people spent two workshops on this ask and nobody entered commercials. That zero is the single most useful output of the session.</span>
+        <span style="display:flex; align-items:center; gap:12px; font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700; text-transform:uppercase; color:#a1a1aa; flex-shrink:0">
+          <span style="display:flex; align-items:center; gap:5px"><span style="width:11px; height:11px; background:#F8F7F4; border:1px solid #F8F7F4"></span>Defined</span>
+          <span style="display:flex; align-items:center; gap:5px"><span style="width:11px; height:11px; background:rgba(253,224,71,0.2); border:1px solid #FFD43B"></span>Partial</span>
+          <span style="display:flex; align-items:center; gap:5px"><span style="width:11px; height:11px; background:#000; border:1px dashed #71717a"></span>Dark</span>
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding:24px 48px 40px">
+    <div style="display:flex; align-items:baseline; justify-content:space-between; gap:16px; margin-bottom:16px">
+      <h3 style="margin:0; font-family:'Space Grotesk',sans-serif; font-size:18px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em">Scope ledger</h3>
+      <span style="font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.08em; color:#71717a">The same statuses as a status-pack artefact</span>
+    </div>
+
+    <div style="background:#fff; border:3px solid #000; box-shadow:6px 6px 0px 0px rgba(0,0,0,1); padding:28px">
+      <div style="display:flex; align-items:baseline; justify-content:space-between; gap:16px; padding-bottom:12px; border-bottom:2px solid #000; margin-bottom:6px">
+        <span style="font-family:'Space Grotesk',sans-serif; font-size:14px; font-weight:900; text-transform:uppercase; letter-spacing:0.05em">Northwind Group · digital transformation · level set v2</span>
+        <span style="font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; color:#52525b; white-space:nowrap">7 defined · 2 partial · 1 dark</span>
+      </div>
+
+      <div style="display:flex; gap:0; padding:9px 0">
+        <span style="flex:1; font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:#a1a1aa">Area of the ask</span>
+        <span style="width:96px; flex-shrink:0; font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:#a1a1aa">Status</span>
+        <span style="width:64px; flex-shrink:0; text-align:right; font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:#a1a1aa">Frags</span>
+        <span style="width:64px; flex-shrink:0; text-align:right; font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:#a1a1aa">Voices</span>
+        <span style="width:130px; flex-shrink:0; text-align:right; font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:#a1a1aa">Owner</span>
+        <span style="width:150px; flex-shrink:0; text-align:right; font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:#a1a1aa">Next</span>
+      </div>
+
+      <div style="display:flex; gap:0; align-items:center; padding:10px 0; border-top:1px solid #e4e4e7">
+        <span style="flex:1; font-size:13px; font-weight:600; padding-right:12px">Business processes in scope</span>
+        <span style="width:96px; flex-shrink:0"><span style="display:inline-block; border:1px solid #000; background:#51CF66; padding:2px 7px; font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700; text-transform:uppercase">Defined</span></span>
+        <span style="width:64px; flex-shrink:0; text-align:right; font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:700">43</span>
+        <span style="width:64px; flex-shrink:0; text-align:right; font-family:'JetBrains Mono',monospace; font-size:11px; color:#52525b">6</span>
+        <span style="width:130px; flex-shrink:0; text-align:right; font-family:'JetBrains Mono',monospace; font-size:10px; color:#52525b">Lindqvist</span>
+        <span style="width:150px; flex-shrink:0; text-align:right; font-size:11px; color:#71717a">Sign off as baseline</span>
+      </div>
+
+      <div style="display:flex; gap:0; align-items:center; padding:10px 0; border-top:1px solid #e4e4e7">
+        <span style="flex:1; font-size:13px; font-weight:600; padding-right:12px">Current-state systems &amp; integrations</span>
+        <span style="width:96px; flex-shrink:0"><span style="display:inline-block; border:1px solid #000; background:#51CF66; padding:2px 7px; font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700; text-transform:uppercase">Defined</span></span>
+        <span style="width:64px; flex-shrink:0; text-align:right; font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:700">38</span>
+        <span style="width:64px; flex-shrink:0; text-align:right; font-family:'JetBrains Mono',monospace; font-size:11px; color:#52525b">5</span>
+        <span style="width:130px; flex-shrink:0; text-align:right; font-family:'JetBrains Mono',monospace; font-size:10px; color:#52525b">Mehta</span>
+        <span style="width:150px; flex-shrink:0; text-align:right; font-size:11px; color:#71717a">Confirm adapter lifespan</span>
+      </div>
+
+      <div style="display:flex; gap:0; align-items:center; padding:10px 0; border-top:1px solid #e4e4e7">
+        <span style="flex:1; font-size:13px; font-weight:600; padding-right:12px">Operating model &amp; ownership</span>
+        <span style="width:96px; flex-shrink:0"><span style="display:inline-block; border:1px solid #000; background:#51CF66; padding:2px 7px; font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700; text-transform:uppercase">Defined</span></span>
+        <span style="width:64px; flex-shrink:0; text-align:right; font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:700">24</span>
+        <span style="width:64px; flex-shrink:0; text-align:right; font-family:'JetBrains Mono',monospace; font-size:11px; color:#52525b">5</span>
+        <span style="width:130px; flex-shrink:0; text-align:right; font-family:'JetBrains Mono',monospace; font-size:10px; color:#52525b">Vance</span>
+        <span style="width:150px; flex-shrink:0; text-align:right; font-size:11px; color:#71717a">Name run-state owners</span>
+      </div>
+
+      <div style="display:flex; gap:0; align-items:center; padding:10px 0; border-top:1px solid #e4e4e7">
+        <span style="flex:1; font-size:13px; font-weight:600; padding-right:12px">Data &amp; reporting</span>
+        <span style="width:96px; flex-shrink:0"><span style="display:inline-block; border:1px solid #000; background:#51CF66; padding:2px 7px; font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700; text-transform:uppercase">Defined</span></span>
+        <span style="width:64px; flex-shrink:0; text-align:right; font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:700">21</span>
+        <span style="width:64px; flex-shrink:0; text-align:right; font-family:'JetBrains Mono',monospace; font-size:11px; color:#52525b">4</span>
+        <span style="width:130px; flex-shrink:0; text-align:right; font-family:'JetBrains Mono',monospace; font-size:10px; color:#52525b">Mehta</span>
+        <span style="width:150px; flex-shrink:0; text-align:right; font-size:11px; color:#71717a">Map reporting consumers</span>
+      </div>
+
+      <div style="display:flex; gap:0; align-items:center; padding:10px 0; border-top:1px solid #e4e4e7">
+        <span style="flex:1; font-size:13px; font-weight:600; padding-right:12px">People, roles, change impact</span>
+        <span style="width:96px; flex-shrink:0"><span style="display:inline-block; border:1px solid #000; background:#51CF66; padding:2px 7px; font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700; text-transform:uppercase">Defined</span></span>
+        <span style="width:64px; flex-shrink:0; text-align:right; font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:700">19</span>
+        <span style="width:64px; flex-shrink:0; text-align:right; font-family:'JetBrains Mono',monospace; font-size:11px; color:#52525b">4</span>
+        <span style="width:130px; flex-shrink:0; text-align:right; font-family:'JetBrains Mono',monospace; font-size:10px; color:#52525b">Lindqvist</span>
+        <span style="width:150px; flex-shrink:0; text-align:right; font-size:11px; color:#71717a">Impact per branch role</span>
+      </div>
+
+      <div style="display:flex; gap:0; align-items:center; padding:10px 0; border-top:1px solid #e4e4e7">
+        <span style="flex:1; font-size:13px; font-weight:600; padding-right:12px">Success measures</span>
+        <span style="width:96px; flex-shrink:0"><span style="display:inline-block; border:1px solid #000; background:#51CF66; padding:2px 7px; font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700; text-transform:uppercase">Defined</span></span>
+        <span style="width:64px; flex-shrink:0; text-align:right; font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:700">17</span>
+        <span style="width:64px; flex-shrink:0; text-align:right; font-family:'JetBrains Mono',monospace; font-size:11px; color:#52525b">3</span>
+        <span style="width:130px; flex-shrink:0; text-align:right; font-family:'JetBrains Mono',monospace; font-size:10px; color:#52525b">Okafor</span>
+        <span style="width:150px; flex-shrink:0; text-align:right; font-size:11px; color:#71717a">Baseline the numbers</span>
+      </div>
+
+      <div style="display:flex; gap:0; align-items:center; padding:10px 0; border-top:1px solid #e4e4e7">
+        <span style="flex:1; font-size:13px; font-weight:600; padding-right:12px">Security, compliance &amp; residency</span>
+        <span style="width:96px; flex-shrink:0"><span style="display:inline-block; border:1px solid #000; background:#51CF66; padding:2px 7px; font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700; text-transform:uppercase">Defined</span></span>
+        <span style="width:64px; flex-shrink:0; text-align:right; font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:700">16</span>
+        <span style="width:64px; flex-shrink:0; text-align:right; font-family:'JetBrains Mono',monospace; font-size:11px; color:#52525b">4</span>
+        <span style="width:130px; flex-shrink:0; text-align:right; font-family:'JetBrains Mono',monospace; font-size:10px; color:#52525b">Njoku</span>
+        <span style="width:150px; flex-shrink:0; text-align:right; font-size:11px; color:#71717a">Residency constraint doc</span>
+      </div>
+
+      <div style="display:flex; gap:0; align-items:center; padding:10px 6px; border-top:1px solid #e4e4e7; background:#FFF3BF; margin:0 -6px">
+        <span style="flex:1; font-size:13px; font-weight:700; padding-right:12px">Risks &amp; dependencies</span>
+        <span style="width:96px; flex-shrink:0"><span style="display:inline-block; border:1px solid #000; background:#FFD43B; padding:2px 7px; font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700; text-transform:uppercase">Partial</span></span>
+        <span style="width:64px; flex-shrink:0; text-align:right; font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:700">11</span>
+        <span style="width:64px; flex-shrink:0; text-align:right; font-family:'JetBrains Mono',monospace; font-size:11px; color:#52525b">2</span>
+        <span style="width:130px; flex-shrink:0; text-align:right; font-family:'JetBrains Mono',monospace; font-size:10px; color:#52525b">Vance</span>
+        <span style="width:150px; flex-shrink:0; text-align:right; font-size:11px; color:#3f3f46">Vendor contract review</span>
+      </div>
+
+      <div style="display:flex; gap:0; align-items:center; padding:10px 6px; border-top:1px solid #e4e4e7; background:#FFF3BF; margin:0 -6px">
+        <span style="flex:1; font-size:13px; font-weight:700; padding-right:12px">Timeline &amp; milestones</span>
+        <span style="width:96px; flex-shrink:0"><span style="display:inline-block; border:1px solid #000; background:#FFD43B; padding:2px 7px; font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700; text-transform:uppercase">Partial</span></span>
+        <span style="width:64px; flex-shrink:0; text-align:right; font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:700">9</span>
+        <span style="width:64px; flex-shrink:0; text-align:right; font-family:'JetBrains Mono',monospace; font-size:11px; color:#52525b">2</span>
+        <span style="width:130px; flex-shrink:0; text-align:right; font-family:'JetBrains Mono',monospace; font-size:10px; color:#52525b">Farrell</span>
+        <span style="width:150px; flex-shrink:0; text-align:right; font-size:11px; color:#3f3f46">Confirm the hard date</span>
+      </div>
+
+      <div style="display:flex; gap:0; align-items:center; padding:10px 6px; border-top:1px solid #e4e4e7; background:#000; color:#fff; margin:0 -6px">
+        <span style="flex:1; font-size:13px; font-weight:700; padding-right:12px">Commercials &amp; funding envelope</span>
+        <span style="width:96px; flex-shrink:0"><span style="display:inline-block; border:1px solid #fff; background:#000; color:#fff; padding:2px 7px; font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700; text-transform:uppercase">Dark</span></span>
+        <span style="width:64px; flex-shrink:0; text-align:right; font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:700">0</span>
+        <span style="width:64px; flex-shrink:0; text-align:right; font-family:'JetBrains Mono',monospace; font-size:11px; color:#a1a1aa">0</span>
+        <span style="width:130px; flex-shrink:0; text-align:right; font-family:'JetBrains Mono',monospace; font-size:10px; color:#d4d4d8">Unassigned</span>
+        <span style="width:150px; flex-shrink:0; text-align:right; font-size:11px; color:#FFFEE0">Escalate to sponsor</span>
+      </div>
+
+      <div style="margin-top:20px; padding:14px 16px; border:2px solid #000; background:#fafafa; display:flex; align-items:flex-start; gap:12px">
+        <span style="font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; flex-shrink:0; background:#000; color:#FFFEE0; padding:3px 7px">On the record</span>
+        <span style="font-size:13px; line-height:1.6; color:#3f3f46">One structural call sits inside this ledger rather than above it: <strong>re-platform or re-think the process</strong>. Both readings are evidenced in the pile, so it is written up as an open decision for the sponsor with the fragments attached — not smoothed into a recommendation the group never made.</span>
+      </div>
+    </div>
+  </div>
+  <div style="padding:24px 48px 16px; background:#EFEFEF; border-top:3px solid #000; border-bottom:3px solid #000">
+    <div style="display:flex; align-items:baseline; gap:16px; padding:24px 0">
+      <span style="font-family:'Space Grotesk',sans-serif; font-size:40px; font-weight:700; line-height:1">04</span>
+      <h2 style="margin:0; font-family:'Space Grotesk',sans-serif; font-size:26px; font-weight:700; text-transform:uppercase; letter-spacing:-0.01em">Three registers</h2>
+      <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#52525b; text-transform:uppercase; letter-spacing:0.12em; margin-left:auto">Questions · assumptions · definitions</span>
+    </div>
+    <p style="margin:0 0 24px; font-size:15px; line-height:1.65; color:#3f3f46; max-width:900px; text-wrap:pretty">The ledger says how well each area is understood. These three say why — what is still being asked, what is being taken on faith, and which words the group had to pin down before they could agree on anything.</p>
+  </div>
+
+  <div style="padding:40px 48px 24px">
+    <div style="background:#fff; border:3px solid #000; box-shadow:6px 6px 0px 0px rgba(0,0,0,1); padding:28px">
+      <div style="display:flex; align-items:baseline; justify-content:space-between; gap:16px; padding-bottom:12px; border-bottom:2px solid #000; margin-bottom:18px">
+        <h3 style="margin:0; font-family:'Space Grotesk',sans-serif; font-size:18px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em">Open questions</h3>
+        <span style="font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.08em; color:#71717a">14 open · 9 owned · 5 unassigned</span>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:12px">
+        <div style="border:2px solid #000; background:#FFF3BF; padding:14px 16px; display:flex; gap:16px; align-items:flex-start">
+          <span style="font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; flex-shrink:0; width:34px; padding-top:1px">Q-01</span>
+          <div style="flex:1">
+            <p style="margin:0; font-size:14px; line-height:1.5; font-weight:600">What is the funding envelope for phase one, and who signs it off?</p>
+            <p style="margin:5px 0 0; font-size:12px; line-height:1.5; color:#52525b">Raised by Farrell in workshop 02 after the coverage map showed commercials dark. No fragments from anyone in either session.</p>
+          </div>
+          <div style="flex-shrink:0; width:150px; text-align:right">
+            <span style="display:block; font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; text-transform:uppercase">Unassigned</span>
+            <span style="display:block; font-family:'JetBrains Mono',monospace; font-size:9px; color:#52525b; text-transform:uppercase; margin-top:3px">Blocks scoping</span>
+          </div>
+        </div>
+
+        <div style="border:2px solid #000; background:#fafafa; padding:14px 16px; display:flex; gap:16px; align-items:flex-start">
+          <span style="font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; flex-shrink:0; width:34px; padding-top:1px">Q-02</span>
+          <div style="flex:1">
+            <p style="margin:0; font-size:14px; line-height:1.5; font-weight:600">Which of the three intake channels is the reference process?</p>
+            <p style="margin:5px 0 0; font-size:12px; line-height:1.5; color:#52525b">Branch, broker and portal each have their own exception path. Every downstream design decision depends on picking one.</p>
+          </div>
+          <div style="flex-shrink:0; width:150px; text-align:right">
+            <span style="display:block; font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; text-transform:uppercase">Lindqvist</span>
+            <span style="display:block; font-family:'JetBrains Mono',monospace; font-size:9px; color:#52525b; text-transform:uppercase; margin-top:3px">Due Fri</span>
+          </div>
+        </div>
+
+        <div style="border:2px solid #000; background:#fafafa; padding:14px 16px; display:flex; gap:16px; align-items:flex-start">
+          <span style="font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; flex-shrink:0; width:34px; padding-top:1px">Q-03</span>
+          <div style="flex:1">
+            <p style="margin:0; font-size:14px; line-height:1.5; font-weight:600">How long must the mainframe adapter be supported, contractually?</p>
+            <p style="margin:5px 0 0; font-size:12px; line-height:1.5; color:#52525b">Mehta says "at least two more years" — the group is proceeding on that without seeing the contract.</p>
+          </div>
+          <div style="flex-shrink:0; width:150px; text-align:right">
+            <span style="display:block; font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; text-transform:uppercase">Vance</span>
+            <span style="display:block; font-family:'JetBrains Mono',monospace; font-size:9px; color:#52525b; text-transform:uppercase; margin-top:3px">Vendor review</span>
+          </div>
+        </div>
+
+        <div style="border:2px solid #000; background:#fafafa; padding:14px 16px; display:flex; gap:16px; align-items:flex-start">
+          <span style="font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; flex-shrink:0; width:34px; padding-top:1px">Q-04</span>
+          <div style="flex:1">
+            <p style="margin:0; font-size:14px; line-height:1.5; font-weight:600">Is data residency a hard legal constraint or an internal policy?</p>
+            <p style="margin:5px 0 0; font-size:12px; line-height:1.5; color:#52525b">The answer changes the target platform, not just the controls on top of it.</p>
+          </div>
+          <div style="flex-shrink:0; width:150px; text-align:right">
+            <span style="display:block; font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; text-transform:uppercase">Njoku</span>
+            <span style="display:block; font-family:'JetBrains Mono',monospace; font-size:9px; color:#52525b; text-transform:uppercase; margin-top:3px">Due Wed</span>
+          </div>
+        </div>
+
+        <div style="border:2px solid #000; background:#fafafa; padding:14px 16px; display:flex; gap:16px; align-items:flex-start">
+          <span style="font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; flex-shrink:0; width:34px; padding-top:1px">Q-05</span>
+          <div style="flex:1">
+            <p style="margin:0; font-size:14px; line-height:1.5; font-weight:600">Who operates the platform after handover, and are they staffed for it?</p>
+            <p style="margin:5px 0 0; font-size:12px; line-height:1.5; color:#52525b">Operating model is defined on paper; the headcount behind it has not been confirmed by anyone in the room.</p>
+          </div>
+          <div style="flex-shrink:0; width:150px; text-align:right">
+            <span style="display:block; font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; text-transform:uppercase">Okafor</span>
+            <span style="display:block; font-family:'JetBrains Mono',monospace; font-size:9px; color:#52525b; text-transform:uppercase; margin-top:3px">Sponsor call</span>
+          </div>
+        </div>
+
+        <div style="border:2px dashed #000; background:#fff; padding:12px 16px; font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.06em; color:#52525b; text-align:center">+ 9 more · filterable by area, owner or workshop</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding:16px 48px 24px">
+    <div style="background:#fff; border:3px solid #000; box-shadow:6px 6px 0px 0px rgba(0,0,0,1); padding:28px">
+      <div style="display:flex; align-items:baseline; justify-content:space-between; gap:16px; padding-bottom:12px; border-bottom:2px solid #000; margin-bottom:18px">
+        <h3 style="margin:0; font-family:'Space Grotesk',sans-serif; font-size:18px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em">Assumptions</h3>
+        <span style="font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.08em; color:#71717a">What we are proceeding on without evidence</span>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px">
+        <div style="border:2px solid #000; background:#fafafa; padding:16px">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px">
+            <span style="font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700">A-01</span>
+            <span style="border:1px solid #000; background:#FF6B6B; padding:1px 7px; font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700; text-transform:uppercase; white-space:nowrap">High impact</span>
+          </div>
+          <p style="margin:0; font-size:13px; line-height:1.5; font-weight:600">The adapter survives the programme, so no big-bang cutover is needed.</p>
+          <p style="margin:6px 0 0; font-size:11px; line-height:1.5; color:#52525b">Source: Mehta, workshop 01. Unverified against the vendor contract. If false, phase one changes shape entirely.</p>
+        </div>
+
+        <div style="border:2px solid #000; background:#fafafa; padding:16px">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px">
+            <span style="font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700">A-02</span>
+            <span style="border:1px solid #000; background:#FF6B6B; padding:1px 7px; font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700; text-transform:uppercase; white-space:nowrap">High impact</span>
+          </div>
+          <p style="margin:0; font-size:13px; line-height:1.5; font-weight:600">Funding continues past phase one if a customer-visible change lands.</p>
+          <p style="margin:6px 0 0; font-size:11px; line-height:1.5; color:#52525b">Source: inferred from Okafor's framing. Nobody has confirmed the envelope, which is why commercials is dark.</p>
+        </div>
+
+        <div style="border:2px solid #000; background:#fafafa; padding:16px">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px">
+            <span style="font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700">A-03</span>
+            <span style="border:1px solid #000; background:#FFD43B; padding:1px 7px; font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700; text-transform:uppercase; white-space:nowrap">Medium</span>
+          </div>
+          <p style="margin:0; font-size:13px; line-height:1.5; font-weight:600">The branch channel is representative enough to design against first.</p>
+          <p style="margin:6px 0 0; font-size:11px; line-height:1.5; color:#52525b">Convenient rather than evidenced — it is the channel the group knows best, not necessarily the highest-volume one.</p>
+        </div>
+
+        <div style="border:2px solid #000; background:#fafafa; padding:16px">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px">
+            <span style="font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700">A-04</span>
+            <span style="border:1px solid #000; background:#FFD43B; padding:1px 7px; font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700; text-transform:uppercase; white-space:nowrap">Medium</span>
+          </div>
+          <p style="margin:0; font-size:13px; line-height:1.5; font-weight:600">Existing reporting consumers can be migrated without re-negotiation.</p>
+          <p style="margin:6px 0 0; font-size:11px; line-height:1.5; color:#52525b">Nobody from the consuming business units was in either workshop. Absence, not agreement.</p>
+        </div>
+      </div>
+
+      <div style="margin-top:16px; padding:12px 16px; background:#000; color:#FFFEE0; display:flex; align-items:flex-start; gap:12px">
+        <span style="font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; flex-shrink:0">Why separate</span>
+        <span style="font-size:13px; line-height:1.55">An assumption written down is a risk with a name. Left inside a fragment it reads as a fact by the second week.</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding:16px 48px 56px">
+    <div style="background:#fff; border:3px solid #000; box-shadow:6px 6px 0px 0px rgba(0,0,0,1); padding:28px">
+      <div style="display:flex; align-items:baseline; justify-content:space-between; gap:16px; padding-bottom:12px; border-bottom:2px solid #000; margin-bottom:18px">
+        <h3 style="margin:0; font-family:'Space Grotesk',sans-serif; font-size:18px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em">Shared definitions</h3>
+        <span style="font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.08em; color:#71717a">Terms the group had to agree meant one thing</span>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:0">
+        <div style="display:flex; gap:20px; align-items:flex-start; padding:14px 0; border-bottom:1px solid #e4e4e7">
+          <span style="width:190px; flex-shrink:0; font-family:'Space Grotesk',sans-serif; font-size:15px; font-weight:700">"Claim"</span>
+          <div style="flex:1">
+            <p style="margin:0; font-size:13px; line-height:1.55; color:#27272a">A notified event with a reference number — <em>not</em> an enquiry, and not a reopened claim, both of which the branch team had been counting.</p>
+            <p style="margin:5px 0 0; font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.04em; color:#71717a">Surfaced by · Lindqvist &amp; Mehta disagreeing on volumes by a factor of three</p>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:20px; align-items:flex-start; padding:14px 0; border-bottom:1px solid #e4e4e7">
+          <span style="width:190px; flex-shrink:0; font-family:'Space Grotesk',sans-serif; font-size:15px; font-weight:700">"Transformation"</span>
+          <div style="flex:1">
+            <p style="margin:0; font-size:13px; line-height:1.55; color:#27272a">Changing what the business does, not only what it runs on. Recorded explicitly because half the room had been using it to mean a technology migration.</p>
+            <p style="margin:5px 0 0; font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.04em; color:#71717a">Surfaced by · Binary Bracket, workshop 01</p>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:20px; align-items:flex-start; padding:14px 0; border-bottom:1px solid #e4e4e7">
+          <span style="width:190px; flex-shrink:0; font-family:'Space Grotesk',sans-serif; font-size:15px; font-weight:700">"Phase one"</span>
+          <div style="flex:1">
+            <p style="margin:0; font-size:13px; line-height:1.55; color:#27272a">The first release that a customer can perceive. Deliberately not "the first six months" — the sponsor's funding test is visibility, not elapsed time.</p>
+            <p style="margin:5px 0 0; font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.04em; color:#71717a">Surfaced by · Okafor, Guided Drill</p>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:20px; align-items:flex-start; padding:14px 0; border-bottom:1px solid #e4e4e7">
+          <span style="width:190px; flex-shrink:0; font-family:'Space Grotesk',sans-serif; font-size:15px; font-weight:700">"In scope"</span>
+          <div style="flex:1">
+            <p style="margin:0; font-size:13px; line-height:1.55; color:#27272a">Named in this ledger with a status. Anything not in the ledger is out of scope by construction, which is what makes the dark tile safe to escalate.</p>
+            <p style="margin:5px 0 0; font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.04em; color:#71717a">Surfaced by · Farrell, facilitator note</p>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:20px; align-items:flex-start; padding:14px 0">
+          <span style="width:190px; flex-shrink:0; font-family:'Space Grotesk',sans-serif; font-size:15px; font-weight:700">"Owner"</span>
+          <div style="flex:1">
+            <p style="margin:0; font-size:13px; line-height:1.55; color:#27272a">The person who closes the gap, not the person who cares about it most. Every ledger row and open question resolves to a single name.</p>
+            <p style="margin:5px 0 0; font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.04em; color:#71717a">Surfaced by · Vance, after two rows had three owners each</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div style="padding:24px 48px 16px; background:#EFEFEF; border-top:3px solid #000; border-bottom:3px solid #000">
+    <div style="display:flex; align-items:baseline; gap:16px; padding:24px 0">
+      <span style="font-family:'Space Grotesk',sans-serif; font-size:40px; font-weight:700; line-height:1">05</span>
+      <h2 style="margin:0; font-family:'Space Grotesk',sans-serif; font-size:26px; font-weight:700; text-transform:uppercase; letter-spacing:-0.01em">Getting everyone in</h2>
+      <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#52525b; text-transform:uppercase; letter-spacing:0.12em; margin-left:auto">Access · library</span>
+    </div>
+  </div>
+
+  <div style="padding:40px 48px 56px; display:flex; gap:34px; align-items:stretch">
+    <div style="width:600px; flex-shrink:0; display:flex; flex-direction:column; gap:16px">
+      <div style="background:#fff; border:3px solid #000; box-shadow:6px 6px 0px 0px rgba(0,0,0,1); padding:40px 32px; text-align:center; flex:1; display:flex; flex-direction:column; justify-content:center">
+        <div style="display:inline-flex; align-self:center; align-items:center; justify-content:center; background:#000; padding:14px; margin-bottom:20px; border:1px solid #000; box-shadow:2px 2px 0px 0px rgba(0,0,0,1)">
+          <img src="https://unpkg.com/lucide-static@latest/icons/lock.svg" style="width:28px; height:28px; filter:invert(1)" alt="" />
+        </div>
+        <span style="font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.18em; color:#71717a">Northwind Group · engagement 4417</span>
+        <h3 style="margin:10px 0 0; font-family:'Space Grotesk',sans-serif; font-size:34px; font-weight:700; text-transform:uppercase; letter-spacing:-0.02em">Level Set</h3>
+        <p style="margin:14px auto 0; font-size:14px; line-height:1.6; color:#3f3f46; max-width:400px">This chamber is restricted to the engagement group. Access is granted through your organisation's own directory — there is no separate account to create and no password held here.</p>
+        <div style="margin:24px auto 0; border:2px solid #000; background:#fafafa; padding:14px 18px; max-width:420px; text-align:left">
+          <span style="display:block; font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:#52525b; margin-bottom:6px">You are signed in as</span>
+          <div style="display:flex; align-items:center; gap:10px">
+            <span style="width:26px; height:26px; flex-shrink:0; background:#000; color:#fff; font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; display:flex; align-items:center; justify-content:center">AN</span>
+            <span style="display:flex; flex-direction:column">
+              <span style="font-size:13px; font-weight:700">A. Njoku</span>
+              <span style="font-family:'JetBrains Mono',monospace; font-size:10px; color:#71717a">Security &amp; compliance · client side</span>
+            </span>
+          </div>
+        </div>
+        <div style="margin:20px auto 0; font-family:'JetBrains Mono',monospace; font-size:9px; text-transform:uppercase; letter-spacing:0.08em; color:#a1a1aa; max-width:420px; line-height:1.6">Membership is managed in the client's directory · removal there removes access here</div>
+      </div>
+      <div style="background:#FFFEE0; border:2px solid #000; padding:16px; box-shadow:3px 3px 0px 0px rgba(0,0,0,1)">
+        <p style="margin:0; font-size:13px; line-height:1.6; color:#000"><strong style="font-family:'Space Grotesk',sans-serif; text-transform:uppercase; font-size:11px; letter-spacing:0.08em">The point —</strong> client stakeholders never create an account, and offboarding is somebody else's job. The app holds no credentials.</p>
+      </div>
+    </div>
+
+    <div style="flex:1; display:flex; flex-direction:column; gap:20px">
+      <div>
+        <h3 style="margin:0; font-family:'Space Grotesk',sans-serif; font-size:20px; font-weight:700; text-transform:uppercase; letter-spacing:0.02em">Session library, per engagement</h3>
+        <p style="margin:10px 0 0; font-size:14px; line-height:1.6; color:#3f3f46">Today "Previous Sessions" is whatever is in your browser. In group mode it is the engagement's shelf — every workshop, every async window, visible to everyone in the group.</p>
+      </div>
+
+      <div style="background:#fff; border:3px solid #000; box-shadow:6px 6px 0px 0px rgba(0,0,0,1); padding:20px; display:flex; flex-direction:column; gap:12px">
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding-bottom:10px; border-bottom:2px solid #000">
+          <span style="font-family:'Space Grotesk',sans-serif; font-size:13px; font-weight:900; text-transform:uppercase; letter-spacing:0.05em">Engagement shelf</span>
+          <span style="font-family:'JetBrains Mono',monospace; font-size:9px; text-transform:uppercase; letter-spacing:0.06em; color:#71717a">10 members</span>
+        </div>
+
+        <div style="border:2px solid #000; background:#fafafa; padding:12px 14px">
+          <div style="display:flex; align-items:baseline; justify-content:space-between; gap:10px">
+            <span style="font-size:13px; font-weight:700">Kickoff · level set workshop 01</span>
+            <span style="font-family:'JetBrains Mono',monospace; font-size:9px; color:#71717a; white-space:nowrap">Closed</span>
+          </div>
+          <p style="margin:5px 0 0; font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.04em; color:#52525b">47 fragments · 6 contributors · 12 Aug</p>
+        </div>
+
+        <div style="border:2px solid #000; background:#FFF3BF; padding:12px 14px">
+          <div style="display:flex; align-items:baseline; justify-content:space-between; gap:10px">
+            <span style="font-size:13px; font-weight:700">Async window · gap-filling</span>
+            <span style="font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700; color:#000; white-space:nowrap">Open to 4 SMEs</span>
+          </div>
+          <p style="margin:5px 0 0; font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.04em; color:#52525b">+85 fragments · 10 contributors · 13–16 Aug</p>
+        </div>
+
+        <div style="border:2px solid #000; background:#CEEAD6; padding:12px 14px">
+          <div style="display:flex; align-items:baseline; justify-content:space-between; gap:10px">
+            <span style="font-size:13px; font-weight:700">Level set workshop 02 · challenge</span>
+            <span style="font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700; color:#000; white-space:nowrap">Current</span>
+          </div>
+          <p style="margin:5px 0 0; font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.04em; color:#52525b">198 fragments · 10 contributors · 19 Aug</p>
+        </div>
+
+        <div style="border:2px dashed #000; background:#fff; padding:11px 14px; font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.06em; color:#52525b; text-align:center">Sessions belong to the engagement, not to a browser</div>
+      </div>
+
+      <div style="background:#fff; border:3px solid #000; box-shadow:6px 6px 0px 0px rgba(0,0,0,1); padding:20px">
+        <span style="display:block; font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:#71717a; margin-bottom:12px">Scoped invitation</span>
+        <p style="margin:0; font-size:13px; line-height:1.6; color:#27272a">An SME invited into <strong>Risks &amp; dependencies</strong> can read the whole pile but is only prompted on their area — so they add what is missing instead of re-opening what is settled.</p>
+      </div>
+    </div>
+  </div>
+
+  <div style="background:#1A1A1A; color:#F8F7F4; padding:56px 48px">
+    <div style="display:flex; align-items:baseline; gap:16px; border-bottom:2px solid #52525b; padding-bottom:14px; margin-bottom:28px">
+      <span style="font-family:'Space Grotesk',sans-serif; font-size:40px; font-weight:700; line-height:1">06</span>
+      <h2 style="margin:0; font-family:'Space Grotesk',sans-serif; font-size:26px; font-weight:700; text-transform:uppercase; letter-spacing:-0.01em">What this gets a client</h2>
+    </div>
+    <div style="display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px">
+      <div style="border:2px solid #F8F7F4; padding:22px">
+        <div style="font-family:'Space Grotesk',sans-serif; font-size:15px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:10px">A scope you can point at</div>
+        <p style="margin:0; font-size:13px; line-height:1.6; color:#d4d4d8">Ten named areas with a status each. Change requests later get argued against a written boundary instead of a memory of a workshop.</p>
+      </div>
+      <div style="border:2px solid #F8F7F4; padding:22px">
+        <div style="font-family:'Space Grotesk',sans-serif; font-size:15px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:10px">Gaps found in week one</div>
+        <p style="margin:0; font-size:13px; line-height:1.6; color:#d4d4d8">A dark area surfaces on day two rather than in month four. Commercials cost a conversation now; it costs a re-plan later.</p>
+      </div>
+      <div style="border:2px solid #F8F7F4; padding:22px">
+        <div style="font-family:'Space Grotesk',sans-serif; font-size:15px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:10px">Quiet voices on the record</div>
+        <p style="margin:0; font-size:13px; line-height:1.6; color:#d4d4d8">Asynchronous contribution means the people who don't speak up in a room full of executives still shape the scope.</p>
+      </div>
+      <div style="border:2px solid #F8F7F4; padding:22px">
+        <div style="font-family:'Space Grotesk',sans-serif; font-size:15px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:10px">Assumptions made visible</div>
+        <p style="margin:0; font-size:13px; line-height:1.6; color:#d4d4d8">Four things the plan depends on, written down with their source, so nobody discovers them as facts a month in.</p>
+      </div>
+      <div style="border:2px solid #F8F7F4; padding:22px">
+        <div style="font-family:'Space Grotesk',sans-serif; font-size:15px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:10px">One vocabulary</div>
+        <p style="margin:0; font-size:13px; line-height:1.6; color:#d4d4d8">Five words pinned down. "Claim" alone was a three-fold difference in volumes between two stakeholders.</p>
+      </div>
+      <div style="border:2px solid #fde047; padding:22px; background:rgba(253,224,71,0.08)">
+        <div style="font-family:'Space Grotesk',sans-serif; font-size:15px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:10px">A reusable artefact</div>
+        <p style="margin:0; font-size:13px; line-height:1.6; color:#d4d4d8">Regenerate the same pile as a scope document, a risk register, or a phase-one checklist without running another workshop.</p>
+      </div>
+    </div>
+  </div>
+
+  <sc-if value="{{ showDeployment }}" hint-placeholder-val="{{ true }}">
+    <div>
+      <div style="padding:24px 48px 16px; background:#EFEFEF; border-top:3px solid #000; border-bottom:3px solid #000">
+        <div style="display:flex; align-items:baseline; gap:16px; padding:24px 0">
+          <span style="font-family:'Space Grotesk',sans-serif; font-size:40px; font-weight:700; line-height:1">07</span>
+          <h2 style="margin:0; font-family:'Space Grotesk',sans-serif; font-size:26px; font-weight:700; text-transform:uppercase; letter-spacing:-0.01em">How you'd host it</h2>
+          <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#52525b; text-transform:uppercase; letter-spacing:0.12em; margin-left:auto">Cloud Run · IAP · Firestore</span>
+        </div>
+        <p style="margin:0 0 24px; font-size:15px; line-height:1.65; color:#3f3f46; max-width:900px; text-wrap:pretty">One hosted instance per engagement. Identity is the client's own, authorisation is IAM, and the app itself barely changes.</p>
+      </div>
+
+      <div style="padding:40px 48px 24px; display:flex; gap:34px; align-items:flex-start">
+        <div style="flex:1; background:#fff; border:3px solid #000; box-shadow:6px 6px 0px 0px rgba(0,0,0,1); padding:28px">
+          <h3 style="margin:0 0 18px; font-family:'Space Grotesk',sans-serif; font-size:16px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em">Request path</h3>
+          <div style="display:flex; flex-direction:column">
+            <div style="border:2px solid #000; background:#fafafa; padding:14px 16px">
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:10px">
+                <span style="font-family:'Space Grotesk',sans-serif; font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em">Stakeholder browser</span>
+                <span style="font-family:'JetBrains Mono',monospace; font-size:9px; text-transform:uppercase; color:#71717a; white-space:nowrap">6 + 4 SMEs</span>
+              </div>
+              <p style="margin:6px 0 0; font-size:12px; line-height:1.55; color:#52525b">Signs in with their existing Workspace account. Client-side and consultant-side users, one instance.</p>
+            </div>
+
+            <div style="align-self:center; width:2px; height:18px; background:#000"></div>
+
+            <div style="border:3px solid #000; background:#D2E3FC; padding:14px 16px">
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:10px">
+                <span style="font-family:'Space Grotesk',sans-serif; font-size:13px; font-weight:900; text-transform:uppercase; letter-spacing:0.05em">Load balancer + Identity-Aware Proxy</span>
+                <span style="font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700; text-transform:uppercase; border:1px solid #000; background:#fff; padding:2px 6px; white-space:nowrap">Authz here</span>
+              </div>
+              <p style="margin:6px 0 0; font-size:12px; line-height:1.55; color:#27272a">Access by Google Group membership (<span style="font-family:'JetBrains Mono',monospace; font-size:11px">roles/iap.httpsResourceAccessor</span>). Unauthorised requests never reach the app; IAP forwards a signed assertion the server verifies.</p>
+            </div>
+
+            <div style="align-self:center; width:2px; height:18px; background:#000"></div>
+
+            <div style="border:3px solid #000; background:#fff; padding:14px 16px">
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:10px">
+                <span style="font-family:'Space Grotesk',sans-serif; font-size:13px; font-weight:900; text-transform:uppercase; letter-spacing:0.05em">Cloud Run · the existing Express app</span>
+                <span style="font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700; text-transform:uppercase; border:1px solid #000; background:#EFEFEF; padding:2px 6px; white-space:nowrap">Ships today</span>
+              </div>
+              <p style="margin:6px 0 0; font-size:12px; line-height:1.55; color:#52525b">The same <span style="font-family:'JetBrains Mono',monospace; font-size:11px">server.ts</span> bundle, plus reading the verified identity and stamping it on each fragment.</p>
+            </div>
+
+            <div style="display:flex; align-items:stretch; gap:16px; margin-top:18px">
+              <div style="flex:1; border:2px solid #000; background:#CEEAD6; padding:14px 16px">
+                <span style="display:block; font-family:'Space Grotesk',sans-serif; font-size:12px; font-weight:900; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:6px">Firestore</span>
+                <p style="margin:0; font-size:12px; line-height:1.55; color:#27272a">Replaces localStorage. Sessions keyed by engagement, fragments carry an author. Async contribution falls out of this for free.</p>
+              </div>
+              <div style="flex:1; border:2px solid #000; background:#fafafa; padding:14px 16px">
+                <span style="display:block; font-family:'Space Grotesk',sans-serif; font-size:12px; font-weight:900; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:6px">Secret Manager → Gemini</span>
+                <p style="margin:0; font-size:12px; line-height:1.55; color:#52525b">The key moves out of <span style="font-family:'JetBrains Mono',monospace; font-size:11px">.env</span> into Secret Manager, read by the service account. The proxy pattern is already correct.</p>
+              </div>
+            </div>
+
+            <div style="margin-top:18px; padding-top:14px; border-top:2px solid #000; display:flex; align-items:flex-start; gap:10px">
+              <span style="font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; flex-shrink:0; background:#000; color:#FFFEE0; padding:3px 7px">Why IAP</span>
+              <span style="font-size:12px; line-height:1.55; color:#3f3f46">Client thought data is commercially sensitive. No credential handling in the app, revocation through the client's own directory, and Cloud Audit Logs answering "who saw this pile".</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="flex:1; background:#fff; border:3px solid #000; box-shadow:6px 6px 0px 0px rgba(0,0,0,1); padding:28px">
+          <h3 style="margin:0 0 18px; font-family:'Space Grotesk',sans-serif; font-size:16px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em">What actually changes</h3>
+
+          <div style="display:flex; gap:0; border-bottom:2px solid #000; padding-bottom:9px; margin-bottom:4px">
+            <span style="flex:1; font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:#a1a1aa">Concern</span>
+            <span style="width:160px; flex-shrink:0; font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:#a1a1aa">Today</span>
+            <span style="width:190px; flex-shrink:0; font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:#a1a1aa">Hosted</span>
+          </div>
+
+          <div style="display:flex; gap:0; align-items:flex-start; padding:10px 0; border-bottom:1px solid #e4e4e7">
+            <span style="flex:1; font-size:12px; font-weight:700; padding-right:10px">Who can open it</span>
+            <span style="width:160px; flex-shrink:0; font-size:12px; color:#71717a; padding-right:10px">Anyone with the URL</span>
+            <span style="width:190px; flex-shrink:0; font-size:12px; color:#27272a"><strong>IAP</strong> + Google Group on the engagement</span>
+          </div>
+          <div style="display:flex; gap:0; align-items:flex-start; padding:10px 0; border-bottom:1px solid #e4e4e7">
+            <span style="flex:1; font-size:12px; font-weight:700; padding-right:10px">Sign-in</span>
+            <span style="width:160px; flex-shrink:0; font-size:12px; color:#71717a; padding-right:10px">None</span>
+            <span style="width:190px; flex-shrink:0; font-size:12px; color:#27272a">Their own Workspace account; no user table, no passwords</span>
+          </div>
+          <div style="display:flex; gap:0; align-items:flex-start; padding:10px 0; border-bottom:1px solid #e4e4e7">
+            <span style="flex:1; font-size:12px; font-weight:700; padding-right:10px">Where the pile lives</span>
+            <span style="width:160px; flex-shrink:0; font-size:12px; color:#71717a; padding-right:10px"><span style="font-family:'JetBrains Mono',monospace; font-size:11px">localStorage</span>, one browser</span>
+            <span style="width:190px; flex-shrink:0; font-size:12px; color:#27272a"><strong>Firestore</strong>, keyed by engagement</span>
+          </div>
+          <div style="display:flex; gap:0; align-items:flex-start; padding:10px 0; border-bottom:1px solid #e4e4e7">
+            <span style="flex:1; font-size:12px; font-weight:700; padding-right:10px">Who said it</span>
+            <span style="width:160px; flex-shrink:0; font-size:12px; color:#71717a; padding-right:10px">Not recorded</span>
+            <span style="width:190px; flex-shrink:0; font-size:12px; color:#27272a">Author stamped from the verified assertion</span>
+          </div>
+          <div style="display:flex; gap:0; align-items:flex-start; padding:10px 0; border-bottom:1px solid #e4e4e7">
+            <span style="flex:1; font-size:12px; font-weight:700; padding-right:10px">Contributing later</span>
+            <span style="width:160px; flex-shrink:0; font-size:12px; color:#71717a; padding-right:10px">Reopen your own session</span>
+            <span style="width:190px; flex-shrink:0; font-size:12px; color:#27272a">Anyone in the group, any time, same pile</span>
+          </div>
+          <div style="display:flex; gap:0; align-items:flex-start; padding:10px 0; border-bottom:1px solid #e4e4e7">
+            <span style="flex:1; font-size:12px; font-weight:700; padding-right:10px">Gemini key</span>
+            <span style="width:160px; flex-shrink:0; font-size:12px; color:#71717a; padding-right:10px"><span style="font-family:'JetBrains Mono',monospace; font-size:11px">.env</span>, server-side proxy</span>
+            <span style="width:190px; flex-shrink:0; font-size:12px; color:#27272a"><strong>Secret Manager</strong> — same proxy</span>
+          </div>
+          <div style="display:flex; gap:0; align-items:flex-start; padding:10px 0; border-bottom:1px solid #e4e4e7">
+            <span style="flex:1; font-size:12px; font-weight:700; padding-right:10px">Runtime</span>
+            <span style="width:160px; flex-shrink:0; font-size:12px; color:#71717a; padding-right:10px"><span style="font-family:'JetBrains Mono',monospace; font-size:11px">npm run dev</span> on :3000</span>
+            <span style="width:190px; flex-shrink:0; font-size:12px; color:#27272a"><strong>Cloud Run</strong>, same <span style="font-family:'JetBrains Mono',monospace; font-size:11px">server.cjs</span></span>
+          </div>
+          <div style="display:flex; gap:0; align-items:flex-start; padding:10px 0">
+            <span style="flex:1; font-size:12px; font-weight:700; padding-right:10px">"Who saw this?"</span>
+            <span style="width:160px; flex-shrink:0; font-size:12px; color:#71717a; padding-right:10px">Unanswerable</span>
+            <span style="width:190px; flex-shrink:0; font-size:12px; color:#27272a">Cloud Audit Logs</span>
+          </div>
+
+          <div style="margin-top:16px; padding:12px 14px; background:#000; color:#FFFEE0; display:flex; align-items:flex-start; gap:10px">
+            <span style="font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; flex-shrink:0">Note</span>
+            <span style="font-size:12px; line-height:1.55">The app's shape barely changes. The work is a datastore swap and an identity header — the multi-user behaviour is emergent, not a rebuild.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <div style="background:#F8F7F4; padding:32px 48px; border-top:3px solid #000; display:flex; justify-content:space-between; align-items:center; font-family:'JetBrains Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.12em; color:#52525b">
+    <span>Concept · group mode is not built · app screens recreated separately</span>
+    <span>Northwind Group is a placeholder client</span>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;showConceptBanner&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Level Set&quot;},&quot;showDeployment&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Level Set&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      showConceptBanner: this.props.showConceptBanner ?? true,
+      showDeployment: this.props.showDeployment ?? true
+    };
+  }
+}
+</script>
+</body>
+</html>

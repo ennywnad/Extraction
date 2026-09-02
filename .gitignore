@@ -13,3 +13,6 @@ coverage/
 
 # Local engagement store (AUTH_MODE=dev)
 .data/
+
+# Archives — the design bundle is committed extracted, under planv1/
+*.zip

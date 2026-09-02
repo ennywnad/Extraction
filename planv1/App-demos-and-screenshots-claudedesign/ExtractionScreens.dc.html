@@ -1,0 +1,1213 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;family=Playfair+Display:ital,wght@0,600;0,800;1,400;1,700&amp;family=Space+Grotesk:wght@500;700&amp;family=JetBrains+Mono:wght@400;700&amp;display=swap" rel="stylesheet" />
+<style>
+body { margin:0; background:#F8F7F4; color:#1A1A1A; font-family:"Inter",ui-sans-serif,system-ui,sans-serif; }
+a { color:#1A1A1A; text-decoration:underline; }
+a:hover { color:#FF5722; }
+input, textarea, select, button { font-family:inherit; }
+</style>
+</helmet>
+<div style="width:1440px; background:#F8F7F4; color:#1A1A1A; font-family:'Inter',ui-sans-serif,system-ui,sans-serif; position:relative; overflow:hidden">
+
+  <sc-if value="{{ isWorkspace }}" hint-placeholder-val="{{ true }}">
+    <div style="display:flex; flex-direction:column; height:900px; overflow:hidden; background:#F8F7F4">
+
+      <header style="background:#fff; border-bottom:3px solid #000; padding:16px 24px; flex-shrink:0; display:flex; gap:16px; align-items:center; justify-content:space-between">
+        <div style="display:flex; align-items:center; gap:16px">
+          <button style="padding:8px; border:2px solid #000; background:#fff; box-shadow:2px 2px 0px 0px rgba(0,0,0,1); display:flex; cursor:pointer">
+            <img src="https://unpkg.com/lucide-static@latest/icons/arrow-left.svg" style="width:16px; height:16px; display:block" alt="" />
+          </button>
+          <div style="min-width:0">
+            <h2 style="margin:0; font-family:'Space Grotesk',sans-serif; font-size:12px; line-height:16px; font-weight:900; text-transform:uppercase; letter-spacing:-0.025em; color:#000; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:620px">what do we need to walk out of the northwind kickoff with? (Work/Career Domain), (Decision Needed)</h2>
+            <p style="margin:2px 0 0; font-size:11px; color:#71717a">Intention: <strong style="color:#000; font-weight:600; font-family:'Playfair Display',Georgia,serif; font-style:italic">Make a tough choice with clear priority action items</strong></p>
+          </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px">
+          <button onClick="{{ toggleScratch }}" style="padding:6px 14px; border:2px solid #000; background:#fff; color:#000; font-size:12px; line-height:16px; font-weight:700; font-family:'Space Grotesk',sans-serif; text-transform:uppercase; letter-spacing:0.05em; display:flex; align-items:center; gap:6px; cursor:pointer; box-shadow:2px 2px 0px 0px rgba(0,0,0,1)">
+            <img src="https://unpkg.com/lucide-static@latest/icons/plus.svg" style="width:14px; height:14px" alt="" />
+            Scratch Note
+          </button>
+          <button style="padding:8px 16px; border:2px solid #000; background:#000; color:#fff; font-size:12px; line-height:16px; font-weight:900; font-family:'Space Grotesk',sans-serif; text-transform:uppercase; letter-spacing:0.05em; display:flex; align-items:center; gap:8px; cursor:pointer; box-shadow:3px 3px 0px 0px rgba(0,0,0,1)">
+            <img src="https://unpkg.com/lucide-static@latest/icons/sparkles.svg" style="width:14px; height:14px; filter:invert(1)" alt="" />
+            Finish &amp; Organize Outline
+          </button>
+        </div>
+      </header>
+
+      <sc-if value="{{ scratchOpen }}" hint-placeholder-val="{{ false }}">
+        <div style="background:#fafafa; border-bottom:2px solid #000; padding:14px; display:flex; align-items:center; gap:10px; flex-shrink:0">
+          <input type="text" placeholder="Jot down a quick thought fragment instantly or record..." value="{{ scratchText }}" onChange="{{ onScratchChange }}" onKeyDown="{{ onScratchKey }}" style="flex:1; font-size:12px; line-height:16px; border:2px solid #000; padding:8px 12px; background:#fff; outline:none; font-family:'JetBrains Mono',monospace; color:#000" />
+          <button style="padding:8px 12px; border:2px solid #000; background:#fff; display:flex; cursor:pointer; box-shadow:2px 2px 0px 0px rgba(0,0,0,1)">
+            <img src="https://unpkg.com/lucide-static@latest/icons/mic.svg" style="width:14px; height:14px" alt="" />
+          </button>
+          <button onClick="{{ addScratch }}" style="padding:8px 16px; border:2px solid #000; background:#000; color:#fff; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:12px; line-height:16px; text-transform:uppercase; cursor:pointer">Add</button>
+          <button onClick="{{ toggleScratch }}" style="font-size:12px; text-transform:uppercase; font-weight:700; letter-spacing:0.05em; font-family:'Space Grotesk',sans-serif; color:#71717a; padding:0 4px; background:none; border:none; cursor:pointer">Cancel</button>
+        </div>
+      </sc-if>
+
+      <div style="background:#f4f4f5; border-bottom:2px solid #000; padding:12px 24px; flex-shrink:0; overflow-x:auto; display:flex; align-items:center; gap:8px">
+        <span style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; margin-right:8px; flex-shrink:0; display:flex; align-items:center; gap:4px; font-family:'Space Grotesk',sans-serif; color:#000">
+          <img src="https://unpkg.com/lucide-static@latest/icons/layers.svg" style="width:14px; height:14px" alt="" />
+          Jump Mode:
+        </span>
+        <sc-for list="{{ modes }}" as="m" hint-placeholder-count="12">
+          <sc-if value="{{ m.active }}" hint-placeholder-val="{{ false }}">
+            <button style="padding:6px 12px; border:2px solid #000; white-space:nowrap; cursor:pointer; display:flex; align-items:center; gap:6px; font-size:12px; line-height:16px; font-weight:700; text-transform:uppercase; letter-spacing:0.025em; background:#000; color:#fff">
+              <span style="width:8px; height:8px; border-radius:9999px; background:{{ m.dot }}"></span>
+              {{ m.label }}
+              <sc-if value="{{ m.hasCount }}" hint-placeholder-val="{{ true }}">
+                <span style="margin-left:4px; font-size:8px; background:#fde047; color:#000; padding:0 4px; line-height:1; border:1px solid #000; font-family:'JetBrains Mono',monospace">{{ m.count }}</span>
+              </sc-if>
+            </button>
+          </sc-if>
+          <sc-if value="{{ m.inactive }}" hint-placeholder-val="{{ true }}">
+            <button style="padding:6px 12px; border:2px solid #000; white-space:nowrap; cursor:pointer; display:flex; align-items:center; gap:6px; font-size:12px; line-height:16px; font-weight:700; text-transform:uppercase; letter-spacing:0.025em; background:#fff; color:#000">
+              <span style="width:8px; height:8px; border-radius:9999px; background:{{ m.dot }}"></span>
+              {{ m.label }}
+              <sc-if value="{{ m.hasCount }}" hint-placeholder-val="{{ true }}">
+                <span style="margin-left:4px; font-size:8px; background:#fde047; color:#000; padding:0 4px; line-height:1; border:1px solid #000; font-family:'JetBrains Mono',monospace">{{ m.count }}</span>
+              </sc-if>
+            </button>
+          </sc-if>
+        </sc-for>
+      </div>
+
+      <div style="flex:1; display:flex; overflow:hidden">
+        <main style="flex:1; padding:24px; overflow-y:auto; background:#F8F7F4; display:flex; flex-direction:column; justify-content:space-between">
+          <div style="max-width:768px; margin:0 auto; width:100%; flex:1; display:flex; flex-direction:column; justify-content:center">
+            <sc-if value="{{ isGuided }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex; flex-direction:column; gap:24px; height:520px">
+                <div style="background:#fff; border:3px solid #000; padding:16px; box-shadow:4px 4px 0px 0px rgba(0,0,0,1); display:flex; align-items:flex-start; gap:16px; flex-shrink:0">
+                  <img src="https://unpkg.com/lucide-static@latest/icons/circle-help.svg" style="width:20px; height:20px; flex-shrink:0; margin-top:2px" alt="" />
+                  <div>
+                    <h3 style="margin:0; font-family:'Space Grotesk',sans-serif; font-weight:900; font-size:12px; line-height:16px; text-transform:uppercase; color:#000; letter-spacing:0.05em; display:flex; align-items:center; gap:8px">
+                      Guided Drill Interview
+                      <span style="background:#fde047; color:#000; border:1px solid #000; padding:1px 6px; font-size:9px; font-family:'JetBrains Mono',monospace; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; line-height:1">Double-Agent Conversations</span>
+                    </h3>
+                    <p style="margin:2px 0 0; font-size:11px; color:#52525b; line-height:1.5">An adaptive expert interview. Type answers, consult the coach directly, or speak your ideas.</p>
+                  </div>
+                </div>
+
+                <div style="flex:1; overflow-y:auto; border:3px solid #000; background:#F8F7F4; padding:16px; display:flex; flex-direction:column; gap:16px">
+                  <div style="display:flex; flex-direction:column; gap:12px">
+                    <div style="display:flex; align-items:flex-start; justify-content:flex-end">
+                      <div style="background:#000; color:#fff; border:1px solid #000; padding:12px; font-size:12px; line-height:1.5; max-width:85%; font-family:'JetBrains Mono',monospace">
+                        <span style="display:block; font-size:8px; letter-spacing:0.05em; color:#fde047; text-transform:uppercase; font-weight:700; margin-bottom:4px">💬 Dialogue Comment // query:</span>
+                        Why does it matter who said a thing, not just what was said?
+                      </div>
+                    </div>
+                    <div style="display:flex; align-items:flex-start; max-width:85%; padding-left:16px">
+                      <div style="background:#fef9c3; border:2px dashed #000; padding:12px; font-size:12px; color:#000; font-family:'Playfair Display',Georgia,serif; font-style:italic; line-height:1.5">
+                        <span style="display:block; font-size:8px; text-transform:uppercase; letter-spacing:0.05em; font-family:'JetBrains Mono',monospace; font-weight:900; color:#52525b; margin-bottom:4px; line-height:1; font-style:normal">💡 Guide response &amp; Pivot:</span>
+                        "Because coverage is about voices, not volume. Ten fragments from one person is a single point of view wearing a crowd's clothing."
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style="display:flex; flex-direction:column; gap:8px; max-width:85%">
+                    <span style="font-size:8px; text-transform:uppercase; letter-spacing:0.1em; font-family:'JetBrains Mono',monospace; font-weight:700; color:#fff; background:#000; padding:2px 8px; display:inline-block; width:max-content">CRITICAL FOCUS // Deepening Thread</span>
+                    <div style="background:#fff; border:2px solid #000; border-left:8px solid #000; padding:16px; font-size:12px; line-height:1.5; color:#000; box-shadow:2px 2px 0px 0px rgba(0,0,0,1)">Which of the ten areas will actually get skipped if you don't force it onto the agenda?</div>
+                  </div>
+                </div>
+
+                <div style="display:flex; flex-direction:column; gap:12px; flex-shrink:0">
+                  <div style="display:flex; gap:10px; align-items:stretch">
+                    <input type="text" placeholder="Respond to the question here..." style="flex:1; font-size:12px; border:2px solid #000; padding:12px 16px; outline:none; background:#fff; font-family:'JetBrains Mono',monospace; color:#000" />
+                    <button style="padding:0 12px; border:2px solid #000; display:flex; align-items:center; justify-content:center; background:#fff; box-shadow:2px 2px 0px 0px rgba(0,0,0,1); cursor:pointer">
+                      <img src="https://unpkg.com/lucide-static@latest/icons/mic.svg" style="width:16px; height:16px" alt="" />
+                    </button>
+                    <button style="padding:12px 20px; border:2px solid #000; background:#000; display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:3px 3px 0px 0px rgba(0,0,0,1)">
+                      <img src="https://unpkg.com/lucide-static@latest/icons/send.svg" style="width:14px; height:14px; filter:invert(1)" alt="" />
+                    </button>
+                  </div>
+                  <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px">
+                    <button style="display:flex; align-items:center; gap:6px; padding:6px 12px; border:2px solid #000; font-size:10px; font-family:'JetBrains Mono',monospace; text-transform:uppercase; letter-spacing:0.05em; background:#f4f4f5; color:#52525b; cursor:pointer">
+                      <img src="https://unpkg.com/lucide-static@latest/icons/message-square-code.svg" style="width:14px; height:14px" alt="" />
+                      💬 DIRECT RESPONSE: CHANGE TO CHAT
+                    </button>
+                    <button style="font-size:12px; text-transform:uppercase; font-weight:800; letter-spacing:0.05em; font-family:'Space Grotesk',sans-serif; color:#000; background:none; border:none; cursor:pointer">[Skip / Pivot Question]</button>
+                  </div>
+                </div>
+              </div>
+            </sc-if>
+            <sc-if value="{{ isSwipe }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex; flex-direction:column; gap:24px; height:520px">
+                <div style="background:#FFFDF0; border:2px solid #000; padding:18px; box-shadow:4px 4px 0px 0px rgba(0,0,0,1); display:flex; align-items:flex-start; gap:16px; flex-shrink:0">
+                  <img src="https://unpkg.com/lucide-static@latest/icons/layers.svg" style="width:20px; height:20px; flex-shrink:0; margin-top:2px" alt="" />
+                  <div style="flex:1">
+                    <h3 style="margin:0; font-weight:700; font-size:12px; line-height:16px; text-transform:uppercase; color:#000; font-family:'Space Grotesk',sans-serif; letter-spacing:-0.025em">Swipe / React Statements</h3>
+                    <p style="margin:2px 0 0; font-size:11px; color:#52525b; line-height:1.5">Calibrate statements generated dynamically based on your topic. Swipe or tap to indicate resonance.</p>
+                  </div>
+                  <button style="padding:6px 12px; background:#FFE8CC; border:2px solid #000; color:#000; font-size:10px; font-weight:900; text-transform:uppercase; letter-spacing:0.05em; box-shadow:2px 2px 0px 0px rgba(0,0,0,1); cursor:pointer; font-family:'JetBrains Mono',monospace">Re-Synthesize Deck</button>
+                </div>
+
+                <div style="flex:1; display:flex; flex-direction:column; justify-content:space-between">
+                  <div style="display:flex; align-items:center; justify-content:space-between; font-size:10px; text-transform:uppercase; font-weight:700; letter-spacing:0.05em; color:#52525b; font-family:'JetBrains Mono',monospace">
+                    <span>Card 3 of 7</span>
+                    <span style="display:flex; align-items:center; gap:4px; font-weight:600; font-size:9px">Keyboard: ← Reject | → Resonate | ↓ Maybe</span>
+                  </div>
+
+                  <div style="margin:32px 0; flex:1; display:flex; align-items:center; justify-content:center">
+                    <div style="width:100%; max-width:448px; padding:40px; background:#FFFEE0; border:3px solid #000; text-align:center; box-shadow:6px 6px 0px 0px rgba(0,0,0,1); display:flex; flex-direction:column; justify-content:space-between; align-items:center; min-height:220px; box-sizing:border-box">
+                      <div style="display:inline-flex; padding:8px; background:#fff; border:1px solid #000; margin-bottom:16px; flex-shrink:0; box-shadow:1px 1px 0px 0px rgba(0,0,0,1)">
+                        <img src="https://unpkg.com/lucide-static@latest/icons/sparkles.svg" style="width:16px; height:16px" alt="" />
+                      </div>
+                      <p style="margin:0; font-size:16px; color:#000; font-weight:800; line-height:1.625; flex:1; display:flex; align-items:center; justify-content:center">"If we leave the kickoff without a written scope boundary, every change request for the next six months becomes an argument about memory."</p>
+                    </div>
+                  </div>
+
+                  <div style="display:flex; justify-content:center; align-items:center; gap:16px; flex-shrink:0; padding-bottom:8px">
+                    <button style="width:56px; height:56px; background:#FF6B6B; border:2px solid #000; box-shadow:3px 3px 0px 0px rgba(0,0,0,1); cursor:pointer; display:flex; align-items:center; justify-content:center">
+                      <img src="https://unpkg.com/lucide-static@latest/icons/thumbs-down.svg" style="width:20px; height:20px" alt="" />
+                    </button>
+                    <button style="padding:0 24px; height:56px; background:#D2E3FC; border:2px solid #000; color:#000; font-size:12px; font-weight:900; text-transform:uppercase; letter-spacing:0.05em; box-shadow:3px 3px 0px 0px rgba(0,0,0,1); cursor:pointer; display:flex; align-items:center; gap:6px; font-family:'Space Grotesk',sans-serif">
+                      <img src="https://unpkg.com/lucide-static@latest/icons/circle-help.svg" style="width:16px; height:16px" alt="" />
+                      Maybe
+                    </button>
+                    <button style="width:56px; height:56px; background:#51CF66; border:2px solid #000; box-shadow:3px 3px 0px 0px rgba(0,0,0,1); cursor:pointer; display:flex; align-items:center; justify-content:center">
+                      <img src="https://unpkg.com/lucide-static@latest/icons/thumbs-up.svg" style="width:20px; height:20px" alt="" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </sc-if>
+            <sc-if value="{{ isPriority }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex; flex-direction:column; gap:24px">
+                <div style="background:#f8fafc; border:1px solid #f1f5f9; padding:18px; border-radius:16px; display:flex; align-items:flex-start; gap:16px">
+                  <img src="https://unpkg.com/lucide-static@latest/icons/list-todo.svg" style="width:20px; height:20px; flex-shrink:0; margin-top:2px" alt="" />
+                  <div>
+                    <h3 style="margin:0; font-weight:600; font-size:12px; color:#1e293b">Priority Pile / Eisenhower Setup</h3>
+                    <p style="margin:2px 0 0; font-size:11px; color:#64748b; line-height:1.5">Identify what you actually need to do. Sort your compiled insights into Action Piles: "Act On This" (Actionable), "Worth Watching" (Monitor), or "Leave/Discard" (Noise).</p>
+                  </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px">
+                  <div onDragOver="{{ allowDrop }}" onDrop="{{ dropAct }}" style="border:1px solid #f1f5f9; border-top-color:#10b981; padding:16px; border-radius:16px; min-height:300px; display:flex; flex-direction:column; justify-content:space-between; color:#047857; background:rgba(16,185,129,0.1)">
+                    <div>
+                      <span style="display:block; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em">Act On This</span>
+                      <span style="display:block; font-size:10px; opacity:0.7; margin-bottom:12px">Top action goals &amp; focus points</span>
+                      <div style="display:flex; flex-direction:column; gap:8px">
+                        <sc-if value="{{ actEmpty }}" hint-placeholder-val="{{ false }}">
+                          <span style="display:block; text-align:center; padding:40px 0; font-size:10px; font-style:italic; opacity:0.5; border:1px dashed currentColor; border-radius:8px; background:rgba(255,255,255,0.45)">No elements sorted</span>
+                        </sc-if>
+                        <sc-for list="{{ actItems }}" as="it" hint-placeholder-count="2">
+                          <div style="padding:10px; background:#fff; border:1px solid #e2e8f0; border-radius:12px; font-size:11px; color:#334155; box-shadow:0 1px 1px rgba(0,0,0,0.03); line-height:1.625">{{ it.text }}</div>
+                        </sc-for>
+                      </div>
+                    </div>
+                  </div>
+                  <div onDragOver="{{ allowDrop }}" onDrop="{{ dropWatch }}" style="border:1px solid #f1f5f9; border-top-color:#6366f1; padding:16px; border-radius:16px; min-height:300px; display:flex; flex-direction:column; justify-content:space-between; color:#4338ca; background:rgba(99,102,241,0.1)">
+                    <div>
+                      <span style="display:block; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em">Worth Watching</span>
+                      <span style="display:block; font-size:10px; opacity:0.7; margin-bottom:12px">Monitor periodically, medium weight</span>
+                      <div style="display:flex; flex-direction:column; gap:8px">
+                        <sc-if value="{{ watchEmpty }}" hint-placeholder-val="{{ false }}">
+                          <span style="display:block; text-align:center; padding:40px 0; font-size:10px; font-style:italic; opacity:0.5; border:1px dashed currentColor; border-radius:8px; background:rgba(255,255,255,0.45)">No elements sorted</span>
+                        </sc-if>
+                        <sc-for list="{{ watchItems }}" as="it" hint-placeholder-count="1">
+                          <div style="padding:10px; background:#fff; border:1px solid #e2e8f0; border-radius:12px; font-size:11px; color:#334155; box-shadow:0 1px 1px rgba(0,0,0,0.03); line-height:1.625">{{ it.text }}</div>
+                        </sc-for>
+                      </div>
+                    </div>
+                  </div>
+                  <div onDragOver="{{ allowDrop }}" onDrop="{{ dropDiscard }}" style="border:1px solid #f1f5f9; border-top-color:#cbd5e1; padding:16px; border-radius:16px; min-height:300px; display:flex; flex-direction:column; justify-content:space-between; color:#64748b; background:rgba(226,232,240,0.5)">
+                    <div>
+                      <span style="display:block; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em">Good to know / Leave It</span>
+                      <span style="display:block; font-size:10px; opacity:0.7; margin-bottom:12px">Noise, non-actionable elements</span>
+                      <div style="display:flex; flex-direction:column; gap:8px">
+                        <sc-if value="{{ discardEmpty }}" hint-placeholder-val="{{ true }}">
+                          <span style="display:block; text-align:center; padding:40px 0; font-size:10px; font-style:italic; opacity:0.5; border:1px dashed currentColor; border-radius:8px; background:rgba(255,255,255,0.45)">No elements sorted</span>
+                        </sc-if>
+                        <sc-for list="{{ discardItems }}" as="it" hint-placeholder-count="0">
+                          <div style="padding:10px; background:#fff; border:1px solid #e2e8f0; border-radius:12px; font-size:11px; color:#334155; box-shadow:0 1px 1px rgba(0,0,0,0.03); line-height:1.625">{{ it.text }}</div>
+                        </sc-for>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div style="display:flex; flex-direction:column; gap:12px; padding-top:12px; border-top:1px solid #f1f5f9; max-height:224px; overflow-y:auto">
+                  <span style="display:block; font-size:10px; text-transform:uppercase; font-weight:700; letter-spacing:0.05em; color:#94a3b8">Rank Action priorities</span>
+                  <sc-for list="{{ sortRows }}" as="r" hint-placeholder-count="4">
+                    <div draggable="true" onDragStart="{{ r.onDragStart }}" style="padding:12px; background:#fff; border:1px solid #e2e8f0; border-radius:12px; display:flex; justify-content:space-between; gap:16px; align-items:center; cursor:grab">
+                      <p style="margin:0; font-size:12px; color:#334155; line-height:1.625; flex:1">"{{ r.text }}"</p>
+                      <div style="display:flex; gap:6px; flex-shrink:0">
+                        <sc-if value="{{ r.actOn }}" hint-placeholder-val="{{ false }}">
+                          <button onClick="{{ r.onAct }}" style="padding:6px 14px; border-radius:8px; font-size:10px; font-weight:700; cursor:pointer; white-space:nowrap; background:#1e293b; color:#fff; border:1px solid #1e293b">Act</button>
+                        </sc-if>
+                        <sc-if value="{{ r.actOff }}" hint-placeholder-val="{{ true }}">
+                          <button onClick="{{ r.onAct }}" style="padding:6px 14px; border-radius:8px; font-size:10px; font-weight:700; cursor:pointer; white-space:nowrap; background:#f8fafc; color:#64748b; border:1px solid #e2e8f0">Act</button>
+                        </sc-if>
+                        <sc-if value="{{ r.watchOn }}" hint-placeholder-val="{{ false }}">
+                          <button onClick="{{ r.onWatch }}" style="padding:6px 14px; border-radius:8px; font-size:10px; font-weight:700; cursor:pointer; white-space:nowrap; background:#1e293b; color:#fff; border:1px solid #1e293b">Watch</button>
+                        </sc-if>
+                        <sc-if value="{{ r.watchOff }}" hint-placeholder-val="{{ true }}">
+                          <button onClick="{{ r.onWatch }}" style="padding:6px 14px; border-radius:8px; font-size:10px; font-weight:700; cursor:pointer; white-space:nowrap; background:#f8fafc; color:#64748b; border:1px solid #e2e8f0">Watch</button>
+                        </sc-if>
+                        <sc-if value="{{ r.discardOn }}" hint-placeholder-val="{{ false }}">
+                          <button onClick="{{ r.onDiscard }}" style="padding:6px 14px; border-radius:8px; font-size:10px; font-weight:700; cursor:pointer; white-space:nowrap; background:#1e293b; color:#fff; border:1px solid #1e293b">Leave It</button>
+                        </sc-if>
+                        <sc-if value="{{ r.discardOff }}" hint-placeholder-val="{{ true }}">
+                          <button onClick="{{ r.onDiscard }}" style="padding:6px 14px; border-radius:8px; font-size:10px; font-weight:700; cursor:pointer; white-space:nowrap; background:#f8fafc; color:#64748b; border:1px solid #e2e8f0">Leave It</button>
+                        </sc-if>
+                      </div>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-if>
+            <sc-if value="{{ isCluster }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex; flex-direction:column; gap:24px">
+                <div style="background:#f8fafc; border:1px solid #f1f5f9; padding:18px; border-radius:16px; display:flex; align-items:flex-start; gap:16px">
+                  <img src="https://unpkg.com/lucide-static@latest/icons/folder-open.svg" style="width:20px; height:20px; flex-shrink:0; margin-top:2px" alt="" />
+                  <div>
+                    <h3 style="margin:0; font-weight:600; font-size:12px; color:#1e293b">Card Sort / Cluster Sorting</h3>
+                    <p style="margin:2px 0 0; font-size:11px; color:#64748b; line-height:1.5">Group scattered thoughts into logical thematic buckets. Creating clear buckets allows Gemini to structure the headings/subheadings in your final synthesized layout.</p>
+                  </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns:minmax(0,1fr) minmax(0,3fr); gap:24px">
+                  <div style="display:flex; flex-direction:column; gap:16px; border-right:1px solid #f1f5f9; padding-right:20px">
+                    <span style="display:block; font-size:10px; text-transform:uppercase; font-weight:700; letter-spacing:0.05em; color:#94a3b8">Thematic Buckets</span>
+                    <div style="display:flex; flex-direction:column; gap:6px">
+                      <sc-for list="{{ clusterBuckets }}" as="b" hint-placeholder-count="4">
+                        <div style="display:flex; align-items:center; justify-content:space-between; padding:10px; background:#f8fafc; border-radius:12px; font-size:12px; color:#334155">
+                          <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; padding-right:8px; font-weight:500; display:flex; align-items:center; gap:6px">
+                            <img src="https://unpkg.com/lucide-static@latest/icons/folder.svg" style="width:14px; height:14px" alt="" />
+                            {{ b.name }}
+                          </span>
+                          <span style="background:#e2e8f0; color:#334155; font-size:9px; font-weight:800; padding:2px 6px; border-radius:9999px; flex-shrink:0">{{ b.count }}</span>
+                        </div>
+                      </sc-for>
+                    </div>
+                    <div style="padding-top:12px; border-top:1px solid #f1f5f9; display:flex; flex-direction:column; gap:8px">
+                      <input type="text" placeholder="Create folder bucket..." style="width:100%; box-sizing:border-box; font-size:12px; border:1px solid #e2e8f0; border-radius:8px; padding:10px; background:#fff; outline:none" />
+                      <button style="width:100%; padding:8px; background:#4f46e5; color:#fff; border:none; border-radius:8px; font-size:12px; font-weight:600; display:flex; align-items:center; justify-content:center; gap:4px; cursor:pointer">
+                        <img src="https://unpkg.com/lucide-static@latest/icons/folder-plus.svg" style="width:14px; height:14px; filter:invert(1)" alt="" />
+                        Add Bucket
+                      </button>
+                    </div>
+                  </div>
+
+                  <div style="display:flex; flex-direction:column; gap:16px">
+                    <div style="display:flex; align-items:center; justify-content:space-between">
+                      <span style="font-size:10px; text-transform:uppercase; font-weight:700; letter-spacing:0.05em; color:#94a3b8">Unsorted and Sorted Pile</span>
+                      <div style="display:flex; gap:4px">
+                        <sc-for list="{{ clusterTabs }}" as="tab" hint-placeholder-count="4">
+                          <sc-if value="{{ tab.on }}" hint-placeholder-val="{{ false }}">
+                            <button style="padding:4px 10px; border-radius:9999px; font-size:10px; font-weight:700; text-transform:capitalize; cursor:pointer; background:#1e293b; color:#fff; border:none">{{ tab.label }} ({{ tab.count }})</button>
+                          </sc-if>
+                          <sc-if value="{{ tab.off }}" hint-placeholder-val="{{ true }}">
+                            <button style="padding:4px 10px; border-radius:9999px; font-size:10px; font-weight:700; text-transform:capitalize; cursor:pointer; background:#f1f5f9; color:#52525b; border:none">{{ tab.label }} ({{ tab.count }})</button>
+                          </sc-if>
+                        </sc-for>
+                      </div>
+                    </div>
+                    <div style="display:flex; flex-direction:column; gap:12px; max-height:420px; overflow-y:auto; padding:4px">
+                      <sc-for list="{{ clusterRows }}" as="row" hint-placeholder-count="5">
+                        <div style="padding:14px; background:#fff; border:1px solid #e2e8f0; box-shadow:0 1px 1px rgba(0,0,0,0.03); border-radius:12px; display:flex; justify-content:space-between; gap:16px; align-items:center">
+                          <p style="margin:0; font-size:12px; color:#334155; line-height:1.625; flex:1">"{{ row.text }}"</p>
+                          <div style="display:flex; align-items:center; gap:6px; flex-shrink:0">
+                            <img src="https://unpkg.com/lucide-static@latest/icons/tag.svg" style="width:14px; height:14px" alt="" />
+                            <select value="{{ row.bucket }}" style="font-size:11px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:4px 14px; color:#52525b; outline:none; min-width:124px">
+                              <option value="">-- No Bucket --</option>
+                              <option value="Primary Goals">Primary Goals</option>
+                              <option value="Mental Barriers">Mental Barriers</option>
+                              <option value="Action Tasks">Action Tasks</option>
+                              <option value="Loose Details">Loose Details</option>
+                            </select>
+                          </div>
+                        </div>
+                      </sc-for>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </sc-if>
+            <sc-if value="{{ isTimeline }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex; flex-direction:column; gap:24px">
+                <div style="background:#f8fafc; border:1px solid #f1f5f9; padding:18px; border-radius:16px; display:flex; align-items:flex-start; gap:16px">
+                  <img src="https://unpkg.com/lucide-static@latest/icons/calendar.svg" style="width:20px; height:20px; flex-shrink:0; margin-top:2px" alt="" />
+                  <div>
+                    <h3 style="margin:0; font-weight:600; font-size:12px; color:#1e293b">Timeline Mode</h3>
+                    <p style="margin:2px 0 0; font-size:11px; color:#64748b; line-height:1.5">Organize when each thought actually matters: Before (Unprocessed history/origin), Now (Immediate active weight), or After (Future hopes and worries).</p>
+                  </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px">
+                  <div style="border:1px solid #f1f5f9; border-top-color:#fbbf24; padding:16px; border-radius:16px; min-height:300px; background:rgba(245,158,11,0.1)">
+                    <span style="display:block; font-size:12px; font-weight:700; color:#1e293b; text-transform:uppercase; letter-spacing:0.05em">Before / The Past</span>
+                    <span style="display:block; font-size:10px; color:rgba(100,116,139,0.8); margin-bottom:12px">Origin context, roots, history</span>
+                    <div style="display:flex; flex-direction:column; gap:8px">
+                      <sc-for list="{{ tzBefore }}" as="it" hint-placeholder-count="1">
+                        <div style="padding:10px; background:#fff; border:1px solid #e2e8f0; border-radius:12px; font-size:11px; color:#334155; box-shadow:0 1px 1px rgba(0,0,0,0.03); line-height:1.625">{{ it.text }}</div>
+                      </sc-for>
+                    </div>
+                  </div>
+                  <div style="border:1px solid #f1f5f9; border-top-color:#f43f5e; padding:16px; border-radius:16px; min-height:300px; background:rgba(244,63,94,0.1)">
+                    <span style="display:block; font-size:12px; font-weight:700; color:#1e293b; text-transform:uppercase; letter-spacing:0.05em">Now / The Present</span>
+                    <span style="display:block; font-size:10px; color:rgba(100,116,139,0.8); margin-bottom:12px">Active situation, current actions</span>
+                    <div style="display:flex; flex-direction:column; gap:8px">
+                      <sc-for list="{{ tzNow }}" as="it" hint-placeholder-count="2">
+                        <div style="padding:10px; background:#fff; border:1px solid #e2e8f0; border-radius:12px; font-size:11px; color:#334155; box-shadow:0 1px 1px rgba(0,0,0,0.03); line-height:1.625">{{ it.text }}</div>
+                      </sc-for>
+                    </div>
+                  </div>
+                  <div style="border:1px solid #f1f5f9; border-top-color:#6366f1; padding:16px; border-radius:16px; min-height:300px; background:rgba(99,102,241,0.1)">
+                    <span style="display:block; font-size:12px; font-weight:700; color:#1e293b; text-transform:uppercase; letter-spacing:0.05em">After / The Future</span>
+                    <span style="display:block; font-size:10px; color:rgba(100,116,139,0.8); margin-bottom:12px">Forecasts, hopes, future fears</span>
+                    <div style="display:flex; flex-direction:column; gap:8px">
+                      <sc-for list="{{ tzAfter }}" as="it" hint-placeholder-count="2">
+                        <div style="padding:10px; background:#fff; border:1px solid #e2e8f0; border-radius:12px; font-size:11px; color:#334155; box-shadow:0 1px 1px rgba(0,0,0,0.03); line-height:1.625">{{ it.text }}</div>
+                      </sc-for>
+                    </div>
+                  </div>
+                </div>
+
+                <div style="display:flex; flex-direction:column; gap:12px; padding-top:12px; border-top:1px solid #f1f5f9; max-height:224px; overflow-y:auto">
+                  <span style="display:block; font-size:10px; text-transform:uppercase; font-weight:700; letter-spacing:0.05em; color:#94a3b8">Assign Temporal Slots</span>
+                  <sc-for list="{{ timelineRows }}" as="r" hint-placeholder-count="4">
+                    <div style="padding:12px; background:#fff; border:1px solid #e2e8f0; border-radius:12px; display:flex; justify-content:space-between; gap:16px; align-items:center">
+                      <p style="margin:0; font-size:12px; color:#334155; line-height:1.625; flex:1">"{{ r.text }}"</p>
+                      <div style="display:flex; gap:6px; flex-shrink:0">
+                        <sc-if value="{{ r.beforeOn }}" hint-placeholder-val="{{ false }}">
+                          <button style="padding:6px 12px; border-radius:8px; font-size:10px; font-weight:700; white-space:nowrap; background:#1e293b; color:#fff; border:1px solid #1e293b; cursor:pointer">Before</button>
+                        </sc-if>
+                        <sc-if value="{{ r.beforeOff }}" hint-placeholder-val="{{ true }}">
+                          <button style="padding:6px 12px; border-radius:8px; font-size:10px; font-weight:700; white-space:nowrap; background:#f8fafc; color:#64748b; border:1px solid #e2e8f0; cursor:pointer">Before</button>
+                        </sc-if>
+                        <sc-if value="{{ r.nowOn }}" hint-placeholder-val="{{ false }}">
+                          <button style="padding:6px 12px; border-radius:8px; font-size:10px; font-weight:700; white-space:nowrap; background:#1e293b; color:#fff; border:1px solid #1e293b; cursor:pointer">Now</button>
+                        </sc-if>
+                        <sc-if value="{{ r.nowOff }}" hint-placeholder-val="{{ true }}">
+                          <button style="padding:6px 12px; border-radius:8px; font-size:10px; font-weight:700; white-space:nowrap; background:#f8fafc; color:#64748b; border:1px solid #e2e8f0; cursor:pointer">Now</button>
+                        </sc-if>
+                        <sc-if value="{{ r.afterOn }}" hint-placeholder-val="{{ false }}">
+                          <button style="padding:6px 12px; border-radius:8px; font-size:10px; font-weight:700; white-space:nowrap; background:#1e293b; color:#fff; border:1px solid #1e293b; cursor:pointer">After</button>
+                        </sc-if>
+                        <sc-if value="{{ r.afterOff }}" hint-placeholder-val="{{ true }}">
+                          <button style="padding:6px 12px; border-radius:8px; font-size:10px; font-weight:700; white-space:nowrap; background:#f8fafc; color:#64748b; border:1px solid #e2e8f0; cursor:pointer">After</button>
+                        </sc-if>
+                      </div>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-if>
+            <sc-if value="{{ isIntensity }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex; flex-direction:column; gap:24px">
+                <div style="background:#f8fafc; border:1px solid #f1f5f9; padding:18px; border-radius:16px; display:flex; align-items:flex-start; gap:16px">
+                  <img src="https://unpkg.com/lucide-static@latest/icons/sliders-horizontal.svg" style="width:20px; height:20px; flex-shrink:0; margin-top:2px" alt="" />
+                  <div>
+                    <h3 style="margin:0; font-weight:600; font-size:12px; color:#1e293b">Slider / Intensity Map</h3>
+                    <p style="margin:2px 0 0; font-size:11px; color:#64748b; line-height:1.5">Calibrate the load-bearing weight of each surfaced idea. Rate them along key cognitive dimensions to construct a heat-map outline of what actually matters.</p>
+                  </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns:minmax(0,2fr) minmax(0,3fr); gap:24px">
+                  <div style="display:flex; flex-direction:column; gap:8px; border-right:1px solid #f1f5f9; padding-right:16px; height:384px; overflow-y:auto">
+                    <span style="display:block; font-size:10px; text-transform:uppercase; font-weight:700; letter-spacing:0.05em; color:#94a3b8; margin-bottom:8px">Select Thought Fragment</span>
+                    <sc-for list="{{ intensityList }}" as="it" hint-placeholder-count="6">
+                      <sc-if value="{{ it.selected }}" hint-placeholder-val="{{ false }}">
+                        <div style="width:100%; text-align:left; padding:12px; font-size:12px; border-radius:12px; border:1px solid #4f46e5; background:rgba(238,242,255,0.2); color:#0f172a; font-weight:500; cursor:pointer">
+                          <p style="margin:0; line-height:1.625; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden">{{ it.text }}</p>
+                          <sc-if value="{{ it.hasIntensity }}" hint-placeholder-val="{{ true }}">
+                            <div style="display:flex; gap:10px; margin-top:8px; font-size:9px; font-weight:700; color:#4f46e5">
+                              <span>{{ it.urgencyChip }}</span>
+                              <span>{{ it.emotionChip }}</span>
+                            </div>
+                          </sc-if>
+                        </div>
+                      </sc-if>
+                      <sc-if value="{{ it.unselected }}" hint-placeholder-val="{{ true }}">
+                        <div style="width:100%; text-align:left; padding:12px; font-size:12px; border-radius:12px; border:1px solid #f1f5f9; background:#fff; color:#52525b; cursor:pointer">
+                          <p style="margin:0; line-height:1.625; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden">{{ it.text }}</p>
+                        </div>
+                      </sc-if>
+                    </sc-for>
+                  </div>
+
+                  <div style="display:flex; flex-direction:column; gap:24px; background:rgba(248,250,252,0.5); padding:24px; border:1px solid rgba(226,232,240,0.8); border-radius:16px">
+                    <div>
+                      <span style="font-size:10px; text-transform:uppercase; font-weight:700; letter-spacing:0.05em; color:#6366f1">MAPPING INTENSITIES</span>
+                      <p style="margin:4px 0 0; font-size:14px; color:#1e293b; line-height:1.625; font-weight:500">"Biggest fear: we run a warm, productive workshop and still can't write down what is in scope."</p>
+                    </div>
+                    <div style="display:flex; flex-direction:column; gap:16px">
+                      <div style="display:flex; flex-direction:column; gap:6px">
+                        <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; font-weight:600; color:#334155">
+                          <span>Urgency (Immediate Action Focus)</span><span style="color:#4f46e5; font-weight:700">8 / 10</span>
+                        </div>
+                        <input type="range" min="1" max="10" value="8" style="width:100%; accent-color:#ef4444; height:6px; background:#e2e8f0; border-radius:8px" />
+                        <div style="display:flex; justify-content:space-between; font-size:9px; color:#94a3b8; font-weight:700; text-transform:uppercase; letter-spacing:0.05em"><span>Eventually</span><span>Do Today</span></div>
+                      </div>
+                      <div style="display:flex; flex-direction:column; gap:6px">
+                        <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; font-weight:600; color:#334155">
+                          <span>Certainty (Confidence Level)</span><span style="color:#4f46e5; font-weight:700">6 / 10</span>
+                        </div>
+                        <input type="range" min="1" max="10" value="6" style="width:100%; accent-color:#4f46e5; height:6px; background:#e2e8f0; border-radius:8px" />
+                        <div style="display:flex; justify-content:space-between; font-size:9px; color:#94a3b8; font-weight:700; text-transform:uppercase; letter-spacing:0.05em"><span>Gut feeling</span><span>100% Confident</span></div>
+                      </div>
+                      <div style="display:flex; flex-direction:column; gap:6px">
+                        <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; font-weight:600; color:#334155">
+                          <span>Emotional Charge (Stress / Energy level)</span><span style="color:#4f46e5; font-weight:700">7 / 10</span>
+                        </div>
+                        <input type="range" min="1" max="10" value="7" style="width:100%; accent-color:#ec4899; height:6px; background:#e2e8f0; border-radius:8px" />
+                        <div style="display:flex; justify-content:space-between; font-size:9px; color:#94a3b8; font-weight:700; text-transform:uppercase; letter-spacing:0.05em"><span>Rational/Neutral</span><span>Highly Charged</span></div>
+                      </div>
+                      <div style="display:flex; flex-direction:column; gap:6px">
+                        <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; font-weight:600; color:#334155">
+                          <span>Willingness to Act (Capability)</span><span style="color:#4f46e5; font-weight:700">4 / 10</span>
+                        </div>
+                        <input type="range" min="1" max="10" value="4" style="width:100%; accent-color:#10b981; height:6px; background:#e2e8f0; border-radius:8px" />
+                        <div style="display:flex; justify-content:space-between; font-size:9px; color:#94a3b8; font-weight:700; text-transform:uppercase; letter-spacing:0.05em"><span>Hard to address</span><span>Fully actionable</span></div>
+                      </div>
+                    </div>
+                    <div style="padding:14px; background:#eef2ff; border:1px solid #e0e7ff; border-radius:12px; display:flex; align-items:center; gap:12px; font-size:12px; color:#334155">
+                      <img src="https://unpkg.com/lucide-static@latest/icons/trending-up.svg" style="width:20px; height:20px; flex-shrink:0" alt="" />
+                      <p style="margin:0">🔥 <strong style="color:#0f172a; font-weight:600">Tension Spot:</strong> This thought carries both high urgency and emotional energy. This is a critical item for immediate focus and unburdening.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+        </main>
+
+        <aside style="width:384px; border-left:3px solid #000; background:#fff; display:flex; flex-direction:column; height:100%; overflow:hidden; flex-shrink:0">
+          <div style="padding:16px; border-bottom:2px solid #000; background:#fafafa; flex-shrink:0; display:flex; flex-direction:column; gap:12px">
+            <div style="display:flex; align-items:center; justify-content:space-between">
+              <div style="display:flex; align-items:center; gap:8px">
+                <div style="padding:4px 10px; background:#000; color:#fff; font-size:12px; line-height:16px; font-family:'JetBrains Mono',monospace; font-weight:900; border:1px solid #000; box-shadow:1px 1px 0px 0px rgba(0,0,0,1)">{{ pileCount }}</div>
+                <h3 style="margin:0; font-size:12px; line-height:16px; font-weight:900; color:#000; font-family:'Space Grotesk',sans-serif; text-transform:uppercase; letter-spacing:0.05em; white-space:nowrap">Surfaced Pile</h3>
+              </div>
+              <div style="display:flex; align-items:center; gap:6px">
+                <img src="https://unpkg.com/lucide-static@latest/icons/list-filter.svg" style="width:14px; height:14px" alt="" />
+                <select style="font-size:10px; background:#fff; border:2px solid #000; font-family:'Space Grotesk',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:#000; outline:none; padding:2px 6px; max-width:104px">
+                  <option>All Modes</option>
+                  <option>Free Stream</option>
+                  <option>Quick Fire</option>
+                  <option>Guided Drill</option>
+                  <option>Swipe Statements</option>
+                </select>
+              </div>
+            </div>
+            <div style="position:relative">
+              <input type="text" placeholder="Search text or mode..." style="width:100%; box-sizing:border-box; font-size:10px; font-family:'JetBrains Mono',monospace; padding:6px 10px; border:2px solid #000; background:#fff; outline:none" />
+            </div>
+            <div style="display:flex; flex-wrap:wrap; gap:4px">
+              <button style="font-size:9px; font-family:'JetBrains Mono',monospace; text-transform:uppercase; letter-spacing:-0.025em; font-weight:900; padding:2px 6px; border:2px solid #000; cursor:pointer; background:#000; color:#fff; box-shadow:2px 2px 0px 0px rgba(0,0,0,1)">All</button>
+              <button style="font-size:9px; font-family:'JetBrains Mono',monospace; text-transform:uppercase; letter-spacing:-0.025em; font-weight:800; padding:2px 6px; border:2px solid #000; cursor:pointer; background:#fff; color:#000; box-shadow:1px 1px 0px 0px rgba(0,0,0,1)">⚡ Actions</button>
+              <button style="font-size:9px; font-family:'JetBrains Mono',monospace; text-transform:uppercase; letter-spacing:-0.025em; font-weight:800; padding:2px 6px; border:2px solid #000; cursor:pointer; background:#fff; color:#000; box-shadow:1px 1px 0px 0px rgba(0,0,0,1)">💡 Insights</button>
+              <button style="font-size:9px; font-family:'JetBrains Mono',monospace; text-transform:uppercase; letter-spacing:-0.025em; font-weight:800; padding:2px 6px; border:2px solid #000; cursor:pointer; background:#fff; color:#000; box-shadow:1px 1px 0px 0px rgba(0,0,0,1)">⚠️ Fears</button>
+              <button style="font-size:9px; font-family:'JetBrains Mono',monospace; text-transform:uppercase; letter-spacing:-0.025em; font-weight:800; padding:2px 6px; border:2px solid #000; cursor:pointer; background:#fff; color:#000; box-shadow:1px 1px 0px 0px rgba(0,0,0,1)">🎯 Goals</button>
+            </div>
+          </div>
+
+          <div style="flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:16px; background:#F8F7F4">
+            <sc-for list="{{ pile }}" as="t" hint-placeholder-count="4">
+              <div style="padding:14px; background:#fff; border:2px solid #000; position:relative">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px">
+                  <span style="display:flex; align-items:center; gap:6px; font-size:9px; text-transform:uppercase; letter-spacing:0.05em; font-weight:800; color:#000; font-family:'JetBrains Mono',monospace; white-space:nowrap">
+                    <span style="width:6px; height:6px; border-radius:9999px; background:{{ t.dot }}"></span>
+                    {{ t.modeLabel }}
+                  </span>
+                  <span style="font-size:9px; color:#a1a1aa; font-family:'JetBrains Mono',monospace">{{ t.num }}</span>
+                </div>
+                <p style="margin:0; font-size:12px; color:#27272a; line-height:1.5; white-space:pre-wrap">{{ t.text }}</p>
+                <sc-if value="{{ t.hasStatus }}" hint-placeholder-val="{{ false }}">
+                  <div style="margin-top:8px; display:inline-block; background:#000; color:#fff; padding:3px 8px; font-size:8px; font-family:'JetBrains Mono',monospace; letter-spacing:0.1em; text-transform:uppercase; white-space:nowrap">{{ t.statusLabel }}</div>
+                </sc-if>
+                <sc-if value="{{ t.hasIntensity }}" hint-placeholder-val="{{ false }}">
+                  <div style="margin-top:8px; display:flex; flex-wrap:wrap; gap:4px">
+                    <sc-for list="{{ t.intensityChips }}" as="chip" hint-placeholder-count="4">
+                      <span style="border:1px solid #000; background:#fafafa; color:#000; padding:2px 6px; font-size:8px; font-family:'JetBrains Mono',monospace; text-transform:uppercase; font-weight:700">{{ chip }}</span>
+                    </sc-for>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ t.hasCluster }}" hint-placeholder-val="{{ false }}">
+                  <div style="margin-top:8px; display:inline-flex; align-items:center; gap:4px; border:1px solid #000; background:#EFEFEF; padding:2px 6px; font-size:8px; font-family:'JetBrains Mono',monospace; text-transform:uppercase; font-weight:700">{{ t.clusterLabel }}</div>
+                </sc-if>
+                <sc-if value="{{ t.hasTimeline }}" hint-placeholder-val="{{ false }}">
+                  <div style="margin-top:8px; display:inline-flex; align-items:center; gap:4px; border:1px solid #000; background:#fff7ed; padding:2px 6px; font-size:8px; font-family:'JetBrains Mono',monospace; text-transform:uppercase; font-weight:700">{{ t.timelineLabel }}</div>
+                </sc-if>
+                <sc-if value="{{ t.hasPriority }}" hint-placeholder-val="{{ false }}">
+                  <div style="margin-top:8px; display:inline-flex; align-items:center; gap:4px; border:1px solid #000; background:#f4f4f5; padding:2px 6px; font-size:8px; font-family:'JetBrains Mono',monospace; text-transform:uppercase; font-weight:700">{{ t.priorityLabel }}</div>
+                </sc-if>
+                <div style="position:absolute; right:8px; top:8px; display:flex; align-items:center; background:#fff; border:1px solid #000; gap:4px; padding:2px 4px; opacity:0">
+                  <img src="https://unpkg.com/lucide-static@latest/icons/pencil.svg" style="width:12px; height:12px" alt="" />
+                  <img src="https://unpkg.com/lucide-static@latest/icons/trash-2.svg" style="width:12px; height:12px" alt="" />
+                </div>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="padding:16px; background:#f4f4f5; border-top:2px solid #000; flex-shrink:0; text-align:center; font-family:'JetBrains Mono',monospace">
+            <p style="margin:0; font-size:10px; color:#71717a; text-transform:uppercase; letter-spacing:0.05em">Gather 5+ thoughts for optimal summary output.</p>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isExport }}" hint-placeholder-val="{{ false }}">
+    <div style="max-width:1024px; margin:0 auto; padding:48px 16px; display:flex; flex-direction:column; gap:24px">
+      <div style="display:flex; justify-content:space-between; align-items:center; background:#fff; padding:18px; border:3px solid #000; box-shadow:4px 4px 0px 0px rgba(0,0,0,1)">
+        <button style="display:flex; align-items:center; gap:6px; font-size:12px; border:2px solid #000; background:#fff; color:#000; padding:6px 14px; font-family:'Space Grotesk',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; cursor:pointer">
+          <img src="https://unpkg.com/lucide-static@latest/icons/arrow-left.svg" style="width:16px; height:16px" alt="" />
+          Back to Dashboard
+        </button>
+        <div style="display:flex; align-items:center; gap:8px">
+          <button style="padding:8px; border:2px solid #000; background:#fff; display:flex; cursor:pointer">
+            <img src="https://unpkg.com/lucide-static@latest/icons/refresh-cw.svg" style="width:16px; height:16px" alt="" />
+          </button>
+          <button style="padding:8px 16px; border:2px solid #000; background:#000; color:#fff; font-size:12px; font-weight:900; font-family:'Space Grotesk',sans-serif; text-transform:uppercase; letter-spacing:0.05em; display:flex; align-items:center; gap:6px; cursor:pointer; box-shadow:3px 3px 0px 0px rgba(0,0,0,1)">
+            <img src="https://unpkg.com/lucide-static@latest/icons/plus.svg" style="width:14px; height:14px; filter:invert(1)" alt="" />
+            New Extraction
+          </button>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:minmax(0,2fr) minmax(0,1fr); gap:24px; align-items:start">
+        <div style="display:flex; flex-direction:column; gap:24px; background:#fff; border:3px solid #000; padding:32px; box-shadow:6px 6px 0px 0px rgba(0,0,0,1)">
+          <div>
+            <span style="font-size:9px; text-transform:uppercase; letter-spacing:0.1em; font-family:'JetBrains Mono',monospace; font-weight:700; color:#000; display:flex; align-items:center; gap:6px">
+              <img src="https://unpkg.com/lucide-static@latest/icons/sparkles.svg" style="width:14px; height:14px" alt="" />
+              COGNITIVE SUMMARY
+            </span>
+            <h1 style="margin:4px 0 0; font-size:30px; line-height:1.1; font-weight:900; text-transform:uppercase; color:#000; font-family:'Space Grotesk',sans-serif; letter-spacing:-0.025em">what do we need to walk out of the northwind kickoff with?</h1>
+            <p style="margin:6px 0 0; font-size:10px; color:#71717a; text-transform:uppercase; letter-spacing:0.05em; font-weight:600">INTENTION: "Make a tough choice with clear priority action items" • CREATED: 8/31/2026</p>
+          </div>
+
+          <div style="border-left:3px solid #000; padding:4px 0 4px 18px; color:#27272a; line-height:1.625; font-size:14px; font-family:'Playfair Display',Georgia,serif; font-style:italic; font-weight:500">You are preparing to facilitate a ninety-minute kickoff for six Northwind stakeholders across ten areas of scope. Your thoughts converge on structure over warmth: the session only succeeds if it produces a written boundary, a named owner per area, and an agreed vocabulary — and the risk you keep circling is a pleasant workshop that decides nothing.</div>
+
+          <div style="padding-top:24px; border-top:2px solid #000">
+            <span style="display:block; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:#71717a; font-family:'JetBrains Mono',monospace; margin-bottom:16px">Structured Markdown Outline</span>
+            <div style="padding:20px; background:#F8F7F4; border:2px solid #000; white-space:pre-wrap; font-size:14px; line-height:1.625; color:#000; font-family:'JetBrains Mono',monospace; max-height:460px; overflow-y:auto">## 1. Core Decision: How to Run the Room
+
+- Free Stream first, then Guided Drill per area — the exec fills silence otherwise
+- Nine minutes an area; the modes do the digging, not the facilitator
+- Rejected: agenda-led discussion (produces consensus theatre, not coverage)
+
+## 2. Non-Negotiable Outputs by 17:00
+
+- Agreed definitions of "claim", "transformation" and "phase one"
+- A named owner for every area touched
+- A written scope boundary — including the areas nobody entered
+
+## 3. Watch For
+
+- Commercials skipped because nobody wants to open funding in a room that size
+- Njoku as the sole compliance voice reading as consensus rather than a gap
+- The sponsor and the ops lead disagreeing in public with no facilitation plan</div>
+          </div>
+
+          <div style="display:flex; gap:16px; padding-top:8px; justify-content:space-between">
+            <button style="font-size:12px; text-transform:uppercase; font-weight:700; letter-spacing:0.05em; font-family:'Space Grotesk',sans-serif; color:#000; background:none; border:none; cursor:pointer; text-decoration:none">[View Raw Markdown Source]</button>
+            <button style="font-size:12px; text-transform:uppercase; font-weight:700; letter-spacing:0.05em; font-family:'Space Grotesk',sans-serif; color:#000; display:flex; align-items:center; gap:4px; background:none; border:none; cursor:pointer">
+              <img src="https://unpkg.com/lucide-static@latest/icons/clipboard.svg" style="width:14px; height:14px" alt="" />
+              [Copy Full Summary Markdown]
+            </button>
+          </div>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:24px">
+          <div style="background:#FFFDF0; border:3px solid #000; padding:20px; box-shadow:4px 4px 0px 0px rgba(0,0,0,1); display:flex; flex-direction:column; gap:16px">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:-8px">
+              <span style="font-size:10px; text-transform:uppercase; font-weight:700; letter-spacing:0.05em; font-family:'Space Grotesk',sans-serif; color:#000; display:flex; align-items:center; gap:6px; line-height:1; white-space:nowrap">
+                <img src="https://unpkg.com/lucide-static@latest/icons/sparkles.svg" style="width:14px; height:14px" alt="" />
+                Re-Format Blueprint
+              </span>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:12px">
+              <div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px">
+                  <label style="display:block; font-size:9px; text-transform:uppercase; letter-spacing:0.05em; font-family:'JetBrains Mono',monospace; font-weight:700; color:#52525b; white-space:nowrap">Guidance Tone</label>
+                  <button style="font-size:8px; font-family:'JetBrains Mono',monospace; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:#71717a; background:none; border:none; cursor:pointer; white-space:nowrap">[ℹ Compare]</button>
+                </div>
+                <div style="display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:4px">
+                  <button style="font-size:8px; font-family:'JetBrains Mono',monospace; padding:4px 0; border:1px solid #000; cursor:pointer; text-transform:uppercase; font-weight:800; background:#fff; color:#000">Standard</button>
+                  <button style="font-size:8px; font-family:'JetBrains Mono',monospace; padding:4px 0; border:1px solid #000; cursor:pointer; text-transform:uppercase; font-weight:900; background:#000; color:#fff">Socratic</button>
+                  <button style="font-size:8px; font-family:'JetBrains Mono',monospace; padding:4px 0; border:1px solid #000; cursor:pointer; text-transform:uppercase; font-weight:800; background:#fff; color:#000">Empathetic</button>
+                </div>
+              </div>
+              <div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px">
+                  <label style="display:block; font-size:9px; text-transform:uppercase; letter-spacing:0.05em; font-family:'JetBrains Mono',monospace; font-weight:700; color:#52525b; white-space:nowrap">Analysis filter focus</label>
+                  <button style="font-size:8px; font-family:'JetBrains Mono',monospace; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:#71717a; background:none; border:none; cursor:pointer; white-space:nowrap">[ℹ Compare]</button>
+                </div>
+                <div style="display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:4px">
+                  <button style="font-size:8px; font-family:'JetBrains Mono',monospace; padding:4px 0; border:1px solid #000; cursor:pointer; text-transform:uppercase; font-weight:900; line-height:1; background:#000; color:#fff">Full</button>
+                  <button style="font-size:8px; font-family:'JetBrains Mono',monospace; padding:4px 0; border:1px solid #000; cursor:pointer; text-transform:uppercase; font-weight:800; line-height:1; background:#fff; color:#000">Milestone</button>
+                  <button style="font-size:8px; font-family:'JetBrains Mono',monospace; padding:4px 0; border:1px solid #000; cursor:pointer; text-transform:uppercase; font-weight:800; line-height:1; background:#fff; color:#000">Checklist</button>
+                </div>
+              </div>
+              <div style="display:flex; align-items:center; justify-content:space-between; padding-top:6px; border-top:1px solid rgba(0,0,0,0.1)">
+                <div style="display:flex; align-items:center; gap:6px">
+                  <span style="font-size:9px; font-family:'JetBrains Mono',monospace; text-transform:uppercase; letter-spacing:0.05em; font-weight:700; color:#52525b; white-space:nowrap">Audit Cognitive Bias</span>
+                  <button style="font-size:8px; font-family:'JetBrains Mono',monospace; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:#71717a; background:none; border:none; cursor:pointer; white-space:nowrap">[ℹ Compare]</button>
+                </div>
+                <button style="font-size:9px; font-family:'JetBrains Mono',monospace; padding:2px 8px; border:1px solid #000; cursor:pointer; text-transform:uppercase; font-weight:800; background:#000; color:#fff">Audit on</button>
+              </div>
+              <button style="width:100%; padding:8px; border:2px solid #000; background:#000; color:#fde047; font-family:'Space Grotesk',sans-serif; font-weight:900; font-size:10px; text-transform:uppercase; letter-spacing:0.1em; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; box-shadow:2px 2px 0px 0px rgba(0,0,0,1)">
+                <img src="https://unpkg.com/lucide-static@latest/icons/refresh-cw.svg" style="width:14px; height:14px; filter:invert(1)" alt="" />
+                Regenerate Outline
+              </button>
+            </div>
+          </div>
+
+          <div style="background:#fff; border:3px solid #000; padding:20px; box-shadow:6px 6px 0px 0px rgba(0,0,0,1)">
+            <span style="font-size:10px; text-transform:uppercase; font-weight:700; letter-spacing:0.05em; font-family:'Space Grotesk',sans-serif; color:#000; display:flex; align-items:center; gap:6px; margin-bottom:14px">
+              <img src="https://unpkg.com/lucide-static@latest/icons/list-todo.svg" style="width:16px; height:16px" alt="" />
+              Action Items Pile
+            </span>
+            <div style="display:flex; flex-direction:column; gap:12px; max-height:288px; overflow-y:auto">
+              <div style="display:flex; padding:12px; background:#F8F7F4; border:2px solid #000; font-size:12px; color:#000; align-items:flex-start; gap:10px">
+                <input type="checkbox" style="margin-top:2px; accent-color:#000" />
+                <span style="line-height:1.625; font-weight:600; font-family:'JetBrains Mono',monospace; font-size:11px">Pin the ten-area checklist where the whole room can see it</span>
+              </div>
+              <div style="display:flex; padding:12px; background:#F8F7F4; border:2px solid #000; font-size:12px; color:#000; align-items:flex-start; gap:10px">
+                <input type="checkbox" style="margin-top:2px; accent-color:#000" />
+                <span style="line-height:1.625; font-weight:600; font-family:'JetBrains Mono',monospace; font-size:11px">Open with twelve minutes of Free Stream — no prompts, no commentary</span>
+              </div>
+              <div style="display:flex; padding:12px; background:#F8F7F4; border:2px solid #000; font-size:12px; color:#000; align-items:flex-start; gap:10px">
+                <input type="checkbox" style="margin-top:2px; accent-color:#000" />
+                <span style="line-height:1.625; font-weight:600; font-family:'JetBrains Mono',monospace; font-size:11px">Force commercials onto the agenda even if it lands badly</span>
+              </div>
+              <div style="display:flex; padding:12px; background:#F8F7F4; border:2px solid #000; font-size:12px; color:#000; align-items:flex-start; gap:10px">
+                <input type="checkbox" style="margin-top:2px; accent-color:#000" />
+                <span style="line-height:1.625; font-weight:600; font-family:'JetBrains Mono',monospace; font-size:11px">Agree "claim", "transformation" and "phase one" before any scoping</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="background:#fff; border:3px solid #000; padding:20px; box-shadow:6px 6px 0px 0px rgba(0,0,0,1); display:flex; flex-direction:column; gap:16px">
+            <span style="display:block; font-size:10px; text-transform:uppercase; font-weight:700; letter-spacing:0.05em; font-family:'Space Grotesk',sans-serif; color:#000; white-space:nowrap">Sharing &amp; Output Tools</span>
+            <div style="display:flex; flex-direction:column; gap:10px">
+              <div style="border:2px solid #000; padding:12px; display:flex; flex-direction:column; gap:10px">
+                <div style="display:flex; align-items:center; justify-content:space-between">
+                  <span style="font-size:9px; font-family:'JetBrains Mono',monospace; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:#52525b; white-space:nowrap">Web Link Sharing</span>
+                  <button style="font-size:9px; font-family:'JetBrains Mono',monospace; padding:2px 8px; border:1px solid #000; cursor:pointer; text-transform:uppercase; font-weight:800; background:#fff; color:#000">Disabled</button>
+                </div>
+                <p style="margin:0; font-size:9px; font-family:'JetBrains Mono',monospace; color:#71717a; line-height:1.625">Sharing is off. The shareable link encodes all session thoughts in plaintext — enable only if you're comfortable with that.</p>
+              </div>
+              <button style="width:100%; padding:10px; border:2px solid #000; background:#fafafa; color:#000; font-size:12px; font-weight:900; font-family:'Space Grotesk',sans-serif; text-transform:uppercase; letter-spacing:0.1em; display:flex; align-items:center; justify-content:center; gap:8px; cursor:pointer">
+                <img src="https://unpkg.com/lucide-static@latest/icons/printer.svg" style="width:16px; height:16px" alt="" />
+                Print Outlines
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+  <sc-if value="{{ isIntake }}" hint-placeholder-val="{{ false }}">
+    <div style="max-width:1024px; margin:0 auto; padding:48px 16px">
+      <div style="background:#fff; border:3px solid #000; padding:40px; box-shadow:6px 6px 0px 0px rgba(0,0,0,1); text-align:center; position:relative; overflow:hidden; margin-bottom:32px">
+        <div style="position:absolute; top:8px; right:8px; font-family:'JetBrains Mono',monospace; font-size:9px; color:#a1a1aa; user-select:none">STRICT_ENG_BUILD_V1 // NO_TRANSLATIONS</div>
+        <div style="display:inline-flex; align-items:center; justify-content:center; background:#000; padding:14px; margin-bottom:16px; border:1px solid #000; box-shadow:2px 2px 0px 0px rgba(0,0,0,1)">
+          <img src="https://unpkg.com/lucide-static@latest/icons/brain.svg" style="width:32px; height:32px; filter:invert(1)" alt="" />
+        </div>
+        <h1 style="margin:0; font-size:48px; line-height:1; font-weight:900; letter-spacing:-0.025em; color:#000; font-family:'Space Grotesk',sans-serif; text-transform:uppercase">E X T R A C T I O N</h1>
+        <p style="margin:12px auto 0; font-size:16px; color:#3f3f46; max-width:576px; font-family:'Playfair Display',Georgia,serif; font-style:italic">"Unburden, organize, and map out your thoughts. Let's move from scattered ideas to structural lists and outlines."</p>
+      </div>
+
+      <div style="display:grid; grid-template-columns:minmax(0,2fr) minmax(0,1fr); gap:24px; align-items:start">
+        <div style="display:flex; flex-direction:column; gap:32px; background:#fff; border:3px solid #000; padding:32px; box-shadow:6px 6px 0px 0px rgba(0,0,0,1)">
+          <div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; gap:8px">
+              <h2 style="margin:0; font-size:18px; font-weight:900; color:#000; text-transform:uppercase; letter-spacing:0.05em; font-family:'Space Grotesk',sans-serif; display:flex; align-items:center; gap:10px">
+                <span style="background:#FF6B6B; color:#000; border:2px solid #000; box-shadow:2px 2px 0px 0px rgba(0,0,0,1); padding:2px 10px; font-size:12px; font-family:'JetBrains Mono',monospace; font-weight:900">01</span>
+                What is this session about?
+              </h2>
+              <button style="padding:4px 10px; border:1px solid #000; background:#fff; color:#000; font-size:9px; font-family:'JetBrains Mono',monospace; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; cursor:pointer; box-shadow:1px 1px 0px 0px rgba(0,0,0,1); white-space:nowrap">ℹ Framing Guide</button>
+            </div>
+
+            <div style="display:flex; border-bottom:2px solid #000; overflow-x:auto; gap:4px; margin-bottom:16px">
+              <button style="display:flex; align-items:center; gap:6px; padding:6px 12px; border:2px solid #000; border-bottom:0; white-space:nowrap; cursor:pointer; font-size:10px; font-weight:900; text-transform:uppercase; letter-spacing:0.025em; background:#000; color:#fff">
+                <img src="https://unpkg.com/lucide-static@latest/icons/briefcase.svg" style="width:14px; height:14px; filter:invert(1)" alt="" />Work
+              </button>
+              <button style="display:flex; align-items:center; gap:6px; padding:6px 12px; border:2px solid #000; border-bottom:0; white-space:nowrap; cursor:pointer; font-size:10px; font-weight:900; text-transform:uppercase; letter-spacing:0.025em; background:#fff; color:#000; transform:translateY(2px)">
+                <img src="https://unpkg.com/lucide-static@latest/icons/house.svg" style="width:14px; height:14px" alt="" />Home
+              </button>
+              <button style="display:flex; align-items:center; gap:6px; padding:6px 12px; border:2px solid #000; border-bottom:0; white-space:nowrap; cursor:pointer; font-size:10px; font-weight:900; text-transform:uppercase; letter-spacing:0.025em; background:#fff; color:#000; transform:translateY(2px)">
+                <img src="https://unpkg.com/lucide-static@latest/icons/users.svg" style="width:14px; height:14px" alt="" />Family
+              </button>
+              <button style="display:flex; align-items:center; gap:6px; padding:6px 12px; border:2px solid #000; border-bottom:0; white-space:nowrap; cursor:pointer; font-size:10px; font-weight:900; text-transform:uppercase; letter-spacing:0.025em; background:#fff; color:#000; transform:translateY(2px)">
+                <img src="https://unpkg.com/lucide-static@latest/icons/laptop.svg" style="width:14px; height:14px" alt="" />Tech
+              </button>
+              <button style="display:flex; align-items:center; gap:6px; padding:6px 12px; border:2px solid #000; border-bottom:0; white-space:nowrap; cursor:pointer; font-size:10px; font-weight:900; text-transform:uppercase; letter-spacing:0.025em; background:#fff; color:#000; transform:translateY(2px)">
+                <img src="https://unpkg.com/lucide-static@latest/icons/coins.svg" style="width:14px; height:14px" alt="" />Economics
+              </button>
+              <button style="display:flex; align-items:center; gap:6px; padding:6px 12px; border:2px solid #000; border-bottom:0; white-space:nowrap; cursor:pointer; font-size:10px; font-weight:900; text-transform:uppercase; letter-spacing:0.025em; background:#fff; color:#000; transform:translateY(2px)">
+                <img src="https://unpkg.com/lucide-static@latest/icons/clipboard-list.svg" style="width:14px; height:14px" alt="" />Project Planning
+              </button>
+            </div>
+
+            <div style="border:2px solid #000; padding:16px; margin-bottom:16px; box-shadow:3px 3px 0px 0px rgba(0,0,0,1); background:#FFE8CC">
+              <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid rgba(0,0,0,0.1)">
+                <img src="https://unpkg.com/lucide-static@latest/icons/briefcase.svg" style="width:16px; height:16px" alt="" />
+                <span style="font-weight:900; font-size:10px; text-transform:uppercase; letter-spacing:0.025em; color:#000">Work Starters (Click to load)</span>
+              </div>
+              <div style="display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px">
+                <button style="text-align:left; background:#fff; border:1px solid #000; padding:12px; font-size:10px; color:#3f3f46; line-height:1.625; cursor:pointer; box-shadow:1px 1px 0px 0px rgba(0,0,0,1); min-height:60px; display:flex; flex-direction:column; justify-content:center; font-weight:500">Evaluating a career pivot from corporate to freelancing, balancing risk against passion...</button>
+                <button style="text-align:left; background:#fff; border:1px solid #000; padding:12px; font-size:10px; color:#3f3f46; line-height:1.625; cursor:pointer; box-shadow:1px 1px 0px 0px rgba(0,0,0,1); min-height:60px; display:flex; flex-direction:column; justify-content:center; font-weight:500">Addressing team friction after a conflict regarding project scope and deadlines...</button>
+                <button style="text-align:left; background:#fff; border:1px solid #000; padding:12px; font-size:10px; color:#3f3f46; line-height:1.625; cursor:pointer; box-shadow:1px 1px 0px 0px rgba(0,0,0,1); min-height:60px; display:flex; flex-direction:column; justify-content:center; font-weight:500">Structuring my daily agenda to avoid burnout on heavy delivery weeks...</button>
+              </div>
+            </div>
+
+            <textarea rows="3" style="width:100%; box-sizing:border-box; font-size:14px; border:2px solid #000; padding:12px; outline:none; background:#fff; font-family:'JetBrains Mono',monospace; resize:none; line-height:1.6">what do we need to walk out of the northwind kickoff with? (Work/Career Domain), (Decision Needed)</textarea>
+
+            <div style="margin-top:14px; background:#F8F9FA; border:2px solid #000; padding:14px; display:flex; flex-direction:column; gap:10px; box-shadow:2px 2px 0px 0px rgba(0,0,0,1)">
+              <span style="font-weight:700; font-size:9px; text-transform:uppercase; font-family:'JetBrains Mono',monospace; letter-spacing:0.05em; color:#71717a; display:block">⚡ Quick context keywords (click to append to topic)</span>
+              <div style="display:flex; flex-wrap:wrap; gap:6px">
+                <button style="padding:4px 8px; border:1px solid #000; font-size:9px; font-family:'JetBrains Mono',monospace; font-weight:700; text-transform:uppercase; background:#fff; color:#000; cursor:pointer; box-shadow:1px 1px 0px 0px rgba(0,0,0,1); white-space:nowrap">⚡ Urgent</button>
+                <button style="padding:4px 8px; border:1px solid #000; font-size:9px; font-family:'JetBrains Mono',monospace; font-weight:700; text-transform:uppercase; background:#fff; color:#000; cursor:pointer; box-shadow:1px 1px 0px 0px rgba(0,0,0,1); white-space:nowrap">💰 Financials</button>
+                <button style="padding:4px 8px; border:1px solid #000; font-size:9px; font-family:'JetBrains Mono',monospace; font-weight:700; text-transform:uppercase; background:#fff; color:#000; cursor:pointer; box-shadow:1px 1px 0px 0px rgba(0,0,0,1); white-space:nowrap">❤️ Exhaustion/Burnout</button>
+                <button style="padding:4px 8px; border:1px solid #000; font-size:9px; font-family:'JetBrains Mono',monospace; font-weight:700; text-transform:uppercase; background:#fff; color:#000; cursor:pointer; box-shadow:1px 1px 0px 0px rgba(0,0,0,1); white-space:nowrap">🤷 Highly Ambiguous</button>
+                <button style="padding:4px 8px; border:1px solid #000; font-size:9px; font-family:'JetBrains Mono',monospace; font-weight:700; text-transform:uppercase; background:#fff; color:#000; cursor:pointer; box-shadow:1px 1px 0px 0px rgba(0,0,0,1); white-space:nowrap">🤝 Relationship Friction</button>
+                <button disabled="disabled" style="padding:4px 8px; border:1px solid #d4d4d8; font-size:9px; font-family:'JetBrains Mono',monospace; font-weight:700; text-transform:uppercase; background:#e4e4e7; color:#a1a1aa; cursor:not-allowed; white-space:nowrap">🎯 Decision Needed</button>
+                <button style="padding:4px 8px; border:1px solid #000; font-size:9px; font-family:'JetBrains Mono',monospace; font-weight:700; text-transform:uppercase; background:#fff; color:#000; cursor:pointer; box-shadow:1px 1px 0px 0px rgba(0,0,0,1); white-space:nowrap">📋 Process Mapping</button>
+                <button disabled="disabled" style="padding:4px 8px; border:1px solid #d4d4d8; font-size:9px; font-family:'JetBrains Mono',monospace; font-weight:700; text-transform:uppercase; background:#e4e4e7; color:#a1a1aa; cursor:not-allowed; white-space:nowrap">💼 Work/Career</button>
+                <button style="padding:4px 8px; border:1px solid #000; font-size:9px; font-family:'JetBrains Mono',monospace; font-weight:700; text-transform:uppercase; background:#fff; color:#000; cursor:pointer; box-shadow:1px 1px 0px 0px rgba(0,0,0,1); white-space:nowrap">🚀 Side Project</button>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; gap:8px">
+              <h2 style="margin:0; font-size:18px; font-weight:900; color:#000; text-transform:uppercase; letter-spacing:0.05em; font-family:'Space Grotesk',sans-serif; display:flex; align-items:center; gap:10px">
+                <span style="background:#4DABF7; color:#000; border:2px solid #000; box-shadow:2px 2px 0px 0px rgba(0,0,0,1); padding:2px 10px; font-size:12px; font-family:'JetBrains Mono',monospace; font-weight:900">02</span>
+                What do you want to get out of this?
+              </h2>
+              <button style="padding:4px 10px; border:1px solid #000; background:#fff; color:#000; font-size:9px; font-family:'JetBrains Mono',monospace; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; cursor:pointer; box-shadow:1px 1px 0px 0px rgba(0,0,0,1); white-space:nowrap">ℹ Compare Intentions</button>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:8px">
+              <label style="display:flex; align-items:center; gap:12px; padding:12px; border:2px solid #000; cursor:pointer; font-size:14px; background:#fff; color:#000; box-shadow:1px 1px 0px 0px rgba(0,0,0,1)">
+                <input type="radio" name="intention" style="accent-color:#000" />
+                Organize raw thoughts into a structured markdown outline
+              </label>
+              <label style="display:flex; align-items:center; gap:12px; padding:12px; border:2px solid #000; cursor:pointer; font-size:14px; background:#FFE8CC; color:#000; font-weight:800; box-shadow:3px 3px 0px 0px rgba(0,0,0,1)">
+                <input type="radio" name="intention" checked="checked" style="accent-color:#000" />
+                Make a tough choice with clear priority action items
+              </label>
+              <label style="display:flex; align-items:center; gap:12px; padding:12px; border:2px solid #000; cursor:pointer; font-size:14px; background:#fff; color:#000; box-shadow:1px 1px 0px 0px rgba(0,0,0,1)">
+                <input type="radio" name="intention" style="accent-color:#000" />
+                Decompress deep mental fog and find emotional peace
+              </label>
+              <label style="display:flex; align-items:center; gap:12px; padding:12px; border:2px solid #000; cursor:pointer; font-size:14px; background:#fff; color:#000; box-shadow:1px 1px 0px 0px rgba(0,0,0,1)">
+                <input type="radio" name="intention" style="accent-color:#000" />
+                Something else...
+              </label>
+            </div>
+          </div>
+
+          <div style="border-top:3px solid #000; padding-top:24px">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; gap:8px">
+              <h2 style="margin:0; font-size:18px; font-weight:900; color:#000; text-transform:uppercase; letter-spacing:0.05em; font-family:'Space Grotesk',sans-serif; display:flex; align-items:center; gap:10px">
+                <span style="background:#51CF66; color:#000; border:2px solid #000; box-shadow:2px 2px 0px 0px rgba(0,0,0,1); padding:2px 10px; font-size:12px; font-family:'JetBrains Mono',monospace; font-weight:900">03</span>
+                Advanced Synthesis Controls
+              </h2>
+              <button style="padding:4px 10px; border:1px solid #000; background:#fff; color:#000; font-size:9px; font-family:'JetBrains Mono',monospace; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; cursor:pointer; box-shadow:1px 1px 0px 0px rgba(0,0,0,1); white-space:nowrap">ℹ Compare Settings</button>
+            </div>
+            <p style="margin:0 0 20px; font-size:12px; color:#71717a; line-height:1.625">Define the cognitive style of the extraction session and configure how the final synthesized outputs should filter or organize concepts.</p>
+
+            <div style="display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px">
+              <div style="border:2px solid #000; padding:16px; background:rgba(244,244,245,0.5)">
+                <div style="display:flex; flex-wrap:wrap; gap:4px; justify-content:space-between; align-items:center; margin-bottom:12px">
+                  <span style="display:block; font-size:10px; font-weight:900; text-transform:uppercase; letter-spacing:0.05em; color:#000; font-family:'JetBrains Mono',monospace">03.1 // Prompting Tone</span>
+                  <button style="font-size:9px; font-family:'JetBrains Mono',monospace; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:#71717a; background:none; border:none; cursor:pointer; white-space:nowrap">[ℹ Compare]</button>
+                </div>
+                <div style="display:flex; flex-direction:column; gap:8px">
+                  <label style="display:flex; flex-direction:column; padding:10px; border:2px solid #000; cursor:pointer; background:#fff">
+                    <div style="display:flex; align-items:center; gap:8px"><input type="radio" name="tone" style="accent-color:#000; margin-right:4px" /><span style="font-size:12px; font-weight:900; text-transform:uppercase; letter-spacing:-0.025em; color:#000">Standard Guide</span></div>
+                    <span style="font-size:9px; margin-top:6px; line-height:1.3; font-family:'Playfair Display',Georgia,serif; color:#71717a">Balanced strategic coaching inquiries</span>
+                  </label>
+                  <label style="display:flex; flex-direction:column; padding:10px; border:2px solid #000; cursor:pointer; background:#FFE8CC; box-shadow:2px 2px 0px 0px rgba(0,0,0,1)">
+                    <div style="display:flex; align-items:center; gap:8px"><input type="radio" name="tone" checked="checked" style="accent-color:#000; margin-right:4px" /><span style="font-size:12px; font-weight:900; text-transform:uppercase; letter-spacing:-0.025em; color:#000">Socratic Pressure</span></div>
+                    <span style="font-size:9px; margin-top:6px; line-height:1.3; font-family:'Playfair Display',Georgia,serif; color:#3f3f46; font-weight:600; font-style:italic">Prickly, challenges core assumptions</span>
+                  </label>
+                  <label style="display:flex; flex-direction:column; padding:10px; border:2px solid #000; cursor:pointer; background:#fff">
+                    <div style="display:flex; align-items:center; gap:8px"><input type="radio" name="tone" style="accent-color:#000; margin-right:4px" /><span style="font-size:12px; font-weight:900; text-transform:uppercase; letter-spacing:-0.025em; color:#000">Empathetic Vent</span></div>
+                    <span style="font-size:9px; margin-top:6px; line-height:1.3; font-family:'Playfair Display',Georgia,serif; color:#71717a">Gentle, non-judgmental holding space</span>
+                  </label>
+                </div>
+              </div>
+
+              <div style="border:2px solid #000; padding:16px; background:rgba(244,244,245,0.5)">
+                <div style="display:flex; flex-wrap:wrap; gap:4px; justify-content:space-between; align-items:center; margin-bottom:12px">
+                  <span style="display:block; font-size:10px; font-weight:900; text-transform:uppercase; letter-spacing:0.05em; color:#000; font-family:'JetBrains Mono',monospace">03.2 // Output Filtering</span>
+                  <button style="font-size:9px; font-family:'JetBrains Mono',monospace; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:#71717a; background:none; border:none; cursor:pointer; white-space:nowrap">[ℹ Compare]</button>
+                </div>
+                <div style="display:flex; flex-direction:column; gap:8px">
+                  <label style="display:flex; flex-direction:column; padding:10px; border:2px solid #000; cursor:pointer; background:#D2E3FC; box-shadow:2px 2px 0px 0px rgba(0,0,0,1)">
+                    <div style="display:flex; align-items:center; gap:8px"><input type="radio" name="filter" checked="checked" style="accent-color:#000; margin-right:4px" /><span style="font-size:12px; font-weight:900; text-transform:uppercase; letter-spacing:-0.025em; color:#000">Full Blueprint</span></div>
+                    <span style="font-size:9px; margin-top:6px; line-height:1.3; font-family:'Playfair Display',Georgia,serif; color:#3f3f46; font-weight:600; font-style:italic">Recap summary, outline &amp; steps</span>
+                  </label>
+                  <label style="display:flex; flex-direction:column; padding:10px; border:2px solid #000; cursor:pointer; background:#fff">
+                    <div style="display:flex; align-items:center; gap:8px"><input type="radio" name="filter" style="accent-color:#000; margin-right:4px" /><span style="font-size:12px; font-weight:900; text-transform:uppercase; letter-spacing:-0.025em; color:#000">Action lists Only</span></div>
+                    <span style="font-size:9px; margin-top:6px; line-height:1.3; font-family:'Playfair Display',Georgia,serif; color:#71717a">Exclude summaries, checklist-only</span>
+                  </label>
+                  <label style="display:flex; flex-direction:column; padding:10px; border:2px solid #000; cursor:pointer; background:#fff">
+                    <div style="display:flex; align-items:center; gap:8px"><input type="radio" name="filter" style="accent-color:#000; margin-right:4px" /><span style="font-size:12px; font-weight:900; text-transform:uppercase; letter-spacing:-0.025em; color:#000">Milestones Only</span></div>
+                    <span style="font-size:9px; margin-top:6px; line-height:1.3; font-family:'Playfair Display',Georgia,serif; color:#71717a">Exclude mini steps, strategic themes only</span>
+                  </label>
+                </div>
+              </div>
+
+              <div style="border:2px solid #000; padding:16px; background:rgba(244,244,245,0.5)">
+                <div style="display:flex; flex-wrap:wrap; gap:4px; justify-content:space-between; align-items:center; margin-bottom:12px">
+                  <span style="display:block; font-size:10px; font-weight:900; text-transform:uppercase; letter-spacing:0.05em; color:#000; font-family:'JetBrains Mono',monospace">03.3 // Intellectual Audit</span>
+                  <button style="font-size:9px; font-family:'JetBrains Mono',monospace; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:#71717a; background:none; border:none; cursor:pointer; white-space:nowrap">[ℹ Compare]</button>
+                </div>
+                <div style="display:flex; flex-direction:column; gap:8px">
+                  <label style="display:flex; flex-direction:column; padding:10px; border:2px solid #000; cursor:pointer; background:#fff">
+                    <div style="display:flex; align-items:center; gap:8px"><input type="radio" name="bias" style="accent-color:#000; margin-right:4px" /><span style="font-size:12px; font-weight:900; text-transform:uppercase; letter-spacing:-0.025em; color:#000">Omit Bias Check</span></div>
+                    <span style="font-size:9px; margin-top:6px; line-height:1.3; font-family:'Playfair Display',Georgia,serif; color:#71717a">Purely organize structural ideas</span>
+                  </label>
+                  <label style="display:flex; flex-direction:column; padding:10px; border:2px solid #000; cursor:pointer; background:#CEEAD6; box-shadow:2px 2px 0px 0px rgba(0,0,0,1)">
+                    <div style="display:flex; align-items:center; gap:8px"><input type="radio" name="bias" checked="checked" style="accent-color:#000; margin-right:4px" /><span style="font-size:12px; font-weight:900; text-transform:uppercase; letter-spacing:-0.025em; color:#000">Audit Traps</span></div>
+                    <span style="font-size:9px; margin-top:6px; line-height:1.3; font-family:'Playfair Display',Georgia,serif; color:#3f3f46; font-weight:600; font-style:italic">Diagnostics for cognitive fallback biases</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="padding-top:24px; border-top:2px solid #000; display:flex; flex-direction:column; gap:16px">
+            <div style="display:flex; gap:12px">
+              <button style="flex:1; display:flex; justify-content:center; align-items:center; gap:8px; padding:12px 20px; border:2px solid #000; background:#fff; color:#000; font-family:'Space Grotesk',sans-serif; font-weight:900; font-size:12px; text-transform:uppercase; letter-spacing:0.05em; box-shadow:3px 3px 0px 0px rgba(0,0,0,1); cursor:pointer">
+                <img src="https://unpkg.com/lucide-static@latest/icons/sparkles.svg" style="width:16px; height:16px" alt="" />
+                Guide Me (Recommend a Mode)
+              </button>
+              <button style="flex:1; display:flex; justify-content:center; align-items:center; gap:8px; padding:12px 20px; border:2px solid #000; background:#000; color:#fff; font-family:'Space Grotesk',sans-serif; font-weight:900; font-size:12px; text-transform:uppercase; letter-spacing:0.05em; box-shadow:3px 3px 0px 0px rgba(0,0,0,1); cursor:pointer">
+                Start Instantly (Free Stream)
+                <img src="https://unpkg.com/lucide-static@latest/icons/arrow-right.svg" style="width:16px; height:16px; filter:invert(1)" alt="" />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div style="background:#fff; border:3px solid #000; padding:24px; box-shadow:6px 6px 0px 0px rgba(0,0,0,1); display:flex; flex-direction:column; max-height:600px; overflow:hidden">
+          <h2 style="margin:0 0 12px; font-size:16px; font-weight:900; color:#000; text-transform:uppercase; letter-spacing:0.05em; font-family:'Space Grotesk',sans-serif; display:flex; align-items:center; gap:8px; flex-shrink:0">
+            <img src="https://unpkg.com/lucide-static@latest/icons/folder-open.svg" style="width:20px; height:20px" alt="" />
+            Previous Sessions
+          </h2>
+          <p style="margin:0 0 16px; font-size:12px; color:#71717a; flex-shrink:0">Open past Extractions to continue or view organized summaries.</p>
+          <div style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:12px; padding-right:4px">
+            <div style="display:flex; justify-content:space-between; align-items:center; background:#fff; border:2px solid #000; padding:12px">
+              <div style="flex:1; min-width:0">
+                <span style="display:block; font-weight:700; font-size:12px; color:#000; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-bottom:2px">Northwind discovery call · what did we actually hear?</span>
+                <span style="display:block; font-size:10px; color:#a1a1aa; font-family:'JetBrains Mono',monospace">22 SURFACED THOUGHTS • 8/24/2026</span>
+              </div>
+              <img src="https://unpkg.com/lucide-static@latest/icons/trash-2.svg" style="width:16px; height:16px; opacity:0.3; margin-left:4px" alt="" />
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; background:#fff; border:2px solid #000; padding:12px">
+              <div style="flex:1; min-width:0">
+                <span style="display:block; font-weight:700; font-size:12px; color:#000; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-bottom:2px">Which delivery shape fits a 90-minute kickoff?</span>
+                <span style="display:block; font-size:10px; color:#a1a1aa; font-family:'JetBrains Mono',monospace">9 SURFACED THOUGHTS • 8/19/2026</span>
+              </div>
+              <img src="https://unpkg.com/lucide-static@latest/icons/trash-2.svg" style="width:16px; height:16px; opacity:0.3; margin-left:4px" alt="" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isCompare }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute; inset:0; z-index:50; display:flex; align-items:flex-start; justify-content:center; padding:24px">
+      <div style="position:absolute; inset:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(2px)"></div>
+      <div style="position:relative; background:#fff; border:3px solid #000; padding:32px; max-width:896px; width:100%; box-shadow:8px 8px 0px 0px rgba(0,0,0,1); z-index:10; margin-top:80px">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:3px solid #000; padding-bottom:16px; margin-bottom:24px">
+          <div>
+            <span style="font-size:10px; text-transform:uppercase; font-weight:700; letter-spacing:0.1em; color:#71717a; font-family:'JetBrains Mono',monospace; display:flex; align-items:center; gap:6px; line-height:1">
+              <img src="https://unpkg.com/lucide-static@latest/icons/sparkles.svg" style="width:14px; height:14px" alt="" />
+              Advanced Controls Guide
+            </span>
+            <h2 style="margin:6px 0 0; font-size:24px; font-weight:900; text-transform:uppercase; color:#000; font-family:'Space Grotesk',sans-serif; letter-spacing:-0.025em">Compare Settings &amp; Outcomes</h2>
+          </div>
+          <button style="padding:4px; border:2px solid #000; background:#fff; box-shadow:2px 2px 0px 0px rgba(0,0,0,1); cursor:pointer; display:flex">
+            <img src="https://unpkg.com/lucide-static@latest/icons/x.svg" style="width:16px; height:16px" alt="" />
+          </button>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:16px">
+          <p style="margin:0; font-size:12px; color:#3f3f46; line-height:1.625; font-family:'Playfair Display',Georgia,serif; font-style:italic">"Below is a comparison of how different settings process a sample topic: **'Should I make a career pivot from corporate to freelancing?'** with the thought: **'I am burnt out by corporate rules but terrified of freelance income instability.'**"</p>
+
+          <div style="display:flex; border-bottom:2px solid #000; overflow-x:auto; gap:4px">
+            <button style="padding:8px 16px; border:2px solid #000; border-bottom:0; white-space:nowrap; cursor:pointer; font-size:12px; font-weight:900; text-transform:uppercase; letter-spacing:0.025em; background:#fff; color:#000; transform:translateY(2px)">01 // Topic Framing</button>
+            <button style="padding:8px 16px; border:2px solid #000; border-bottom:0; white-space:nowrap; cursor:pointer; font-size:12px; font-weight:900; text-transform:uppercase; letter-spacing:0.025em; background:#fff; color:#000; transform:translateY(2px)">02 // Intention Objective</button>
+            <button style="padding:8px 16px; border:2px solid #000; border-bottom:0; white-space:nowrap; cursor:pointer; font-size:12px; font-weight:900; text-transform:uppercase; letter-spacing:0.025em; background:#000; color:#fff">03.1 // Guidance Tone</button>
+            <button style="padding:8px 16px; border:2px solid #000; border-bottom:0; white-space:nowrap; cursor:pointer; font-size:12px; font-weight:900; text-transform:uppercase; letter-spacing:0.025em; background:#fff; color:#000; transform:translateY(2px)">03.2 // Output Filtering</button>
+            <button style="padding:8px 16px; border:2px solid #000; border-bottom:0; white-space:nowrap; cursor:pointer; font-size:12px; font-weight:900; text-transform:uppercase; letter-spacing:0.025em; background:#fff; color:#000; transform:translateY(2px)">03.3 // Bias Auditing</button>
+            <button style="padding:8px 16px; border:2px solid #000; border-bottom:0; white-space:nowrap; cursor:pointer; font-size:12px; font-weight:900; text-transform:uppercase; letter-spacing:0.025em; background:#fff; color:#000; transform:translateY(2px)">04 // Warm-up Quiz</button>
+          </div>
+
+          <div style="padding-top:8px; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:24px">
+            <div style="border:2px solid #000; padding:16px; background:#fafafa">
+              <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px">
+                <span style="background:#D2E3FC; color:#000; border:1px solid #000; padding:2px 8px; font-size:9px; font-family:'JetBrains Mono',monospace; font-weight:700; text-transform:uppercase; letter-spacing:0.025em">Standard Guide</span>
+              </div>
+              <h4 style="margin:0 0 6px; font-size:12px; font-weight:900; text-transform:uppercase; letter-spacing:-0.025em; color:#000">Balanced strategic coaching</h4>
+              <p style="margin:0 0 16px; font-size:10px; color:#71717a; line-height:1.625">Ideal for structural roadmap building and logical mapping.</p>
+              <div style="border-top:1px dashed rgba(0,0,0,0.15); padding-top:12px; display:flex; flex-direction:column; gap:14px">
+                <div>
+                  <span style="font-size:8px; text-transform:uppercase; font-weight:700; letter-spacing:0.1em; font-family:'JetBrains Mono',monospace; color:#a1a1aa; display:block; margin-bottom:4px">Example Interview Nudge</span>
+                  <p style="margin:0; font-size:12px; color:#000; line-height:1.625">"What is the primary milestone or safety buffer you want to secure first before quitting?"</p>
+                </div>
+                <div>
+                  <span style="font-size:8px; text-transform:uppercase; font-weight:700; letter-spacing:0.1em; font-family:'JetBrains Mono',monospace; color:#a1a1aa; display:block; margin-bottom:4px">Example Synthesized Outline</span>
+                  <div style="padding:8px; background:#fff; border:1px solid #000; font-family:'JetBrains Mono',monospace; font-size:9px; color:#3f3f46; line-height:1.5"><strong>## 1. Core Focus: Freelance</strong><br />- Rigid Rules vs Flexibility<br />- Key Bottleneck: Income Stability<br /><strong>## 2. Action Priorities</strong><br />- Establish 6-month buffer<br />- Land 2 beta clients</div>
+                </div>
+              </div>
+            </div>
+
+            <div style="border:2px solid #000; padding:16px; background:#FFE8CC">
+              <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px">
+                <span style="background:#FFE3E3; color:#000; border:1px solid #000; padding:2px 8px; font-size:9px; font-family:'JetBrains Mono',monospace; font-weight:700; text-transform:uppercase; letter-spacing:0.025em; display:flex; align-items:center; gap:4px">
+                  <img src="https://unpkg.com/lucide-static@latest/icons/shield-alert.svg" style="width:12px; height:12px" alt="" />
+                  Socratic Pressure
+                </span>
+              </div>
+              <h4 style="margin:0 0 6px; font-size:12px; font-weight:900; text-transform:uppercase; letter-spacing:-0.025em; color:#000">Challenging core assumptions</h4>
+              <p style="margin:0 0 16px; font-size:10px; color:#3f3f46; line-height:1.625">Forces you to test assumptions, cut through hesitation, and audit rationalizations.</p>
+              <div style="border-top:1px dashed rgba(0,0,0,0.15); padding-top:12px; display:flex; flex-direction:column; gap:14px">
+                <div>
+                  <span style="font-size:8px; text-transform:uppercase; font-weight:700; letter-spacing:0.1em; font-family:'JetBrains Mono',monospace; color:#52525b; display:block; margin-bottom:4px">Example Interview Nudge</span>
+                  <p style="margin:0; font-size:12px; color:#000; line-height:1.625; font-weight:600; font-style:italic">"If your stability concern is purely financial, why haven't you drafted an exact budget sheet yet? Is it a math block or a fear block?"</p>
+                </div>
+                <div>
+                  <span style="font-size:8px; text-transform:uppercase; font-weight:700; letter-spacing:0.1em; font-family:'JetBrains Mono',monospace; color:#52525b; display:block; margin-bottom:4px">Example Synthesized Outline</span>
+                  <div style="padding:8px; background:#fff; border:1px solid #000; font-family:'JetBrains Mono',monospace; font-size:9px; color:#27272a; line-height:1.5"><strong>## 1. Viability Audit: Income</strong><br />- Reality Test: Financial projection<br />- Sunk-Cost Trap: Years of tenure<br /><strong>## 2. Hard Action Items</strong><br />- [ ] Draft concrete expense ledger<br />- [ ] Audit consulting hourly market rate</div>
+                </div>
+              </div>
+            </div>
+
+            <div style="border:2px solid #000; padding:16px; background:#E6F4EA">
+              <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px">
+                <span style="background:#fff; color:#000; border:1px solid #000; padding:2px 8px; font-size:9px; font-family:'JetBrains Mono',monospace; font-weight:700; text-transform:uppercase; letter-spacing:0.025em; display:flex; align-items:center; gap:4px">
+                  <img src="https://unpkg.com/lucide-static@latest/icons/smile.svg" style="width:12px; height:12px" alt="" />
+                  Empathetic Vent
+                </span>
+              </div>
+              <h4 style="margin:0 0 6px; font-size:12px; font-weight:900; text-transform:uppercase; letter-spacing:-0.025em; color:#000">Supporting emotional unburdening</h4>
+              <p style="margin:0 0 16px; font-size:10px; color:#52525b; line-height:1.625">Gives room to decompress burnout fatigue and align choices with emotional security.</p>
+              <div style="border-top:1px dashed rgba(0,0,0,0.15); padding-top:12px; display:flex; flex-direction:column; gap:14px">
+                <div>
+                  <span style="font-size:8px; text-transform:uppercase; font-weight:700; letter-spacing:0.1em; font-family:'JetBrains Mono',monospace; color:#71717a; display:block; margin-bottom:4px">Example Interview Nudge</span>
+                  <p style="margin:0; font-size:12px; color:#000; line-height:1.625">"How does it feel when you imagine staying in your corporate job for another full year? Let's acknowledge the exhaustion first."</p>
+                </div>
+                <div>
+                  <span style="font-size:8px; text-transform:uppercase; font-weight:700; letter-spacing:0.1em; font-family:'JetBrains Mono',monospace; color:#71717a; display:block; margin-bottom:4px">Example Synthesized Outline</span>
+                  <div style="padding:8px; background:#fff; border:1px solid #000; font-family:'JetBrains Mono',monospace; font-size:9px; color:#3f3f46; line-height:1.5"><strong>## 1. Burnout &amp; Fatigue Relief</strong><br />- Honoring exhaustion boundaries<br />- Emotional safety over speed<br /><strong>## 2. Supportive Roadmap</strong><br />- Phase 1: Set firm off-work limits<br />- Phase 2: Gentle freelance testing</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top:8px; padding:12px; background:#f4f4f5; border:2px solid #000; text-align:center; font-family:'JetBrains Mono',monospace; font-size:9px; color:#71717a; text-transform:uppercase; letter-spacing:0.025em; line-height:1.625">Note: You can re-synthesize your outlines with different blueprint settings at any time without losing your thoughts history list!</div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:900},&quot;screen&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;intake&quot;,&quot;guided&quot;,&quot;swipe&quot;,&quot;priority&quot;,&quot;cluster&quot;,&quot;timeline&quot;,&quot;intensity&quot;,&quot;export&quot;,&quot;compare&quot;],&quot;default&quot;:&quot;guided&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  static MODES = [
+    { mode: "free_stream", label: "Free Stream", c1: "#fbbf24", c2: "#f97316" },
+    { mode: "quick_fire", label: "Quick Fire", c1: "#ef4444", c2: "#ec4899" },
+    { mode: "guided_drill", label: "Guided Drill", c1: "#3b82f6", c2: "#4f46e5" },
+    { mode: "binary_frame", label: "Binary Bracket", c1: "#10b981", c2: "#0d9488" },
+    { mode: "swipe", label: "Swipe Statements", c1: "#a855f7", c2: "#6366f1" },
+    { mode: "slider", label: "Intensity Map", c1: "#6366f1", c2: "#9333ea" },
+    { mode: "card_sort", label: "Cluster Sorting", c1: "#2dd4bf", c2: "#06b6d4" },
+    { mode: "timeline", label: "Temporal Map", c1: "#fb7185", c2: "#ef4444" },
+    { mode: "sentence_completion", label: "Sentence Starters", c1: "#8b5cf6", c2: "#c026d3" },
+    { mode: "devils_advocate", label: "Advocate Shock", c1: "#d97706", c2: "#b91c1c" },
+    { mode: "letter_writing", label: "Letter Drill", c1: "#fb923c", c2: "#d97706" },
+    { mode: "priority_pile", label: "Priority Eisenhower", c1: "#0d9488", c2: "#047857" }
+  ];
+
+  static SEED = [
+    { id: "th10", mode: "guided_drill", text: 'Q: "Which of the ten areas will actually get skipped if you don\'t force it onto the agenda?"\nA: "Commercials. Nobody on the client side wants to open the funding conversation in a room that size."' },
+    { id: "th9", mode: "swipe", text: "If we leave the kickoff without a written scope boundary, every change request for the next six months becomes an argument about memory.", swipeStatus: "like" },
+    { id: "th8", mode: "guided_drill", text: 'Perspective Clarification // User Query: "Why does it matter who said a thing, not just what was said?" -> Guide Response: "Because coverage is about voices, not volume. Ten fragments from one person is a single point of view wearing a crowd\'s clothing."' },
+    { id: "th7", mode: "swipe", text: "I'm over-preparing the agenda and under-preparing for the sponsor and the ops lead disagreeing in public.", swipeStatus: "maybe" },
+    { id: "th6", mode: "free_stream", text: "Two things I actually need by 17:00 on the day: an agreed definition of 'claim', and a named owner for every area we touch.", clusterCategory: "Primary Goals" },
+    { id: "th5", mode: "quick_fire", text: "Biggest fear: we run a warm, productive workshop and still can't write down what is in scope.", intensity: { urgency: 8, certainty: 6, emotion: 7, actionability: 4 } },
+    { id: "th4", mode: "free_stream", text: "Ninety minutes, six stakeholders, ten areas. That is nine minutes an area — the modes have to do the digging, not me.", timelineZone: "now" },
+    { id: "th3", mode: "quick_fire", text: "Free Stream first or Guided Drill first? Free Stream — otherwise the exec fills the silence and everyone else calibrates to him.", priorityZone: "act" },
+    { id: "th2", mode: "guided_drill", text: 'Q: "What has to be true for the second workshop to be worth booking?"\nA: "That the gaps from the first one are visible and owned. Otherwise it is just another meeting."' },
+    { id: "th1", mode: "free_stream", text: "Njoku will be the only person talking about compliance. I need that to look like a gap, not like consensus." }
+  ];
+
+  state = {
+    thoughts: Component.SEED,
+    scratchOpen: false,
+    scratchText: "",
+    priority: { act: ["th3", "th2"], watch: ["th6"], discard: [] }
+  };
+
+  activeMode() {
+    const s = this.props.screen || "guided";
+    return { guided: "guided_drill", swipe: "swipe", priority: "priority_pile", cluster: "card_sort", timeline: "timeline", intensity: "slider" }[s] || "guided_drill";
+  }
+
+  moveTo(id, zone) {
+    this.setState((s) => {
+      const p = { act: s.priority.act.filter((x) => x !== id), watch: s.priority.watch.filter((x) => x !== id), discard: s.priority.discard.filter((x) => x !== id) };
+      p[zone] = [...p[zone], id];
+      return { priority: p };
+    });
+  }
+
+  renderVals() {
+    const screen = this.props.screen || "guided";
+    const isWorkspace = ["guided", "swipe", "priority", "cluster", "timeline", "intensity"].includes(screen);
+    const active = this.activeMode();
+    const ths = this.state.thoughts;
+
+    const meta = {};
+    Component.MODES.forEach((m) => { meta[m.mode] = m; });
+
+    const pile = ths.map((t, i) => {
+      const m = meta[t.mode] || { label: t.mode, c1: "#94a3b8", c2: "#64748b" };
+      const st = t.swipeStatus;
+      return {
+        id: t.id,
+        text: t.text,
+        modeLabel: t.mode.replaceAll("_", " "),
+        dot: `linear-gradient(to right, ${m.c1}, ${m.c2})`,
+        num: `#${ths.length - i}`,
+        hasStatus: !!st,
+        statusLabel: st ? `STATUS: ${st === "like" ? "RESONANT" : st === "dislike" ? "REJECTED" : "MAYBE"}` : "",
+        hasIntensity: !!t.intensity,
+        intensityChips: t.intensity ? Object.entries(t.intensity).map(([k, v]) => `${k}: ${v}/10`) : [],
+        hasCluster: !!t.clusterCategory,
+        clusterLabel: t.clusterCategory ? `CLUSTER: ${t.clusterCategory}` : "",
+        hasTimeline: !!t.timelineZone,
+        timelineLabel: t.timelineZone ? `TIMELINE: ${t.timelineZone}` : "",
+        hasPriority: !!t.priorityZone,
+        priorityLabel: t.priorityZone ? `PRIORITY: ${t.priorityZone === "act" ? "ACT NOW" : t.priorityZone === "watch" ? "WATCH" : "PASS"}` : ""
+      };
+    });
+
+    const modes = Component.MODES.map((m) => {
+      const count = ths.filter((t) => t.mode === m.mode).length;
+      return { label: m.label, dot: `linear-gradient(to right, ${m.c1}, ${m.c2})`, active: active === m.mode, inactive: active !== m.mode, count, hasCount: count > 0 };
+    });
+
+    const byId = {};
+    ths.forEach((t) => { byId[t.id] = t; });
+    const zoneItems = (z) => this.state.priority[z].map((id) => ({ id, text: byId[id] ? byId[id].text : "" }));
+    const zoneOf = (id) => this.state.priority.act.includes(id) ? "act" : this.state.priority.watch.includes(id) ? "watch" : this.state.priority.discard.includes(id) ? "discard" : "";
+
+    const sortRows = ths.map((t) => {
+      const z = zoneOf(t.id);
+      return {
+        id: t.id,
+        text: t.text,
+        actOn: z === "act", actOff: z !== "act",
+        watchOn: z === "watch", watchOff: z !== "watch",
+        discardOn: z === "discard", discardOff: z !== "discard",
+        onAct: () => this.moveTo(t.id, "act"),
+        onWatch: () => this.moveTo(t.id, "watch"),
+        onDiscard: () => this.moveTo(t.id, "discard"),
+        onDragStart: (e) => { this.dragId = t.id; if (e.dataTransfer) e.dataTransfer.effectAllowed = "move"; }
+      };
+    });
+
+    const dropOn = (zone) => (e) => { e.preventDefault(); if (this.dragId) { this.moveTo(this.dragId, zone); this.dragId = null; } };
+    const allowDrop = (e) => e.preventDefault();
+
+    const CLUSTERS = { th6: "Primary Goals", th5: "Mental Barriers", th4: "Action Tasks", th3: "Action Tasks" };
+    const BUCKETS = ["Primary Goals", "Mental Barriers", "Action Tasks", "Loose Details"];
+    const clusterBuckets = BUCKETS.map((name) => ({ name, count: ths.filter((t) => CLUSTERS[t.id] === name).length }));
+    const clusterRows = ths.map((t) => ({ text: t.text, bucket: CLUSTERS[t.id] || "" }));
+    const clusterTabs = [
+      { label: "all", count: ths.length, on: true, off: false },
+      { label: "unsorted", count: ths.filter((t) => !CLUSTERS[t.id]).length, on: false, off: true },
+      ...clusterBuckets.filter((b) => b.count > 0).map((b) => ({ label: b.name, count: b.count, on: false, off: true }))
+    ];
+
+    const TZ = { th1: "before", th4: "now", th10: "now", th5: "after", th2: "after" };
+    const tzItems = (z) => ths.filter((t) => TZ[t.id] === z).map((t) => ({ text: t.text }));
+    const timelineRows = ths.map((t) => {
+      const z = TZ[t.id] || "";
+      return { text: t.text, beforeOn: z === "before", beforeOff: z !== "before", nowOn: z === "now", nowOff: z !== "now", afterOn: z === "after", afterOff: z !== "after" };
+    });
+
+    const intensityList = ths.map((t) => ({
+      text: t.text,
+      selected: t.id === "th5",
+      unselected: t.id !== "th5",
+      hasIntensity: !!t.intensity,
+      urgencyChip: t.intensity ? `Urgency: ${t.intensity.urgency}/10` : "",
+      emotionChip: t.intensity ? `Emotion: ${t.intensity.emotion}/10` : ""
+    }));
+
+    return {
+      isWorkspace,
+      isIntake: screen === "intake" || screen === "compare",
+      isCompare: screen === "compare",
+      isExport: screen === "export",
+      isGuided: screen === "guided",
+      isSwipe: screen === "swipe",
+      isPriority: screen === "priority",
+      isCluster: screen === "cluster",
+      isTimeline: screen === "timeline",
+      isIntensity: screen === "intensity",
+      pile,
+      pileCount: ths.length,
+      modes,
+      scratchOpen: this.state.scratchOpen,
+      scratchText: this.state.scratchText,
+      toggleScratch: () => this.setState((s) => ({ scratchOpen: !s.scratchOpen, scratchText: "" })),
+      onScratchChange: (e) => this.setState({ scratchText: e.target.value }),
+      onScratchKey: (e) => { if (e.key === "Enter") this.addScratchNote(); },
+      addScratch: () => this.addScratchNote(),
+      actItems: zoneItems("act"),
+      watchItems: zoneItems("watch"),
+      discardItems: zoneItems("discard"),
+      actEmpty: this.state.priority.act.length === 0,
+      watchEmpty: this.state.priority.watch.length === 0,
+      discardEmpty: this.state.priority.discard.length === 0,
+      sortRows,
+      dropAct: dropOn("act"),
+      dropWatch: dropOn("watch"),
+      dropDiscard: dropOn("discard"),
+      allowDrop,
+      clusterBuckets,
+      clusterRows,
+      clusterTabs,
+      tzBefore: tzItems("before"),
+      tzNow: tzItems("now"),
+      tzAfter: tzItems("after"),
+      timelineRows,
+      intensityList
+    };
+  }
+
+  addScratchNote() {
+    const txt = (this.state.scratchText || "").trim();
+    if (!txt) return;
+    const id = "sc" + Date.now();
+    this.setState((s) => ({
+      thoughts: [{ id, mode: this.activeMode(), text: txt }, ...s.thoughts],
+      scratchText: ""
+    }));
+  }
+}
+</script>
+</body>
+</html>
