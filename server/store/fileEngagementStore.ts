@@ -9,7 +9,12 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import type { AuthorStamp, Session, Thought } from "../../src/types.ts";
-import type { EngagementStore, EngagementSummary, SessionMetaPatch } from "./types.ts";
+import type {
+  EngagementStore,
+  EngagementSummary,
+  EngagementVersion,
+  SessionMetaPatch,
+} from "./types.ts";
 import { emptyModeProgress, newEngagement } from "./shape.ts";
 
 type Db = Record<string, Session>;
@@ -81,6 +86,13 @@ export class FileEngagementStore implements EngagementStore {
   async getEngagement(id: string): Promise<Session | null> {
     const db = await this.read();
     return db[id] ? structuredClone(db[id]) : null;
+  }
+
+  async getVersion(id: string): Promise<EngagementVersion | null> {
+    const db = await this.read();
+    const session = db[id];
+    if (!session) return null;
+    return { updatedAt: session.updatedAt, thoughtCount: session.thoughts.length };
   }
 
   async patchEngagement(id: string, patch: SessionMetaPatch): Promise<Session | null> {

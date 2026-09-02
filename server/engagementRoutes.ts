@@ -105,9 +105,12 @@ function sanitizeMetaPatch(body: any) {
   return patch;
 }
 
-/** ETag over the engagement's version, so a 5s poll of an idle pile costs almost nothing. */
-function etagFor(session: Session): string {
-  return `W/"${session.updatedAt}-${session.thoughts.length}"`;
+/**
+ * ETag over the engagement's version. Takes the two fields rather than a Session so the
+ * unchanged-poll path can build one from `store.getVersion` without loading the pile.
+ */
+function etagOf(updatedAt: string, thoughtCount: number): string {
+  return `W/"${updatedAt}-${thoughtCount}"`;
 }
 
 export function createEngagementRouter() {
@@ -174,12 +177,27 @@ export function createEngagementRouter() {
     res.status(201).json(session);
   });
 
+  // The hot route: every open tab polls this, and almost every poll is a 304. Settle that
+  // against the version alone — two Firestore reads — instead of loading the pile to discover
+  // nothing changed, which billed a read per fragment per tab per poll.
   router.get("/:id", async (req, res) => {
+    const store = await getEngagementStore();
+    const inbound = req.get("if-none-match");
+    if (inbound) {
+      const version = await store.getVersion(req.params.id);
+      if (!version) return res.status(404).json({ error: "No such engagement" });
+      const etag = etagOf(version.updatedAt, version.thoughtCount);
+      if (inbound === etag) {
+        res.setHeader("ETag", etag);
+        return res.status(304).end();
+      }
+    }
+
     const session = await loadOr404(req.params.id, res);
     if (!session) return;
-    const etag = etagFor(session);
-    res.setHeader("ETag", etag);
-    if (req.get("if-none-match") === etag) return res.status(304).end();
+    // Recomputed from the session actually being sent, so the ETag always describes the body
+    // even if the pile moved between the version check and the load.
+    res.setHeader("ETag", etagOf(session.updatedAt, session.thoughts.length));
     res.json(session);
   });
 

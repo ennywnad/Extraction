@@ -152,6 +152,31 @@ describe("transport", () => {
     assert.ok(etag);
     const second = await as(A, `/api/engagement/${eng.id}`, { headers: { "If-None-Match": etag } });
     assert.equal(second.status, 304);
+    assert.equal(second.headers.get("etag"), etag, "a 304 must still carry the ETag");
+  });
+
+  // A stale ETag has to fall through to the pile. The 304 short-circuit answers from the
+  // version alone, so a fragment arriving without touching updatedAt would strand every
+  // tab on an old pile forever.
+  it("re-sends the pile when a fragment lands under a held ETag", async () => {
+    const eng = await newEngagement("etag invalidation");
+    const first = await as(A, `/api/engagement/${eng.id}`);
+    const stale = first.headers.get("etag");
+    await contribute(B, eng.id, "arrived after the poll");
+
+    const res = await as(A, `/api/engagement/${eng.id}`, { headers: { "If-None-Match": stale } });
+    assert.equal(res.status, 200);
+    assert.notEqual(res.headers.get("etag"), stale);
+    const body = await res.json();
+    assert.equal(body.thoughts.length, 1);
+  });
+
+  // The conditional request takes its own lookup path, so it needs its own 404.
+  it("404s an unknown engagement even when the caller holds an ETag", async () => {
+    const res = await as(A, "/api/engagement/no-such-id", {
+      headers: { "If-None-Match": 'W/"whatever-0"' },
+    });
+    assert.equal(res.status, 404);
   });
 
   it("rejects a form content type on mutating routes", async () => {

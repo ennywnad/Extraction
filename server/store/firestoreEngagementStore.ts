@@ -12,7 +12,12 @@
 
 import { FieldPath, Firestore } from "@google-cloud/firestore";
 import type { AuthorStamp, Session, Thought } from "../../src/types.ts";
-import type { EngagementStore, EngagementSummary, SessionMetaPatch } from "./types.ts";
+import type {
+  EngagementStore,
+  EngagementSummary,
+  EngagementVersion,
+  SessionMetaPatch,
+} from "./types.ts";
 import { newEngagement } from "./shape.ts";
 
 const ENGAGEMENTS = "engagements";
@@ -85,6 +90,20 @@ export class FirestoreEngagementStore implements EngagementStore {
     return {
       ...(snap.data() as EngagementDoc),
       thoughts: thoughtSnap.docs.map((d) => d.data() as Thought),
+    };
+  }
+
+  /**
+   * Two reads, whatever the size of the pile: the engagement document and a count()
+   * aggregation, which Firestore bills as a single read rather than one per fragment.
+   */
+  async getVersion(id: string): Promise<EngagementVersion | null> {
+    const ref = this.doc(id);
+    const [snap, count] = await Promise.all([ref.get(), ref.collection(THOUGHTS).count().get()]);
+    if (!snap.exists) return null;
+    return {
+      updatedAt: (snap.data() as EngagementDoc).updatedAt,
+      thoughtCount: count.data().count,
     };
   }
 

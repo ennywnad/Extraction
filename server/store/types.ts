@@ -17,6 +17,16 @@ export type SessionMetaPatch = Partial<
   >
 >;
 
+/**
+ * Just enough to build an ETag: the pair the poll compares, with none of the pile behind it.
+ * Kept separate from EngagementSummary so an implementation can serve it without reading
+ * every fragment — see `getVersion`.
+ */
+export interface EngagementVersion {
+  updatedAt: string;
+  thoughtCount: number;
+}
+
 export interface EngagementSummary {
   id: string;
   topic: string;
@@ -47,6 +57,16 @@ export interface EngagementStore {
 
   /** Null when no such engagement exists. */
   getEngagement(id: string): Promise<Session | null>;
+
+  /**
+   * The engagement's version without its fragments. Null when no such engagement exists.
+   *
+   * This exists purely so an unchanged poll stays cheap. Every open tab asks for the pile
+   * every few seconds and almost always gets a 304, so an implementation that answered this
+   * by loading the whole engagement would bill a read per fragment per tab per poll for an
+   * answer of "nothing has changed". Implementations must serve it in O(1) reads.
+   */
+  getVersion(id: string): Promise<EngagementVersion | null>;
 
   patchEngagement(id: string, patch: SessionMetaPatch): Promise<Session | null>;
 

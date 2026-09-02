@@ -24,6 +24,9 @@ import DevilsAdvocate from "./components/Modes/DevilsAdvocate";
 import LetterWriting from "./components/Modes/LetterWriting";
 import PriorityPile from "./components/Modes/PriorityPile";
 
+/** How often an open tab asks the server whether the shared pile has moved. */
+const POLL_INTERVAL_MS = 15_000;
+
 const VALID_MODES: ExtractionMode[] = [
   "free_stream",
   "quick_fire",
@@ -496,8 +499,11 @@ export default function App() {
     window.history.pushState({}, document.title, window.location.pathname);
   };
 
-  // Poll the shared pile. The ETag makes an idle poll a 304, and polling pauses while the
-  // tab is hidden or a fragment is being edited, so an in-flight edit is never clobbered.
+  // Poll the shared pile. The ETag makes an idle poll a 304 that the server settles without
+  // reading the pile, and polling pauses while the tab is hidden or a fragment is being
+  // edited, so an in-flight edit is never clobbered. The interval is a cost lever as much as
+  // a latency one: it is the read rate of every open tab, including one left visible and
+  // forgotten for a month. Fifteen seconds is under the pace of people typing fragments.
   const engagementId = currentSession?.engagementId;
   useEffect(() => {
     if (!engagementId) return;
@@ -525,7 +531,7 @@ export default function App() {
       }
     };
 
-    const interval = setInterval(poll, 5000);
+    const interval = setInterval(poll, POLL_INTERVAL_MS);
     window.addEventListener("focus", poll);
     poll();
     return () => {
