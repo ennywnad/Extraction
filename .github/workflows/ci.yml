@@ -1,0 +1,26 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # tsc --noEmit, then the node:test suite. No secrets needed: the tests
+      # exercise the no-Gemini fallback paths and the local file store.
+      - run: npm run check
+
+      # Catches a broken vite/esbuild build before it reaches Cloud Run.
+      - run: npm run build
