@@ -32,13 +32,36 @@ This is the only click-through in the process.
 ./scripts/bootstrap-gcp.sh
 ```
 
-Idempotent — safe to re-run. It enables the APIs, creates the Firestore database, creates a
-dedicated `extraction-run` service account (deliberately not the default compute account,
-which carries project Editor), grants it `datastore.user` + `aiplatform.user`, and creates the
-Artifact Registry repository.
+Idempotent — safe to re-run. It enables the APIs, creates the Firestore database, and creates
+a dedicated `extraction-run` service account (deliberately not the default compute account,
+which carries project Editor) with `datastore.user` + `aiplatform.user`.
+
+It deliberately creates no Artifact Registry repository. `deploy.sh` builds with `--source .`,
+so Cloud Build pushes to the `cloud-run-source-deploy` repository gcloud makes on first use.
 
 > **The Firestore location is permanent.** It is set to `$REGION` and cannot be changed
 > afterwards without recreating the database. Pick the region you want before running this.
+
+## Set the cost guardrails
+
+Do this **before** the first deploy, not after — you want the budget and the usage alerts live
+before anything is able to spend. It needs the project to exist and the APIs enabled, which is
+what `bootstrap-gcp.sh` just did, but it does not need the app deployed.
+
+```bash
+ALERT_EMAIL=you@example.com MONTHLY_BUDGET=25 ./scripts/cost-guardrails.sh
+```
+
+Creates a monthly budget with alerts at 50/90/100% of actual spend and 90% of forecast, plus
+Cloud Monitoring policies on the three metrics that can run away: Vertex AI tokens, Firestore
+reads, and Cloud Run requests. Thresholds sit well above real workshop use, so a page means
+something is genuinely wrong.
+
+**A budget alerts; it does not cap.** The only hard stop is a quota ceiling — the script
+prints the console link for lowering the Vertex AI generate-content limit.
+
+`./scripts/audit-costs.sh` is a read-only inventory of everything the project holds. Run it now
+for a baseline to diff against later.
 
 ## Deploy
 
@@ -91,6 +114,21 @@ until you enable them. Add to the project IAM policy's `auditConfigs`:
 ```
 
 IAP writes request-level Admin Activity logs regardless.
+
+## After the first deploy, once
+
+The `cloud-run-source-deploy` repository does not exist until the first deploy creates it, so
+this cannot be done earlier. Without it, every deploy leaves a container image behind forever —
+the only cost in this stack that grows while nobody is using the app.
+
+```bash
+gcloud artifacts repositories set-cleanup-policies cloud-run-source-deploy \
+  --location=$REGION \
+  --policy=<(echo '[{"name":"keep-5","action":{"type":"Keep"},"mostRecentVersions":{"keepCount":5}},
+                    {"name":"delete-old","action":{"type":"Delete"},"condition":{"olderThan":"30d"}}]')
+```
+
+Keep enough versions to cover any revision you might roll back to.
 
 ## Notes
 

@@ -71,14 +71,10 @@ else
   fi
 fi
 
-echo "==> Artifact Registry"
-if gcloud artifacts repositories describe extraction --location="${REGION}" >/dev/null 2>&1; then
-  echo "    already exists"
-else
-  gcloud artifacts repositories create extraction \
-    --repository-format=docker --location="${REGION}" \
-    --description="Extraction container images"
-fi
+# No Artifact Registry repository is created here. deploy.sh builds with `--source .`, which
+# hands the build to Cloud Build and pushes to the `cloud-run-source-deploy` repository that
+# gcloud creates on first use. A repository made here would sit empty forever. The
+# artifactregistry API is still enabled above, because that auto-created repository needs it.
 
 echo "==> Firestore security rules"
 echo "    firestore.rules in this repo is deny-all. The Admin SDK bypasses rules, so nothing"
@@ -94,5 +90,7 @@ Still manual, once:
   2. Audit logs for "who read this pile" (Part B6 of the plan): enable DATA_READ / DATA_WRITE
      for firestore.googleapis.com in the project IAM audit config.
 
-Then:  ./scripts/deploy.sh
+Then, in this order:
+  ./scripts/cost-guardrails.sh   # budget + usage alerts, BEFORE anything can spend
+  ./scripts/deploy.sh
 NEXT
