@@ -52,18 +52,64 @@ The final **Export Panel** features an advanced **Re-Format Executive Blueprint 
 
 ---
 
+## 👥 Group Mode — one shared pile
+
+Extraction also runs as a **hosted, authenticated instance** where a whole room contributes to
+a single pile over an engagement. The twelve extraction modes are unchanged; what changes is
+who can reach the pile and whether a fragment remembers who said it.
+
+- **A fragment remembers who said it.** Contributions are stamped server-side with the
+  verified contributor's identity and role — never typed in, never accepted from the client.
+- **Nobody rewrites anyone.** Only the author may edit or delete their own words. *Filing* a
+  card — cluster, timeline zone, priority, intensity, swipe — is open to any member, because
+  sorting the pile together is the point of sharing it. Enforced server-side, not just hidden
+  in the UI.
+- **The pile keeps growing after the room empties.** Anyone in the group can contribute at any
+  time; a `?engagement=<id>` link drops the whole room into the same pile.
+- **No accounts.** Identity comes from the client's own directory through Identity-Aware
+  Proxy. The app holds no credentials, and removing someone from the group removes their
+  access.
+- **The level set is a group deliverable.** Explicit and single-flight rather than generated
+  on render, versioned against the pile it was built from, and marked stale when the pile
+  moves on. Coverage — including which areas *nobody* raised — is computed by arithmetic over
+  classified fragments rather than asked of the model.
+
+Solo mode is untouched: sessions still live in `localStorage`, and a session with no
+engagement renders exactly as it always has.
+
+## ☁️ Deployment
+
+The app deploys to **Cloud Run behind IAP**, with **Firestore** holding the shared pile and
+**Vertex AI** serving Gemini as the runtime service account — so a deployment holds no API key
+material at all.
+
+```bash
+export PROJECT=your-project-id
+./scripts/bootstrap-gcp.sh   # idempotent, once
+./scripts/deploy.sh
+```
+
+See **[DEPLOYMENT.md](DEPLOYMENT.md)** for the full walkthrough, including the one manual
+console step and how to grant the engagement group access.
+
 ## 🛠️ Architecture & Setup Guidelines
 
 ### Full-Stack Express + Vite (Type-Safe Bundle)
 The platform utilizes a robust Express API proxy in tandem with **Vite** and TypeScript. To safely bypass strict Node ES Module runtime checks and speed up cold-starts, the server-side code compiles on build into a single stand-alone target via `esbuild`.
+
+The client bundle is built to `dist/` and served statically; the server bundle is built to
+`dist-server/` deliberately **outside** that directory, so the compiled server and its
+sourcemap are never fetchable over HTTP.
 
 #### Key Node Scripts
 ```json
 {
   "scripts": {
     "dev": "tsx server.ts",
-    "build": "vite build && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs",
-    "start": "node dist/server.cjs"
+    "build": "vite build && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist-server/server.cjs",
+    "start": "node dist-server/server.cjs",
+    "lint": "tsc --noEmit",
+    "test": "tsx --test test/*.test.ts test/*.test.mjs"
   }
 }
 ```
@@ -73,17 +119,49 @@ The platform utilizes a robust Express API proxy in tandem with **Vite** and Typ
 # Install package dependencies
 npm install
 
-# Start full-stack local server (Dev port binds exclusively to 3000)
+# Copy the sample environment (optional — the app runs with no configuration at all)
+cp .env.example .env
+
+# Start full-stack local server (defaults to :3000, override with PORT)
 npm run dev
 ```
 
+#### Tests
+```bash
+npm test
+```
+Boots a real server against an isolated file store, with no cloud configuration and no
+Gemini key. Covers attribution, field-level authorship, the concurrent-contribution
+regression, ETag revalidation, the CSRF content-type gate, synthesis failure handling and
+the coverage arithmetic.
+
 ---
 
-## 🔒 API Key & Environment Security
-This application utilizes server-side API proxying (`/api/session/*`) to keep all AI credentials fully secure and hidden from client-side network inspectors.
+## 🔒 API Keys, Identity & Environment
 
-- Create a `.env` file at the root:
-```env
-GEMINI_API_KEY=your-high-security-google-genai-key-here
-```
-*(The framework will load the variable securely server-side; do not prefix with `VITE_` to ensure zero browser exposure).*
+All AI calls are proxied server-side (`/api/session/*`, `/api/engagement/*`) so credentials
+are never exposed to client-side network inspectors. Never prefix a secret with `VITE_` — that
+publishes it to the browser.
+
+Everything below is optional: with no configuration at all, the app runs solo with canned
+prompts. See [`.env.example`](.env.example) for the annotated list.
+
+| Variable | Purpose |
+| :--- | :--- |
+| `GEMINI_API_KEY` | Gemini Developer API key. Easiest for local development. |
+| `GENAI_BACKEND` | `apikey` (default) or `vertex`. Vertex uses ADC — no key material. |
+| `VERTEX_LOCATION` | Region, when `GENAI_BACKEND=vertex`. |
+| `GEMINI_MODELS` | Comma-separated model chain. Ids differ per backend and change over time. |
+| `AUTH_MODE` | `iap` verifies the IAP assertion; `dev` asserts a local identity. |
+| `IAP_AUDIENCE` | Expected JWT audience. Computed for you by `scripts/deploy.sh`. |
+| `FIRESTORE_PROJECT_ID` | Set to use Firestore; unset falls back to a local JSON file. |
+| `DEV_USER_EMAIL` / `DEV_USER_NAME` | The identity assumed under `AUTH_MODE=dev`. |
+| `PORT` | Listen port. Defaults to 3000; Cloud Run injects its own. |
+
+**`AUTH_MODE` fails closed.** It resolves to `iap` under `NODE_ENV=production` and `dev`
+otherwise, and the process exits at startup on an inconsistent configuration — a missing
+`IAP_AUDIENCE` in production, or `dev` in production — rather than quietly serving unverified
+identities.
+
+For a two-person local test of the shared pile, run one server and pin a different identity
+per browser profile with `?dev_user=someone@example.com`.
