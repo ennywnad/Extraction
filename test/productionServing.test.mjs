@@ -46,8 +46,11 @@ before(async () => {
     },
     stdio: ["ignore", "pipe", "pipe"],
   });
-  server.stdout.on("data", (d) => (startupLog += d));
-  server.stderr.on("data", (d) => (startupLog += d));
+  // Drained, and capped: an unread pipe eventually blocks the child, and an unbounded
+  // string is a slow leak if the server turns chatty.
+  const capture = (d) => (startupLog = (startupLog + d).slice(-8192));
+  server.stdout.on("data", capture);
+  server.stderr.on("data", capture);
 
   for (let i = 0; i < 60; i++) {
     if (server.exitCode !== null) {
@@ -62,7 +65,18 @@ before(async () => {
 });
 
 after(async () => {
-  server?.kill("SIGTERM");
+  // Stop reading before killing, then make sure it is actually dead. A spawned server that
+  // outlives its test holds the pipes this file attached, and on a CI runner that is the
+  // difference between a suite that ends and a step that hangs until the job is cancelled.
+  server?.stdout?.destroy();
+  server?.stderr?.destroy();
+  if (server && server.exitCode === null) {
+    const exited = new Promise((r) => server.once("exit", r));
+    server.kill("SIGTERM");
+    const timer = setTimeout(() => server.kill("SIGKILL"), 3000);
+    await exited;
+    clearTimeout(timer);
+  }
   await rm(distDir, { recursive: true, force: true });
   await rm(dataDir, { recursive: true, force: true });
 });
