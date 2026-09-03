@@ -7,6 +7,10 @@ already is. It is not a plan and nothing here is scheduled.
 Separate from [planv1/](../../planv1/), which is the frozen design record of a thing that got
 built. These are the opposite end: ideas that have not earned a plan yet.
 
+**[STATUS.md](STATUS.md) records what has actually landed against these**, newest first. Read
+it before the table below: an intent whose file still reads as untouched may have had a slice
+built, and the log says which slice and what it deliberately left alone.
+
 | #                                              | Intent                                             | Depends on | Cost if attempted today                                                      |
 | :--------------------------------------------- | :------------------------------------------------- | :--------- | :--------------------------------------------------------------------------- |
 | [001](001-mcp-server-over-the-pile.md)         | An MCP server over the pile                        | —          | Medium. The store seam fits; identity is the real work.                      |

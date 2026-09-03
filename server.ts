@@ -8,6 +8,7 @@ import { createRequireIdentity } from "./server/iapAuth.ts";
 import { createEngagementRouter } from "./server/engagementRoutes.ts";
 import { generateContentWithFallback, getGemini } from "./server/ai/client.ts";
 import { sendAiError, sendFallback, sendModel } from "./server/ai/respond.ts";
+import { instanceStatus } from "./server/status.ts";
 import {
   binaryBracketPrompt,
   devilsAdvocatePrompt,
@@ -54,8 +55,10 @@ if (authConfig.mode === "dev") {
   });
 }
 
+// Unauthenticated, so it reports which branch each seam took and nothing that names the
+// deployment. See server/status.ts for the rule and what it deliberately does not claim.
 app.get("/healthz", (_req, res) => {
-  res.json({ ok: true, aiEnabled: getGemini() !== null });
+  res.json(instanceStatus(authConfig));
 });
 
 // Who the caller is, as far as the server is concerned. The frontend uses this to decide
@@ -67,7 +70,8 @@ app.get("/api/whoami", requireIdentity, (req, res) => {
     name: identity.email.split("@")[0],
     role: null,
     dev: !identity.verified,
-    aiEnabled: getGemini() !== null,
+    // Same derivation as /healthz rather than a second independent one.
+    aiEnabled: instanceStatus(authConfig).aiEnabled,
   });
 });
 
