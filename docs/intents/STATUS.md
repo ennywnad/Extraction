@@ -31,6 +31,74 @@ this file only records which pieces of one have become code.
 
 ---
 
+## 2026-09-03 — 008, in part: the production store has now run
+
+008 is the one intent that is not code, and it is the floor under everything else: group mode
+has only ever run on a laptop, so `FirestoreEngagementStore`, IAP verification and Vertex had
+never executed once. The deploy is not mine to do. Two of the things that make it less likely to
+go badly are.
+
+**The store contract now runs against Firestore.**
+[test/storeContract.test.ts](../../test/storeContract.test.ts) states the `EngagementStore`
+contract once and runs it against both implementations — `FileEngagementStore` always, and
+`FirestoreEngagementStore` when `FIRESTORE_EMULATOR_HOST` is set (`npm run test:firestore`, 87
+tests, nothing skipped). Ten behaviours, and the two stores agree on all of them, including two
+that only one of them could ever have got wrong: a roster keyed by an email address, which
+Firestore reads as a dotted field path unless it is wrapped in a `FieldPath`, and ten
+simultaneous contributions, where the file store rewrites one array and the production store
+writes a subcollection.
+
+The contract was prose on the interface before this — "implementations must treat thoughts as an
+independently addressable collection", "must serve `getVersion` in O(1) reads" — and prose is not
+a test. What made this worth doing rather than deferring to the deploy is that the emulator runs
+the real client and the real query, batch, aggregation and `FieldPath` semantics, which is
+precisely where two implementations of one interface diverge. What it cannot tell you: whether
+ADC resolves, whether the runtime service account holds the roles, or whether
+[firestore.rules](../../firestore.rules) denies what it means to. So 008's table row is narrower
+now, not gone, and the file says so.
+
+**The audience is checked before a request depends on it.** 008 named the IAP audience as the
+plausible first-deploy failure, and the reason it is nasty is that it presents as a 401 from
+every route with nothing in the response to explain it. It is _computed_ by deploy.sh from a
+`gcloud projects describe` lookup, so the way it goes wrong is a failed substitution:
+`/projects//locations/...` deploys perfectly happily and then refuses everyone.
+[authMode.ts](../../server/authMode.ts) now exits on an audience that cannot work and says which
+substitution to check; [deploy.sh](../../scripts/deploy.sh) refuses to deploy when the project
+number did not resolve at all.
+
+The two strengths are deliberate and are the only interesting decision here. An _unusable_
+audience is fatal, because "an inconsistent identity configuration exits the process" is that
+file's whole design. An _unfamiliar_ one only warns — IAP issues three audience formats
+depending on what sits in front of the service, and failing closed on a hardcoded list would be
+failing closed on an assumption about someone else's deployment.
+
+**And the fail-closed resolution finally has tests.** `resolveAuthConfig` is the function whose
+failure is the feature — an earlier design would have turned a deployment into an anonymous
+free-for-all on one missing variable — and CLAUDE.md asks for that behaviour to be preserved,
+but nothing enforced it. A refactor softening a `fatal()` into a warning would have passed the
+whole suite. [test/authMode.test.ts](../../test/authMode.test.ts) replaces `process.exit` with a
+throw and asserts on each refusal, including the original bug in one line: an unset `AUTH_MODE`
+under `NODE_ENV=production` must never resolve to dev.
+
+**A documentation correction that mattered.** `/healthz` changed shape in the 007 increment
+below, which made [DEPLOYMENT.md](../../DEPLOYMENT.md)'s verification ladder quote a response the
+server no longer sends. Corrected, and the ladder is stronger for it: it now reads
+`storage.backend`, where `file` on a deployment means `FIRESTORE_PROJECT_ID` never reached the
+service and the shared pile is being written to a container disk that will vanish with the
+instance. That is the most expensive misconfiguration this app can have and it is invisible from
+inside the app.
+
+**What this did not do.** Not deployed. Nothing here has spent a token or created a resource.
+The route layer's rules — attribution, author-only edits, the 304 — are still exercised only
+over the file store; it is the store contract that is now proven of both, not the routes above
+it. And an emulator is not the service.
+
+**Next, if picking up here.** The deploy itself, in 008's own order: guardrails, then the Vertex
+quota ceiling, then a deploy with `GENAI_BACKEND` unset to prove IAP, Firestore and the container
+without spending anything.
+
+---
+
 ## 2026-09-03 — 009, in part: the coverage map is drawn
 
 **What landed.** The map of what a room has _not_ discussed, which was computed, shaped, shipped

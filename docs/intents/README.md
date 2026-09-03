@@ -20,7 +20,7 @@ built, and the log says which slice and what it deliberately left alone.
 | [005](005-listening-mode.md)                   | Listening mode — a kickoff with no model           | —          | Smallest on this list. Mostly already true.                                  |
 | [006](006-local-assists-before-submit.md)      | Local assists before a fragment enters the pile    | —          | Cheap to build, independent of everything else. The cost is setup, not code. |
 | [007](007-status-board.md)                     | A status board that looks like the rest of the app | —          | Small. Every fact it needs is already computed.                              |
-| [008](008-deploying-group-mode.md)             | Deploying group mode for the first time            | —          | Not code. Group mode is built and has never run outside a laptop.            |
+| [008](008-deploying-group-mode.md)             | Deploying group mode for the first time            | —          | Not code, and still not done. Its two code-shaped preparations have landed.  |
 | [009](009-the-deferred-group-surface.md)       | The deferred group surface                         | —          | A catalogue. Most of it should stay deferred; the coverage map should not.   |
 
 ## How to read these
@@ -106,9 +106,13 @@ v1 is genuinely additive. Its only tie to the rest is a panel in 007.
 
 **008 comes before all of it, and is not really in this ordering.** Every intent above assumes a
 deployment that has never been exercised: group mode is built and has only ever run on a laptop,
-so the Firestore store, IAP verification and Vertex have not executed once. Building more on top
-of that is building on an untested floor. It is also the cheapest item here in code terms,
-because it is not code.
+so IAP verification and Vertex have not executed once. Building more on top of that is building
+on an untested floor. It is also the cheapest item here in code terms, because it is not code.
+
+The two parts of it that _were_ code have since landed (2026-09-03): the store contract runs
+against Firestore under an emulator, so the production store has at least executed, and the IAP
+audience is checked at boot rather than presenting as a 401 wall. Neither is a deploy. The floor
+is better lit and still untested.
 
 **009 is a catalogue rather than a step**, but it held one thing the ordering above wanted: the
 coverage map was computed, shipped across the wire and never rendered. That one is now built

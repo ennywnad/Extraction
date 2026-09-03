@@ -69,6 +69,23 @@ prints the console link for lowering the Vertex AI generate-content limit.
 `./scripts/audit-costs.sh` is a read-only inventory of everything the project holds. Run it now
 for a baseline to diff against later.
 
+## Check the production store before you deploy it
+
+`FirestoreEngagementStore` is one of the two adapters that only exist in a deployment, and it
+can be exercised locally against an emulator — no credentials, no project, no spend:
+
+```bash
+gcloud components install cloud-firestore-emulator   # once; needs a JRE on PATH
+gcloud emulators firestore start --host-port=localhost:8484
+npm run test:firestore                               # in another shell
+```
+
+That runs [test/storeContract.test.ts](test/storeContract.test.ts) against both store
+implementations, so the pile's guarantees — nothing lost under concurrent contribution, a
+version the poll can compare, an email as a roster key surviving Firestore's field paths — are
+checked rather than assumed before the first deploy. It does not exercise ADC, IAM or
+[firestore.rules](firestore.rules); those still first run in production.
+
 ## Deploy
 
 ```bash
@@ -101,11 +118,34 @@ access with no change to the app — offboarding is the client directory's job.
 | `curl $URL/healthz` with no credentials                    | `403` from IAP, before the request reaches the app |
 | Signed-in group member                                     | `200`, app loads                                   |
 | Signed-in non-member                                       | `403` from IAP                                     |
-| `/healthz` as a member                                     | `{"ok":true,"aiEnabled":true}`                     |
+| `/healthz` as a member                                     | the branch each seam took — see below              |
 | `gcloud run services describe extraction --region=$REGION` | no secret mounts                                   |
 
+`/healthz` reports which branch every seam selected, which is the fastest way to find out
+whether the deployment is wired the way you think it is:
+
+```json
+{
+  "ok": true,
+  "identity": { "mode": "iap", "verified": true },
+  "storage": { "backend": "firestore", "live": false },
+  "model": { "backend": "vertex", "chainLength": 2 },
+  "aiEnabled": true
+}
+```
+
+Anything other than `identity.mode: "iap"` on a deployment is wrong. `storage.backend: "file"`
+means `FIRESTORE_PROJECT_ID` did not reach the service and the shared pile is being written to
+the container's ephemeral disk, which will vanish with the instance — the single most important
+line here, and it is invisible from the app itself. `storage.live: false` only means no request
+has opened the store yet; load the app and check again.
+
 `aiEnabled: false` means Gemini is not reachable and every AI route is silently returning
-canned static output. Do not run a workshop in that state.
+canned static output. Do not run a workshop in that state. It is a deliberate first-deploy
+state, though — see the note about deploying without `GENAI_BACKEND` below.
+
+It names no project, audience, model id or path: the endpoint is reachable by anyone inside the
+IAP perimeter, and `test/status.test.ts` fails if deployment topology leaks into it.
 
 ## Audit logging
 

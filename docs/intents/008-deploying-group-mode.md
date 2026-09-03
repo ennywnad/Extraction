@@ -1,6 +1,8 @@
 # 008 — Deploying group mode for the first time
 
-**Status:** intent. Not planned, not scheduled.
+**Status:** intent. Not planned, not scheduled. Two of its preparatory items landed
+2026-09-03 — the store contract now runs against Firestore, and the audience is checked at
+boot. The deploy itself has still not happened. See [STATUS.md](STATUS.md).
 **Written:** 2026-09-03
 
 ## What
@@ -17,22 +19,33 @@ and the alternative is that it stays in someone's head.
 
 ## Why
 
-**Two adapters have never run, and they are the two that only exist in production.** The store
-and identity seams each have a local implementation and a cloud one. Every test exercises the
-local one:
+**The adapters that only exist in production are the least exercised.** The store and identity
+seams each have a local implementation and a cloud one, and for most of this repo's life every
+test ran the local one. That is now true of less than it was, and the table says exactly how
+much less:
 
-| Seam         | Exercised by the suite                                                           | Never executed                                  |
-| :----------- | :------------------------------------------------------------------------------- | :---------------------------------------------- |
-| **Store**    | `FileEngagementStore`, via [sharedPile.test.mjs](../../test/sharedPile.test.mjs) | `FirestoreEngagementStore`                      |
-| **Identity** | `AUTH_MODE=dev`, asserted identity                                               | IAP JWT verification, and the computed audience |
-| **Model**    | The no-Gemini fallback path on every route                                       | Vertex via ADC as the runtime service account   |
-| **Serving**  | `NODE_ENV=production` static branch, via `DIST_DIR`                              | The actual container, on Cloud Run              |
+| Seam         | Exercised by the suite                                                                     | Never executed                                |
+| :----------- | :----------------------------------------------------------------------------------------- | :-------------------------------------------- |
+| **Store**    | Both implementations, via [storeContract.test.ts](../../test/storeContract.test.ts)        | Firestore's own IAM and `firestore.rules`     |
+| **Identity** | `AUTH_MODE=dev`; the fail-closed resolution and the audience shape, via `authMode.test.ts` | IAP JWT verification against a real assertion |
+| **Model**    | The no-Gemini fallback path on every route                                                 | Vertex via ADC as the runtime service account |
+| **Serving**  | `NODE_ENV=production` static branch, via `DIST_DIR`                                        | The actual container, on Cloud Run            |
+
+Updated 2026-09-03. The store row changed because the contract test runs against the Firestore
+emulator — the real `@google-cloud/firestore` client, and the real query, batch, aggregation and
+`FieldPath` semantics the production store depends on. The two implementations agree on all ten
+behaviours. What the emulator cannot tell you is whether ADC resolves, whether the runtime
+service account has the roles, or whether [firestore.rules](../../firestore.rules) denies what it
+means to — so the row is narrower, not gone.
 
 This is not a gap in the testing so much as a property of what those tests can reach — CI holds
-no credentials by design, and says so. But it means the group-mode rules that
+no credentials by design, and says so. But it used to mean that the group-mode rules
 [sharedPile.test.mjs](../../test/sharedPile.test.mjs) proves — server-side attribution,
-author-only edits, no lost fragment under a stale pile, 304 on an unchanged re-poll — are proven
-against one `EngagementStore` implementation and assumed of the other.
+author-only edits, no lost fragment under a stale pile, 304 on an unchanged re-poll — were proven
+against one `EngagementStore` implementation and assumed of the other. The store _contract_ is
+now proven of both, without credentials, against an emulator. The route rules above it are still
+proven only over the file store, and that is the honest remaining half: what the pile guarantees
+is shared, and what the routes guarantee is not yet.
 
 **The deployment document described a different app than the one it now deploys.** It opened by
 saying it deployed "solo mode, behind IAP. Group mode arrives in later phases." That was true at
@@ -89,13 +102,18 @@ More than expected. The cost work was done before the deploy, which is the right
   is one `gcloud run services update`. The plan's own phase-0 argument — get the deployment
   problems out of the way while the feature surface is zero — applies again here at a smaller
   scale.
-- **Exercise the group rules against Firestore, not just the file store.** The behaviours in
-  [sharedPile.test.mjs](../../test/sharedPile.test.mjs) are the ones worth re-checking by hand
-  on the real store: two people contributing at once, one editing another's fragment and being
-  refused, a delete, and a 304 on an idle poll.
-- **Confirm the IAP audience.** It is computed rather than copied out of the console, and the
-  Cloud Run format differs from App Engine and from load-balancer backends — a plausible
-  first-deploy failure, and one that presents as a 401 from the app rather than anything obvious.
+- **Exercise the group rules against Firestore, not just the file store.** The _store_ half is
+  done and automated — `npm run test:firestore` against an emulator. What is still worth doing
+  by hand on the real service is the half above the store: two people contributing at once, one
+  editing another's fragment and being refused, a delete, and a 304 on an idle poll.
+- ~~**Confirm the IAP audience.**~~ Partly handled in code, because "presents as a 401 with
+  nothing to say why" was the whole problem. [authMode.ts](../../server/authMode.ts) now checks
+  the audience at boot: an unusable one — an empty segment, which is what a failed substitution
+  in deploy.sh produces — exits the process with the reason, and one that is merely unfamiliar
+  warns and boots, since IAP issues three different formats and refusing on a hardcoded list
+  would be fail-closed on an assumption. [deploy.sh](../../scripts/deploy.sh) also refuses to
+  deploy when the project-number lookup did not resolve. What is left is confirming the audience
+  is the _right_ one, which only a real assertion can tell you.
 - **Set the Artifact Registry cleanup policy** once the first deploy has created the repository.
 
 ## Open questions
