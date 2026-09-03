@@ -2,6 +2,7 @@ import { Type } from "@google/genai";
 import type { Session } from "../../src/types.ts";
 import { getEngagementStore } from "../store/index.ts";
 import { generateContentWithFallback, getGemini } from "./client.ts";
+import { UserFacingError } from "./respond.ts";
 import { computeCoverage, type AreaCoverage } from "./coverage.ts";
 import { LEVEL_SET_AREAS, classificationPrompt, levelSetPrompt } from "./levelSetPrompt.ts";
 
@@ -79,7 +80,7 @@ async function runSynthesis(
   if (!ai) {
     // No canned filler here. A placeholder summary written into a shared client deliverable
     // reads exactly like a real one, and nobody would know to regenerate it.
-    throw new Error("Gemini is not configured; cannot produce a level set.");
+    throw new UserFacingError("Gemini is not configured; cannot produce a level set.");
   }
 
   const classification = await classify(session);

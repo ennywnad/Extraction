@@ -18,8 +18,8 @@ solo (fragments in `localStorage`) and group (a shared pile on the server, behin
 Healthy `npm run check` ends with:
 
 ```
-# tests 16
-# pass 16
+# tests 40
+# pass 40
 # fail 0
 ```
 
@@ -36,7 +36,10 @@ Every backend picks itself by **presence of configuration**, not by a flag. Read
   `.data/`. So a fresh clone runs with no cloud setup.
 - **Gemini** — `GENAI_BACKEND=vertex` (ADC, no key material) or `apikey` (local dev).
   `getGemini()` returns `null` when unconfigured and **every AI route has a static fallback**
-  — the app must stay usable with no AI. Preserve that when adding a route.
+  — the app must stay usable with no AI. Preserve that when adding a route, and send the
+  fallback through `sendFallback()` from [server/ai/respond.ts](server/ai/respond.ts)
+  so it is labelled (`source`, plus a header) rather than passed off as generated. The group
+  level set is the one exception: it refuses rather than filling a client deliverable.
 
 ## Architecture notes that aren't obvious
 
@@ -47,8 +50,23 @@ Every backend picks itself by **presence of configuration**, not by a flag. Read
   call. Don't "simplify" this into an array diff.
 - Coverage arithmetic ([server/ai/coverage.ts](server/ai/coverage.ts)) is deliberately **not**
   delegated to the model — a count of zero has to be right every time.
+- The model chain in [server/ai/client.ts](server/ai/client.ts) advances **only** for
+  "this model id is not served here". 400/401/403 are fatal and rethrown with their status;
+  transient 408/429/5xx are the SDK's `retryOptions` backoff to handle, not the chain's.
+- **An AI route reports a failure with `sendAiError()`**, never by formatting its own. A
+  message reaches the caller only if it is a `UserFacingError`; everything else is summarised,
+  because Gemini and Firestore errors both name the project, and `/api/session/*` has no
+  identity requirement in a solo deployment. Allowlist, not denylist. A 429 — the only status
+  a caller can act on — passes through.
 - Adding an extraction mode means touching `VALID_MODES` in both
   [src/App.tsx](src/App.tsx) and [server/store/shape.ts](server/store/shape.ts).
+- **Prompts do not live in route handlers.** They are pure functions in
+  [server/ai/sessionPrompts.ts](server/ai/sessionPrompts.ts) (solo) and
+  [server/ai/levelSetPrompt.ts](server/ai/levelSetPrompt.ts) (group), so a prompt change is a
+  readable diff. Route handlers hold the schema and the plumbing only.
+- Share links are **base64url** ([src/utils/shareLink.ts](src/utils/shareLink.ts)). Standard
+  base64's `+` becomes a space in a query string and `atob` then silently drops it. Don't
+  reintroduce a bare `btoa`.
 
 ## Conventions
 
