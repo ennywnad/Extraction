@@ -79,8 +79,10 @@ fallbacks — is already provider-agnostic in shape and mostly needs renaming.
   Schema is more honest and slightly more work to constrain.
 - Does the seam stay in-process, or does it become a small HTTP contract so a provider can be
   a separate service? The gateway idea in 004 pushes toward the latter.
-- Is the provider chosen per-process (an env var, matching today) or per-route? Per-route is
-  where this gets genuinely useful — a cheap local model on `drill-next`, a frontier model on
+- Is the provider chosen per-process (an env var, matching today) or per-route?
+  [006](006-distributed-local-inference.md) turns this from a refinement into the load-bearing
+  question: routing cheap, high-frequency work away from a frontier model is the entire saving,
+  and it is expressible only per-route. Per-route is where this gets genuinely useful — a cheap local model on `drill-next`, a frontier model on
   the level set — and it is also where the configuration story gets complicated. Worth
   deciding deliberately rather than drifting into it.
 - What happens to `GEMINI_MODELS` and `GENAI_BACKEND`? Renaming them is a breaking change to

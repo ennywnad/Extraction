@@ -267,5 +267,6 @@ No ESLint — `tsc --noEmit` is the lint step.
 
 Design records and plans live in [planv1/](planv1/), committed with their provenance. Where
 this is likely to go next — an MCP server over the pile, a provider-neutral model seam, local
-models in solo mode, Claude served from the same GCP project, and a no-model listening mode —
+models in solo mode, Claude served from the same GCP project, a no-model listening mode,
+a status board in the same visual idiom, and peer compute using participants' own machines —
 is written up in [docs/intents/](docs/intents/).
