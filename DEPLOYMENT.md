@@ -75,10 +75,15 @@ for a baseline to diff against later.
 can be exercised locally against an emulator — no credentials, no project, no spend:
 
 ```bash
-gcloud components install cloud-firestore-emulator   # once; needs a JRE on PATH
+gcloud components install cloud-firestore-emulator   # once
+brew install openjdk                                 # once, if `java -version` fails
+export PATH="/opt/homebrew/opt/openjdk/bin:$PATH"    # keg-only, so not on PATH by default
 gcloud emulators firestore start --host-port=localhost:8484
 npm run test:firestore                               # in another shell
 ```
+
+The emulator is a Java process, and macOS ships a `java` stub that only reports that no runtime
+is installed — so a missing JRE presents as `gcloud` finding java and failing to execute it.
 
 That runs [test/storeContract.test.ts](test/storeContract.test.ts) against both store
 implementations, so the pile's guarantees — nothing lost under concurrent contribution, a
