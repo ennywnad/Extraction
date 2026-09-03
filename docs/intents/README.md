@@ -7,15 +7,15 @@ already is. It is not a plan and nothing here is scheduled.
 Separate from [planv1/](../../planv1/), which is the frozen design record of a thing that got
 built. These are the opposite end: ideas that have not earned a plan yet.
 
-| #                                              | Intent                                             | Depends on | Cost if attempted today                                 |
-| :--------------------------------------------- | :------------------------------------------------- | :--------- | :------------------------------------------------------ |
-| [001](001-mcp-server-over-the-pile.md)         | An MCP server over the pile                        | —          | Medium. The store seam fits; identity is the real work. |
-| [002](002-model-provider-seam.md)              | A provider-neutral model seam                      | —          | Medium, and it is the prerequisite for 003 and 004.     |
-| [003](003-local-models-in-solo-mode.md)        | Local models in solo mode                          | 002        | Small once 002 exists.                                  |
-| [004](004-claude-and-the-gcp-model-gateway.md) | Claude, and the model as a deployment choice       | 002        | Small once 002 exists.                                  |
-| [005](005-listening-mode.md)                   | Listening mode — a kickoff with no model           | —          | Smallest on this list. Mostly already true.             |
-| [006](006-local-assists-before-submit.md)      | Local assists before a fragment enters the pile    | —          | Small, and independent of everything else here.         |
-| [007](007-status-board.md)                     | A status board that looks like the rest of the app | —          | Small. Every fact it needs is already computed.         |
+| #                                              | Intent                                             | Depends on | Cost if attempted today                                                      |
+| :--------------------------------------------- | :------------------------------------------------- | :--------- | :--------------------------------------------------------------------------- |
+| [001](001-mcp-server-over-the-pile.md)         | An MCP server over the pile                        | —          | Medium. The store seam fits; identity is the real work.                      |
+| [002](002-model-provider-seam.md)              | A provider-neutral model seam                      | —          | Medium, and it is the prerequisite for 003 and 004.                          |
+| [003](003-local-models-in-solo-mode.md)        | Local models in solo mode                          | 002        | Small once 002 exists.                                                       |
+| [004](004-claude-and-the-gcp-model-gateway.md) | Claude, and the model as a deployment choice       | 002        | Small once 002 exists.                                                       |
+| [005](005-listening-mode.md)                   | Listening mode — a kickoff with no model           | —          | Smallest on this list. Mostly already true.                                  |
+| [006](006-local-assists-before-submit.md)      | Local assists before a fragment enters the pile    | —          | Cheap to build, independent of everything else. The cost is setup, not code. |
+| [007](007-status-board.md)                     | A status board that looks like the rest of the app | —          | Small. Every fact it needs is already computed.                              |
 
 ## How to read these
 

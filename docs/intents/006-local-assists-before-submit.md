@@ -89,14 +89,81 @@ something hovering while you type. Reformatting is a filing decision, not a writ
   changes none of it — an assisted fragment is submitted identically to a typed one.
 - **It needs neither 002 nor 003.** Both of those are about the _server's_ model call. This is
   the browser talking to a runtime on the same machine, so it shares no code with them and
-  waits for neither. That makes it the cheapest non-trivial intent on the list and it can be
-  done first.
+  waits for neither. The _code_ is therefore the cheapest non-trivial thing on this list and
+  could be done first. The _adoption_ is not cheap on the localhost path — see the two gates
+  below — which is the one place this intent is more expensive than it first looks.
+
+## Reaching the model: the server never does, and does not need to
+
+The obvious-sounding version of this — the server calls the participant's model — does not
+work and should not be made to. A laptop is behind NAT with no public IP, no inbound port, and
+a tab that can close mid-request. Everything that "fixes" that (ngrok, Cloudflare Tunnel,
+Tailscale) works by making the laptop reachable _from the internet_, which is a worse trade
+than the problem it solves, and a strange thing to build into an app that is otherwise careful
+about where a client's material goes.
+
+**The browser is the only component with reach to both sides** — an HTTPS session with Cloud
+Run, and localhost. So every workable design routes through it, and the real question is never
+"how does the server reach the laptop" but "who decides what work happens":
+
+|                          | Who queues the work            | Who consumes the result       | Server contract                     |
+| :----------------------- | :----------------------------- | :---------------------------- | :---------------------------------- |
+| This intent              | The browser, for its own draft | The author, before submitting | None — an ordinary fragment arrives |
+| Peer compute (set aside) | The server                     | The server                    | A work queue and a trust model      |
+
+Both are the browser calling localhost. That is worth knowing: the transport was never what
+made the larger idea hard.
+
+### Two gates, not one
+
+**The browser gate.** Since Chrome 142 (late October 2025), Local Network Access is
+permission-gated: a page served from a public origin that fetches a loopback or local-network
+address is blocked, and the fetch rejects with a network error, until the user grants a prompt.
+That is a one-time native click rather than a config file, so it is better than it sounds. The
+part that matters most is that permission-gated local requests are **exempt from mixed-content
+checks** — which is the thing that would otherwise kill this outright. A deployed HTTPS page
+_can_ call `http://localhost:11434` once permission is granted.
+
+**The runtime gate.** Ollama sends no CORS headers to a browser origin by default — only
+`127.0.0.1` and `0.0.0.0` are permitted — so the preflight fails. It needs
+`OLLAMA_ORIGINS=https://<the app origin>` and a restart.
+
+So a participant's setup is: click Allow, set one environment variable, restart the runtime.
+Fine for a demonstration on one machine. Enough friction that it will not happen spontaneously
+across a room — which is consistent with this being per-user and opt-in, but it does cap how
+far it can spread.
+
+Verify both before building: browser behaviour here changed recently and may change again, and
+runtime defaults differ across Ollama, llama.cpp and LM Studio.
+
+### The option that removes both gates
+
+**In-browser inference.** WebGPU, via something like transformers.js or WebLLM, runs the model
+_in the page_. No localhost call, so no permission prompt and no CORS. The cost is capability:
+realistically 1-3B, perhaps 7-8B with a good GPU and patience, plus a few-hundred-megabyte
+download on first use.
+
+Except look at what this intent actually asks for — pick one of four tags, shorten, reformat to
+a template. Those are what a 1-3B model is fine at. **For these assists specifically,
+in-browser may simply be the better answer**: no setup, works for every participant rather than
+only the one who configured it, and the capability ceiling never binds. A 32B model is the
+wrong tool for choosing between `action`, `insight`, `fear` and `goal`.
+
+That is a genuine fork, and it maps onto two different motivations that pull apart:
+
+| Goal                               | Path                  | Why                                                  |
+| :--------------------------------- | :-------------------- | :--------------------------------------------------- |
+| See what a real local model can do | Ollama over localhost | Exercises the hardware; two setup gates; one machine |
+| Ship an assist that helps the room | WebGPU in the page    | No setup, everyone gets it, capability is sufficient |
+
+Not exclusive — same call helper, different backend behind it — but they would be built in that
+order and for different reasons, and only the first is a demonstration.
 
 ## What would have to change
 
-- **The browser has to reach the local runtime.** Ollama and friends need CORS permitting the
-  app's origin, or a small shim. This is a per-user setup step and it is the main real work —
-  which for a demonstration is fine, since it is one person's laptop.
+- **A transport decision, before anything else** — localhost or in-page. See above; it changes
+  who can use this and how much setup they need, and nothing else in this list depends on which
+  way it goes.
 - **A claim in the README needs qualifying.** It currently says all AI calls are proxied
   server-side so credentials are never exposed to client-side network inspectors. A
   browser-to-localhost call is a client-side model call. The _reason_ for the rule does not
@@ -130,19 +197,44 @@ synthesis so idle laptops offset frontier spend. Set aside, and worth rememberin
 - **It would have required the server to trust a result it did not produce**, and the
   verification needed to make that safe eats into the saving that justified it.
 
-If it is ever revisited, the one defensible piece was that _classification_ — bounded, shardable,
-verifiable against a fixed label set — is the only part of synthesis with those properties.
-Generation never was.
+If it is ever revisited, two things carry over. The one defensible piece of the idea was that
+_classification_ — bounded, shardable, verifiable against a fixed label set — is the only part
+of synthesis with those properties; generation never was. And mechanically it would be **this
+intent's client code plus a work queue**: the browser pulls a unit, runs it against the same
+local runtime, and posts the result back, so the server still never initiates a connection to
+anyone's laptop. That is the ordinary self-hosted-runner shape. Which is the point — the
+transport was never the hard part. The trust boundary was.
 
 ## Open questions
 
-- OpenAI-compatible HTTP, so "local" means any such endpoint rather than one runtime?
+- **Localhost or in-page?** The fork above is the first decision and the only one that changes
+  who this is for. Possibly both, in that order.
+- If localhost: OpenAI-compatible HTTP, so "local" means any such endpoint rather than one
+  runtime?
+- Is there a Chrome-only shortcut worth taking? The browser ships a built-in on-device model
+  API that would remove even the WebGPU download. Chrome-only, and its status should be checked
+  rather than assumed.
 - Does an assisted fragment record that it was assisted? Arguably yes — the app is careful
   elsewhere about saying who wrote what, and "the human typed this" versus "a model reshaped it
   and the human accepted" is the same kind of distinction the `source` field already makes for
   responses.
 - Does tag suggestion replace the keyword matcher, or sit alongside it as an upgrade when a
   runtime is present? Alongside is more honest, since most users will not have one.
+
+## References
+
+Claims above about browser and runtime behaviour, so a future reader can re-check rather than
+trust this file. Both areas move.
+
+- [Chrome: new permission prompt for Local Network Access](https://developer.chrome.com/blog/local-network-access)
+  — the permission gate, and the mixed-content exemption that makes an HTTPS page able to call
+  loopback at all.
+- [Intent to Ship: local network access restrictions](https://groups.google.com/a/chromium.org/g/blink-dev/c/cwu_RUmBpzY)
+  — shipping timeline, Chrome 142.
+- [Local Network Access spec (WICG)](https://wicg.github.io/local-network-access/)
+- [Ollama FAQ](https://docs.ollama.com/faq) — `OLLAMA_ORIGINS`, and the default of permitting
+  only `127.0.0.1` and `0.0.0.0`.
+- [ollama#300 — allowing browser origins](https://github.com/ollama/ollama/issues/300)
 
 ## Non-goals
 
