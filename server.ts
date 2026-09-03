@@ -413,9 +413,15 @@ async function startServer() {
     });
     app.use(vite.middlewares);
   } else {
-    const distPath = path.join(process.cwd(), "dist");
+    // Overridable so the production path is testable without a build in the tree, the same
+    // way ENGAGEMENT_DATA_DIR makes the file store testable.
+    const distPath = path.resolve(process.env.DIST_DIR || path.join(process.cwd(), "dist"));
     app.use(express.static(distPath));
-    app.get("*", (_req, res) => {
+    // A regex rather than "*". Express 5 matches paths with path-to-regexp v8, where a bare
+    // "*" is not a valid pattern and **throws when the route is registered** — which would
+    // take the process down at boot, in production only. `/.*/` means the same thing and is
+    // valid under both Express 4 and 5.
+    app.get(/.*/, (_req, res) => {
       res.sendFile(path.join(distPath, "index.html"));
     });
   }

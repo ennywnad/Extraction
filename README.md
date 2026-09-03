@@ -246,6 +246,7 @@ browser. See [`.env.example`](.env.example) for the annotated list.
 | `FIRESTORE_PROJECT_ID`             | Set to use Firestore; unset falls back to a local JSON file.              |
 | `DEV_USER_EMAIL` / `DEV_USER_NAME` | The identity assumed under `AUTH_MODE=dev`.                               |
 | `PORT`                             | Listen port. Defaults to 3000; Cloud Run injects its own.                 |
+| `DIST_DIR`                         | Static root under `NODE_ENV=production`. Defaults to `./dist`.            |
 
 ## 🎨 Design language
 
