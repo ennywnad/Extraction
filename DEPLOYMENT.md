@@ -4,8 +4,14 @@ One Cloud Run service per engagement, private to a Google Group via Identity-Awa
 Firestore holds the shared pile; Vertex AI handles Gemini calls as the runtime service
 account, so no API key exists anywhere in the deployment.
 
-Phase 0 (this document) deploys the app as it stands today — solo mode, behind IAP. Group
-mode arrives in later phases; see `planv1/level-set-plan-v2.md`.
+This deploys the app as it stands today, which is **both modes**: solo, and group mode with a
+shared pile in Firestore behind IAP. When this document was first written only phase 0 existed
+and it deployed solo mode alone — that sentence outlived its truth and was corrected on
+2026-09-03. All six phases of `planv1/level-set-plan-v2.md` are built.
+
+Built is not the same as exercised. Nothing below has been run against a real project yet, and
+`docs/intents/008-deploying-group-mode.md` records which parts have never executed and what the
+first deploy should cost.
 
 ## Prerequisites
 
@@ -63,6 +69,28 @@ prints the console link for lowering the Vertex AI generate-content limit.
 `./scripts/audit-costs.sh` is a read-only inventory of everything the project holds. Run it now
 for a baseline to diff against later.
 
+## Check the production store before you deploy it
+
+`FirestoreEngagementStore` is one of the two adapters that only exist in a deployment, and it
+can be exercised locally against an emulator — no credentials, no project, no spend:
+
+```bash
+gcloud components install cloud-firestore-emulator   # once
+brew install openjdk                                 # once, if `java -version` fails
+export PATH="/opt/homebrew/opt/openjdk/bin:$PATH"    # keg-only, so not on PATH by default
+gcloud emulators firestore start --host-port=localhost:8484
+npm run test:firestore                               # in another shell
+```
+
+The emulator is a Java process, and macOS ships a `java` stub that only reports that no runtime
+is installed — so a missing JRE presents as `gcloud` finding java and failing to execute it.
+
+That runs [test/storeContract.test.ts](test/storeContract.test.ts) against both store
+implementations, so the pile's guarantees — nothing lost under concurrent contribution, a
+version the poll can compare, an email as a roster key surviving Firestore's field paths — are
+checked rather than assumed before the first deploy. It does not exercise ADC, IAM or
+[firestore.rules](firestore.rules); those still first run in production.
+
 ## Deploy
 
 ```bash
@@ -95,11 +123,34 @@ access with no change to the app — offboarding is the client directory's job.
 | `curl $URL/healthz` with no credentials                    | `403` from IAP, before the request reaches the app |
 | Signed-in group member                                     | `200`, app loads                                   |
 | Signed-in non-member                                       | `403` from IAP                                     |
-| `/healthz` as a member                                     | `{"ok":true,"aiEnabled":true}`                     |
+| `/healthz` as a member                                     | the branch each seam took — see below              |
 | `gcloud run services describe extraction --region=$REGION` | no secret mounts                                   |
 
+`/healthz` reports which branch every seam selected, which is the fastest way to find out
+whether the deployment is wired the way you think it is:
+
+```json
+{
+  "ok": true,
+  "identity": { "mode": "iap", "verified": true },
+  "storage": { "backend": "firestore", "live": false },
+  "model": { "backend": "vertex", "chainLength": 2 },
+  "aiEnabled": true
+}
+```
+
+Anything other than `identity.mode: "iap"` on a deployment is wrong. `storage.backend: "file"`
+means `FIRESTORE_PROJECT_ID` did not reach the service and the shared pile is being written to
+the container's ephemeral disk, which will vanish with the instance — the single most important
+line here, and it is invisible from the app itself. `storage.live: false` only means no request
+has opened the store yet; load the app and check again.
+
 `aiEnabled: false` means Gemini is not reachable and every AI route is silently returning
-canned static output. Do not run a workshop in that state.
+canned static output. Do not run a workshop in that state. It is a deliberate first-deploy
+state, though — see the note about deploying without `GENAI_BACKEND` below.
+
+It names no project, audience, model id or path: the endpoint is reachable by anyone inside the
+IAP perimeter, and `test/status.test.ts` fails if deployment topology leaks into it.
 
 ## Audit logging
 

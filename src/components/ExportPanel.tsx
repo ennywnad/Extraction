@@ -15,9 +15,10 @@ import {
   RefreshCw,
   Plus,
 } from "lucide-react";
-import { Session } from "../types";
+import { AreaCoverage, Session } from "../types";
 import { encodeSnapshot } from "../utils/shareLink";
 import CompareSettingsModal from "./CompareSettingsModal";
+import CoverageMap from "./CoverageMap";
 
 interface ExportPanelProps {
   session: Session;
@@ -48,6 +49,11 @@ export default function ExportPanel({
   // of the async window — so a level set built from an older pile is stale, not wrong.
   const isEngagement = Boolean(session.engagementId);
   const isStale = isEngagement && synthesizedAt !== null && synthesizedAt !== session.updatedAt;
+
+  // From the level set for whoever generated it, and from the pile for everyone else: the
+  // synthesize response goes only to the caller, while the mirrored copy arrives with the
+  // next poll. Same value either way — a map of the pile the whole room is watching.
+  const coverage: AreaCoverage[] = levelSet?.coverage ?? session.coverage ?? [];
 
   // Advanced Styling Config States
   const [promptingStyle, setPromptingStyle] = useState<"standard" | "socratic" | "empathetic">(
@@ -177,7 +183,24 @@ export default function ExportPanel({
     );
   };
 
-  const fullMarkdownSummary = `# ${session.topic}\n**Intention:** ${session.intention}\n**Surfaces Date:** ${new Date().toLocaleDateString()}\n\n## Core Executive Summary\n${session.synthesizedSummary || ""}\n\n${session.synthesizedOutline || ""}\n\n## Refined Action Items\n${(session.synthesizedActionItems || []).map((itm) => `- [ ] ${itm}`).join("\n")}`;
+  // The map goes into the copied deliverable too. It is the half of a level set that a
+  // facilitator is most likely to be asked about in the room, and a copy that omitted it
+  // would present the outline as though the pile had covered everything.
+  const coverageMarkdown = coverage.length
+    ? `\n\n## Coverage\n${coverage
+        .map(
+          (c) =>
+            `- **${c.area}** — ${c.status.toUpperCase()} (${c.fragments} fragments, ${c.voices} voices)`,
+        )
+        .join("\n")}\n\nDark areas: ${
+        coverage
+          .filter((c) => c.status === "dark")
+          .map((c) => c.area)
+          .join(", ") || "none"
+      }`
+    : "";
+
+  const fullMarkdownSummary = `# ${session.topic}\n**Intention:** ${session.intention}\n**Surfaces Date:** ${new Date().toLocaleDateString()}\n\n## Core Executive Summary\n${session.synthesizedSummary || ""}\n\n${session.synthesizedOutline || ""}${coverageMarkdown}\n\n## Refined Action Items\n${(session.synthesizedActionItems || []).map((itm) => `- [ ] ${itm}`).join("\n")}`;
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8 md:py-12 space-y-6" id="export-panel">
@@ -240,6 +263,12 @@ export default function ExportPanel({
             {synthesizedAt ? "Regenerate" : "Generate"}
           </button>
         </div>
+      )}
+
+      {/* The map of what the room has not discussed. Above the deliverable rather than in the
+          sidebar: the areas nobody entered are the finding, not a footnote to the outline. */}
+      {isEngagement && !loading && coverage.length > 0 && (
+        <CoverageMap coverage={coverage} pileSize={session.thoughts.length} />
       )}
 
       {loading ? (

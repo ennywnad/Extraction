@@ -1,15 +1,8 @@
-import type { Session, Thought } from "../../src/types.ts";
+import type { AreaCoverage, AreaStatus, Session, Thought } from "../../src/types.ts";
 
-export type AreaStatus = "defined" | "partial" | "dark";
-
-export interface AreaCoverage {
-  area: string;
-  status: AreaStatus;
-  fragments: number;
-  /** Distinct contributor roles that have spoken into this area. */
-  voices: number;
-  fragmentIds: string[];
-}
+// The shape is declared in src/types.ts, with the rest of what crosses the wire. Re-exported
+// so callers of the arithmetic can keep importing the type from beside it.
+export type { AreaCoverage, AreaStatus };
 
 const PARTIAL_AT = 1; // at least this many fragments to be more than dark
 const DEFINED_AT = 12; // and this many, from more than one voice, to count as defined

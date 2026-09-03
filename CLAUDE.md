@@ -6,21 +6,31 @@ solo (fragments in `localStorage`) and group (a shared pile on the server, behin
 
 ## Commands
 
-| Command          | What it does                                                                             |
-| :--------------- | :--------------------------------------------------------------------------------------- |
-| `npm run dev`    | Server + Vite middleware on :3000. `AUTH_MODE=dev` identity.                             |
-| `npm run check`  | **The verification loop.** `format:check`, `lint`, `test`. Run before calling work done. |
-| `npm run lint`   | `tsc --noEmit`. There is no ESLint — don't reach for one.                                |
-| `npm run format` | Prettier over the repo. A hook formats edited files, so you rarely run it by hand.       |
-| `npm test`       | `node:test` via tsx over `test/*.test.{ts,mjs}`.                                         |
-| `npm run build`  | Vite client build + esbuild server bundle to `dist-server/server.cjs`.                   |
+| Command                  | What it does                                                                             |
+| :----------------------- | :--------------------------------------------------------------------------------------- |
+| `npm run dev`            | Server + Vite middleware on :3000. `AUTH_MODE=dev` identity.                             |
+| `npm run check`          | **The verification loop.** `format:check`, `lint`, `test`. Run before calling work done. |
+| `npm run lint`           | `tsc --noEmit`. There is no ESLint — don't reach for one.                                |
+| `npm run format`         | Prettier over the repo. A hook formats edited files, so you rarely run it by hand.       |
+| `npm test`               | `node:test` via tsx over `test/*.test.{ts,mjs}`.                                         |
+| `npm run test:firestore` | The same suite with the store contract also run against Firestore. Needs an emulator.    |
+| `npm run build`          | Vite client build + esbuild server bundle to `dist-server/server.cjs`.                   |
 
 Healthy `npm run check` ends with:
 
 ```
-# tests 45
-# pass 45
+# tests 78
+# pass 77
 # fail 0
+# skipped 1
+```
+
+The skip is `FirestoreEngagementStore` in
+[test/storeContract.test.ts](test/storeContract.test.ts), which needs an emulator:
+
+```
+gcloud emulators firestore start --host-port=localhost:8484   # needs a JRE on PATH
+npm run test:firestore                                        # 87 tests, 0 skipped
 ```
 
 ## Configuration decides behavior
@@ -33,7 +43,9 @@ Every backend picks itself by **presence of configuration**, not by a flag. Read
   **exits the process** on an inconsistent config rather than failing at request time. That
   fail-closed behavior is deliberate; keep it.
 - **Storage** — `FIRESTORE_PROJECT_ID` set means Firestore, unset means a JSON file under
-  `.data/`. So a fresh clone runs with no cloud setup.
+  `.data/`. So a fresh clone runs with no cloud setup. Both implementations answer one set of
+  assertions in [test/storeContract.test.ts](test/storeContract.test.ts) — add to that file
+  rather than to one store's tests, or the production store goes back to being assumed.
 - **Gemini** — `GENAI_BACKEND=vertex` (ADC, no key material) or `apikey` (local dev).
   `getGemini()` returns `null` when unconfigured and **every AI route has a static fallback**
   — the app must stay usable with no AI. Preserve that when adding a route, and send the

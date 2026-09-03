@@ -113,6 +113,31 @@ describe("field-level authorship", () => {
   });
 });
 
+describe("the coverage map is the server's to write", () => {
+  it("ignores a coverage map sent by a client", async () => {
+    // The map is arithmetic over the pile, computed outside the model so a zero is right
+    // every time. A caller that could set it could report every area defined on an empty
+    // pile — which is the one number in the deliverable nobody should be able to argue with.
+    const eng = await newEngagement("coverage gate");
+    await contribute(A, eng.id, "one fragment, one area at most");
+
+    const res = await as(A, `/api/engagement/${eng.id}`, {
+      method: "PATCH",
+      body: JSON.stringify({
+        topic: "coverage gate",
+        coverage: [
+          { area: "Commercials", status: "defined", fragments: 99, voices: 9, fragmentIds: [] },
+        ],
+      }),
+    });
+    assert.equal(res.status, 200, "the rest of the patch is still a valid one");
+
+    const after = await asJson(A, `/api/engagement/${eng.id}`);
+    assert.equal(after.coverage, undefined, "a client wrote the coverage map");
+    assert.equal(after.topic, "coverage gate", "the allowed fields in the same patch were dropped");
+  });
+});
+
 describe("concurrent contribution", () => {
   it("does not lose a fragment added while another contributor held a stale pile", async () => {
     const eng = await newEngagement("stale snapshot");

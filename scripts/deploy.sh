@@ -7,6 +7,17 @@ source "$(dirname "$0")/config.sh"
 
 PROJECT_NUMBER="$(gcloud projects describe "${PROJECT}" --format='value(projectNumber)')"
 
+# Stop here rather than deploying an audience with a hole in it. If the lookup above failed —
+# wrong project, no permission, no credentials — the substitution below yields
+# "/projects//locations/..." which deploys happily and then rejects every request with a 401.
+# The server refuses to boot on that now, but a deploy that never starts is a worse afternoon
+# than a deploy that never happened.
+if [[ ! "${PROJECT_NUMBER}" =~ ^[0-9]+$ ]]; then
+  echo "FATAL: could not resolve the project number for '${PROJECT}' (got '${PROJECT_NUMBER}')." >&2
+  echo "       The IAP audience is computed from it; check gcloud auth and the project id." >&2
+  exit 1
+fi
+
 # The IAP JWT audience is computable for Cloud Run; nothing to copy out of the console.
 # Format differs from App Engine and from load-balancer backend services.
 IAP_AUDIENCE="/projects/${PROJECT_NUMBER}/locations/${REGION}/services/${SERVICE}"

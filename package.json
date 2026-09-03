@@ -12,6 +12,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "tsx --test --test-timeout=60000 test/*.test.ts test/*.test.mjs",
+    "test:firestore": "FIRESTORE_EMULATOR_HOST=${FIRESTORE_EMULATOR_HOST:-localhost:8484} npm test",
     "check": "npm run format:check && npm run lint && npm test"
   },
   "dependencies": {

@@ -16,7 +16,7 @@ import type {
   EngagementStore,
   EngagementSummary,
   EngagementVersion,
-  SessionMetaPatch,
+  ServerMetaPatch,
 } from "./types.ts";
 import { newEngagement } from "./shape.ts";
 
@@ -107,7 +107,7 @@ export class FirestoreEngagementStore implements EngagementStore {
     };
   }
 
-  async patchEngagement(id: string, patch: SessionMetaPatch): Promise<Session | null> {
+  async patchEngagement(id: string, patch: ServerMetaPatch): Promise<Session | null> {
     const ref = this.doc(id);
     if (!(await ref.get()).exists) return null;
     await ref.update({ ...patch, ...this.touch() });

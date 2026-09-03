@@ -20,6 +20,14 @@ const RETRY_OPTIONS = { attempts: 3 };
 let client: GoogleGenAI | null = null;
 let resolved = false;
 
+/**
+ * Which backend `getGemini()` actually built — reported rather than only logged, so that
+ * something other than the boot log can answer "where is the model coming from".
+ * `none` covers both "nothing configured" and "vertex asked for, misconfigured, disabled".
+ */
+export type GeminiBackend = "vertex" | "apikey" | "none";
+let backend: GeminiBackend = "none";
+
 export function getGemini(): GoogleGenAI | null {
   if (resolved) return client;
   resolved = true;
@@ -31,6 +39,7 @@ export function getGemini(): GoogleGenAI | null {
       console.error(
         "GENAI_BACKEND=vertex requires FIRESTORE_PROJECT_ID and VERTEX_LOCATION; AI is disabled.",
       );
+      backend = "none";
       return (client = null);
     }
     client = new GoogleGenAI({
@@ -39,6 +48,7 @@ export function getGemini(): GoogleGenAI | null {
       location,
       httpOptions: { headers: { "User-Agent": "extraction" }, retryOptions: RETRY_OPTIONS },
     });
+    backend = "vertex";
     return client;
   }
 
@@ -51,8 +61,18 @@ export function getGemini(): GoogleGenAI | null {
         retryOptions: RETRY_OPTIONS,
       },
     });
+    backend = "apikey";
   }
   return client;
+}
+
+/**
+ * The backend behind the live client. Resolves it if nothing has asked yet, so this answers
+ * the same before and after the first AI request.
+ */
+export function geminiBackend(): GeminiBackend {
+  getGemini();
+  return backend;
 }
 
 /**
@@ -60,7 +80,7 @@ export function getGemini(): GoogleGenAI | null {
  * API and Vertex and move faster than this file does — verify them against the backend you
  * deploy with rather than trusting this default.
  */
-function modelChain(): string[] {
+export function modelChain(): string[] {
   const configured = process.env.GEMINI_MODELS?.split(",")
     .map((m) => m.trim())
     .filter(Boolean);

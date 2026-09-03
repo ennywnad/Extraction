@@ -13,7 +13,7 @@ import type {
   EngagementStore,
   EngagementSummary,
   EngagementVersion,
-  SessionMetaPatch,
+  ServerMetaPatch,
 } from "./types.ts";
 import { emptyModeProgress, newEngagement } from "./shape.ts";
 
@@ -95,7 +95,7 @@ export class FileEngagementStore implements EngagementStore {
     return { updatedAt: session.updatedAt, thoughtCount: session.thoughts.length };
   }
 
-  async patchEngagement(id: string, patch: SessionMetaPatch): Promise<Session | null> {
+  async patchEngagement(id: string, patch: ServerMetaPatch): Promise<Session | null> {
     return this.mutate((db) => {
       const session = db[id];
       if (!session) return null;
