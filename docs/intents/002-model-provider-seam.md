@@ -3,6 +3,8 @@
 **Status:** intent. Not planned, not scheduled.
 **Written:** 2026-09-03
 **Blocks:** [003](003-local-models-in-solo-mode.md), [004](004-claude-and-the-gcp-model-gateway.md)
+**Updated:** 2026-09-03 — the seam is in-process. See
+[004](004-claude-and-the-gcp-model-gateway.md) for why, and the note on two SDKs below.
 
 ## What
 
@@ -73,12 +75,29 @@ in a Gemini costume. So:
 Everything else — the model chain, the fatal-status gate, the retry policy, the labelled
 fallbacks — is already provider-agnostic in shape and mostly needs renaming.
 
+**Both mechanisms are GA on Vertex**, which is what makes this viable at all: structured outputs
+and strict tool use are generally available there for Gemini and Claude alike. Had constrained
+decoding turned out to be first-party-only for either, this file would be describing something
+much weaker than it is, and step 1 above would be a gamble rather than a translation.
+
+**An adapter owns its client, because the SDKs are different.** Claude on Vertex is
+`@anthropic-ai/vertex-sdk` (`new AnthropicVertex({ projectId, region })`); Gemini is
+`@google/genai`. `getGemini()` therefore cannot generalise into a `getModel()` returning one
+client type with a wider branch — the client type is part of what each adapter hides. Both
+authenticate through ADC against the same project and region, so the _configuration_ converges
+even though the objects do not.
+
 ## Open questions
 
 - Is `schema` plain JSON Schema, or a narrow local type that each adapter expands? Plain JSON
   Schema is more honest and slightly more work to constrain.
-- Does the seam stay in-process, or does it become a small HTTP contract so a provider can be
-  a separate service? The gateway idea in 004 pushes toward the latter.
+- ~~Does the seam stay in-process, or does it become a small HTTP contract?~~ **Resolved:
+  in-process.** [004](004-claude-and-the-gcp-model-gateway.md) settled on the Vertex endpoint
+  itself as the "gateway", so there is no proxy service for a provider to sit behind. One thing
+  would reopen it: API Gateway model routing leaving Public Preview with structured-output
+  support. It is an OpenAI-compatible front for Gemini, Claude and GPT, and because local
+  runtimes speak that shape too, it would collapse this intent and
+  [003](003-local-models-in-solo-mode.md) into a single adapter.
 - Is the provider chosen per-process (an env var, matching today) or per-route? Per-route is
   where this gets genuinely useful — a cheap local model on `drill-next`, a frontier model on
   the level set — and it is also where the configuration story gets complicated. Worth

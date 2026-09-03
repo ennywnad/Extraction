@@ -10,12 +10,14 @@ built. These are the opposite end: ideas that have not earned a plan yet.
 | #                                              | Intent                                             | Depends on | Cost if attempted today                                                      |
 | :--------------------------------------------- | :------------------------------------------------- | :--------- | :--------------------------------------------------------------------------- |
 | [001](001-mcp-server-over-the-pile.md)         | An MCP server over the pile                        | —          | Medium. The store seam fits; identity is the real work.                      |
-| [002](002-model-provider-seam.md)              | A provider-neutral model seam                      | —          | Medium, and it is the prerequisite for 003 and 004.                          |
+| [002](002-model-provider-seam.md)              | A provider-neutral model seam                      | —          | Medium, and the prerequisite for 003 and 004. Shape settled: in-process.     |
 | [003](003-local-models-in-solo-mode.md)        | Local models in solo mode                          | 002        | Small once 002 exists.                                                       |
-| [004](004-claude-and-the-gcp-model-gateway.md) | Claude, and the model as a deployment choice       | 002        | Small once 002 exists.                                                       |
+| [004](004-claude-and-the-gcp-model-gateway.md) | Claude, and the model as a deployment choice       | 002        | Small once 002 exists. The gateway question is resolved: Vertex is it.       |
 | [005](005-listening-mode.md)                   | Listening mode — a kickoff with no model           | —          | Smallest on this list. Mostly already true.                                  |
 | [006](006-local-assists-before-submit.md)      | Local assists before a fragment enters the pile    | —          | Cheap to build, independent of everything else. The cost is setup, not code. |
 | [007](007-status-board.md)                     | A status board that looks like the rest of the app | —          | Small. Every fact it needs is already computed.                              |
+| [008](008-deploying-group-mode.md)             | Deploying group mode for the first time            | —          | Not code. Group mode is built and has never run outside a laptop.            |
+| [009](009-the-deferred-group-surface.md)       | The deferred group surface                         | —          | A catalogue. Most of it should stay deferred; the coverage map should not.   |
 
 ## How to read these
 
@@ -24,7 +26,7 @@ trusting least over time and checking first — it describes the repository as o
 the file, and the whole point of writing it down was to find out which of these intents the
 existing seams already fit and which ones they do not.
 
-Two findings from writing them, worth stating up front:
+Three findings from writing them, worth stating up front:
 
 - **The store seam is in good shape and the model seam is not.** `EngagementStore` is an
   interface with no HTTP in it, so 001 is genuinely additive. The model call is not abstracted
@@ -42,3 +44,73 @@ Two findings from writing them, worth stating up front:
   submitted yet belongs to one person, while the pile does not. The smaller version is not a
   compromise — it is the version where the problem does not exist. That file records the
   larger one and why it was set aside.
+
+## In what order, if they were built
+
+Added 2026-09-03, after the files above were written and their "what the code already supports"
+sections were re-checked against `main`. Nothing here schedules anything. It records which of
+these would make the others cheaper, and which orderings would cost a rewrite.
+
+**Only 002, 003 and 004 contend for the same code.** 001, 005, 006 and 007 touch different seams
+and can be built in any order, or at the same time, by different people. So sequencing is really
+a question about that one cluster, and the saving from getting it right is one avoided rewrite of
+nine call sites and thirty-eight schema declarations.
+
+**The dependency that mattered pointed backwards.** The table says 004 depends on 002, and for
+code that is true. The _decision_ ran the other way: 004's "what does gateway mean concretely"
+determined whether 002 was an in-process adapter or an HTTP contract, so designing 002 first
+would have been a coin flip. That edge is now discharged — 004 records the answer and 002 records
+that it stays in-process — which is why the cluster is ready to start. The general form is worth
+keeping in mind: an open question in a dependent file can gate the design of the file it depends
+on, and the arrows in the table do not show it.
+
+**002 should never land alone.** By itself it is a pure refactor that ships nothing anyone can
+see, and a seam with one implementation behind it is an indirection rather than a seam. Landing
+it with 004 puts a second provider behind it immediately, and 004 is the right one to prove it
+with: Gemini's `config.responseSchema` and Claude's `output_config.format` are genuinely
+different shapes, and both are GA on Vertex under the ADC the deployment already uses. That tests
+the seam rather than the auth.
+
+**003 after 004, not before** — which reverses what the numbering suggests. 003's own file calls
+structured output "the real risk": grammar-constrained decoding is the weak case and may force
+reduced schemas on the local path. Design the seam against two providers that constrain well and
+003 slots in afterwards as the degraded case, with `source` already able to say so. Do it the
+other way and the seam gets shaped around the weakest mechanism it will ever serve. 003 is also
+where per-route provider selection stops being optional, and that is 002's hardest open question
+— better answered with the seam already proven.
+
+**007 splits, and half of it goes early.** The board wants the full state space and belongs at
+the end. But "each seam reports its choice rather than logging it" only gets more expensive the
+longer it waits: `getEngagementStore()` merely `console.log`s its branch, and `getGemini()`
+returns a client or `null` without ever saying which backend it built — which is why `/healthz`
+can expose nothing but a boolean. Fold that into 002's work, while someone is already inside
+`client.ts`. Add three providers first and there are three more scattered facts to go back for.
+
+**006 before 005 buys 005 its most interesting feature.** They look unrelated and share no code.
+But 005's live-coverage question is blocked on `classify()` being a model call that returns `{}`
+when nothing is configured, which makes every area read dark. 006 builds a client-side classifier
+over the author's own draft before submission. If that assist suggests a coverage _area_
+alongside the tag, fragments arrive already classified, the human is still the verification step
+exactly as 006 argues, and live coverage needs no server model call at all. That composition also
+argues for 006's in-page WebGPU fork over the localhost one: localhost works only for the
+participant who set `OLLAMA_ORIGINS`, which is no use for a coverage wall the whole room is
+meant to watch.
+
+**001 is orthogonal.** It adapts the store seam, not the model seam, and its identity problem
+shares nothing with the cluster. Judge it on its own merits and build it whenever — the read-only
+v1 is genuinely additive. Its only tie to the rest is a panel in 007.
+
+**008 comes before all of it, and is not really in this ordering.** Every intent above assumes a
+deployment that has never been exercised: group mode is built and has only ever run on a laptop,
+so the Firestore store, IAP verification and Vertex have not executed once. Building more on top
+of that is building on an untested floor. It is also the cheapest item here in code terms,
+because it is not code.
+
+**009 is a catalogue rather than a step**, but it holds one thing the ordering above wants: the
+coverage map is computed, shipped across the wire and never rendered, and it is the missing half
+of both 005 and 007. If either of those gets built, that is where to start.
+
+One item is not an ordering question but has a deadline attached: 002 and 004 both rename
+`GEMINI_API_KEY`, `GEMINI_MODELS` and `GENAI_BACKEND`, and both note that renaming breaks a
+documented deployment. Since [deploy.sh](../../scripts/deploy.sh) pushes straight to production,
+the aliases have to exist before that push rather than after it.

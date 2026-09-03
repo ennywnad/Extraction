@@ -32,7 +32,7 @@ a coral warning banner reading _"AI is unavailable… check the Gemini configura
 running a session that matters."_ That message is correct for an accident and actively wrong
 for a deliberate choice. Making the state nameable is most of the work.
 
-**It is cheap.** Of the five intents on this list, this is the one where the code is already
+**It is cheap.** Of the seven intents on this list, this is the one where the code is already
 almost entirely there.
 
 ## What the code already supports

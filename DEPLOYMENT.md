@@ -4,8 +4,14 @@ One Cloud Run service per engagement, private to a Google Group via Identity-Awa
 Firestore holds the shared pile; Vertex AI handles Gemini calls as the runtime service
 account, so no API key exists anywhere in the deployment.
 
-Phase 0 (this document) deploys the app as it stands today — solo mode, behind IAP. Group
-mode arrives in later phases; see `planv1/level-set-plan-v2.md`.
+This deploys the app as it stands today, which is **both modes**: solo, and group mode with a
+shared pile in Firestore behind IAP. When this document was first written only phase 0 existed
+and it deployed solo mode alone — that sentence outlived its truth and was corrected on
+2026-09-03. All six phases of `planv1/level-set-plan-v2.md` are built.
+
+Built is not the same as exercised. Nothing below has been run against a real project yet, and
+`docs/intents/008-deploying-group-mode.md` records which parts have never executed and what the
+first deploy should cost.
 
 ## Prerequisites
 

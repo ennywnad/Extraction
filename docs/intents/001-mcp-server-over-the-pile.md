@@ -89,6 +89,17 @@ is this, and by what evidence? Three shapes, in increasing order of both usefuln
 Starting at 1 and leaving 3 as the open door seems right. Going straight to 3 means designing
 a token lifecycle before knowing whether anyone wants to write to a pile from an agent.
 
+**A lead worth checking before designing option 3 by hand.**
+[GCP Agent Gateway](https://docs.cloud.google.com/gemini-enterprise-agent-platform/govern/gateways/agent-gateway-overview)
+governs agent-to-agent and agent-to-tool traffic, explicitly including MCP, over mTLS with Agent
+Identity and Context-Aware Access. It surfaced while resolving the model-gateway question in
+[004](004-claude-and-the-gcp-model-gateway.md), where it was the wrong tool — it does not proxy
+model inference — but it is aimed squarely at the problem this section describes: authenticating
+a non-browser client that is not behind IAP. If it can arrive at the same `Identity` this app
+already trusts, option 3 becomes configuration rather than a token lifecycle this repo owns and
+has to keep correct. Only the overview has been read. Whether it composes with IAP rather than
+replacing it, and what it costs to run, are both unverified.
+
 ### `synthesize` is not a normal tool
 
 It costs money, it takes a while, and it is single-flight per engagement by design — ten people
