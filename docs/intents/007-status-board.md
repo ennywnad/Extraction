@@ -31,9 +31,10 @@ places, one story, no single view.
 
 **The state space is about to get much larger.** With [003](003-local-models-in-solo-mode.md),
 [004](004-claude-and-the-gcp-model-gateway.md) and
-[006](006-distributed-local-inference.md), "which model answered" stops being a boolean and
-becomes: local, Vertex-Gemini, Vertex-Claude, first-party Claude, a peer's laptop, or a
-labelled fallback — possibly varying per route. At that point a board stops being a nicety.
+[006](006-local-assists-before-submit.md), "which model answered" stops being a boolean and
+becomes: local, Vertex-Gemini, Vertex-Claude, first-party Claude, or a labelled fallback —
+possibly varying per route, and with a local runtime that may be assisting in the browser
+without touching the pile at all. At that point a board stops being a nicety.
 A facilitator about to run a paid workshop needs to see, at a glance, that the room is wired
 the way they think it is.
 
@@ -112,8 +113,8 @@ design decision rather than an afterthought.
 - Its own route, an overlay, or a panel on the dashboard?
 - Does it poll, or is a boot-time snapshot enough? Most of it cannot change without a restart
   — model backend, auth mode, store — so the only genuinely live parts are "did the last call
-  succeed", MCP connections, and (with [006](006-distributed-local-inference.md)) which peers
-  are offering capacity.
+  succeed", MCP connections, and (with [006](006-local-assists-before-submit.md)) whether this
+  browser can currently reach a local runtime.
 - Does it show _per-route_ provider once that exists, or just the default? Per-route is more
   honest and much busier.
 - Is there a place for the coverage map here, or does that belong to the engagement rather

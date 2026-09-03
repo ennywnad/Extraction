@@ -72,9 +72,11 @@ now, which is the only reason it is being written down rather than dismissed.
 - OpenAI-compatible HTTP as the interface, since Ollama, llama.cpp and LM Studio all speak it?
   That is the pragmatic answer and it means "local" is really "any OpenAI-compatible endpoint",
   which is arguably a better feature than the one described here.
-- Does this apply to group mode at all? Two different answers: the _deployment's_ model is
-  [004](004-claude-and-the-gcp-model-gateway.md), and a _participant's_ machine as capacity for
-  the room is [006](006-distributed-local-inference.md).
+- Does this apply to group mode at all? Not as the pile's model — that is the deployment's
+  job, and a laptop is not a deployment; see
+  [004](004-claude-and-the-gcp-model-gateway.md). A participant's own machine helping with
+  their own draft before they submit it is a separate and much smaller idea:
+  [006](006-local-assists-before-submit.md), which needs none of this.
 - Should the _client_ be able to reach a local model directly, cutting the server out for solo
   mode entirely? Tempting, and it breaks the "all model calls are proxied server-side" property
   that the README currently claims.
