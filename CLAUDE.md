@@ -75,6 +75,10 @@ Every backend picks itself by **presence of configuration**, not by a flag. Read
   `shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]`, pastel fills. Match the neighbouring mode
   component in [src/components/Modes/](src/components/Modes/) rather than inventing styling.
 - Plans and design records live in [planv1/](planv1/) and are committed with their provenance.
+- Roadmap direction lives in [docs/intents/](docs/intents/): one file per idea, each carrying an
+  honest read of how far the current seams already go. Not plans, not scheduled. If work starts
+  on one, its intent file is the brief — and the "what the code already supports" section in it
+  is the first thing to re-verify, since it describes the repo on the day it was written.
 
 ## Deploying
 
