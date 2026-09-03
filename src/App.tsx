@@ -28,20 +28,31 @@ import PriorityPile from "./components/Modes/PriorityPile";
 /** How often an open tab asks the server whether the shared pile has moved. */
 const POLL_INTERVAL_MS = 15_000;
 
-const VALID_MODES: ExtractionMode[] = [
-  "free_stream",
-  "quick_fire",
-  "guided_drill",
-  "binary_frame",
-  "swipe",
-  "slider",
-  "card_sort",
-  "timeline",
-  "sentence_completion",
-  "devils_advocate",
-  "letter_writing",
-  "priority_pile",
-];
+/**
+ * Every mode at zero progress, and — by being keyed on `ExtractionMode` rather than listed —
+ * the one place this file enumerates the modes.
+ *
+ * A mode added to `ExtractionMode` and forgotten here is a compile error. Listed, it was a
+ * silent one: `VALID_MODES` is what `validateAndSanitizeSnapshot` filters an imported session
+ * through, so a missing mode meant shared links quietly downgraded that mode's fragments to
+ * free_stream. Its twin on the server is `emptyModeProgress` in server/store/shape.ts.
+ */
+const EMPTY_MODE_PROGRESS: Record<ExtractionMode, number> = {
+  free_stream: 0,
+  quick_fire: 0,
+  guided_drill: 0,
+  binary_frame: 0,
+  swipe: 0,
+  slider: 0,
+  card_sort: 0,
+  timeline: 0,
+  sentence_completion: 0,
+  devils_advocate: 0,
+  letter_writing: 0,
+  priority_pile: 0,
+};
+
+const VALID_MODES = Object.keys(EMPTY_MODE_PROGRESS) as ExtractionMode[];
 
 function validateAndSanitizeSnapshot(data: any): Session | null {
   if (!data || typeof data !== "object") return null;
@@ -111,20 +122,7 @@ function validateAndSanitizeSnapshot(data: any): Session | null {
     }
   }
 
-  const modeProgress: Record<ExtractionMode, number> = {
-    free_stream: 0,
-    quick_fire: 0,
-    guided_drill: 0,
-    binary_frame: 0,
-    swipe: 0,
-    slider: 0,
-    card_sort: 0,
-    timeline: 0,
-    sentence_completion: 0,
-    devils_advocate: 0,
-    letter_writing: 0,
-    priority_pile: 0,
-  };
+  const modeProgress: Record<ExtractionMode, number> = { ...EMPTY_MODE_PROGRESS };
   if (data.modeProgress && typeof data.modeProgress === "object") {
     for (const m of VALID_MODES) {
       const val = data.modeProgress[m];
@@ -313,20 +311,7 @@ export default function App() {
       status: "active",
       activeMode: sessionData.activeMode || "free_stream",
       thoughts: [],
-      modeProgress: {
-        free_stream: 0,
-        quick_fire: 0,
-        guided_drill: 0,
-        binary_frame: 0,
-        swipe: 0,
-        slider: 0,
-        card_sort: 0,
-        timeline: 0,
-        sentence_completion: 0,
-        devils_advocate: 0,
-        letter_writing: 0,
-        priority_pile: 0,
-      },
+      modeProgress: { ...EMPTY_MODE_PROGRESS },
       modeHistory: [
         { mode: sessionData.activeMode || "free_stream", timestamp: new Date().toISOString() },
       ],

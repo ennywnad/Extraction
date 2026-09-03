@@ -25,6 +25,19 @@ const SHARED_FIELDS = [
 /** Fields only the fragment's author may change. */
 const AUTHOR_ONLY_FIELDS = ["text"] as const;
 
+/**
+ * Everything a client may write on a fragment, as a type.
+ *
+ * The two lists above were prose until this existed: they described the rule and enforced
+ * nothing, so `sanitizeThoughtPatch` could grow a field neither of them mentioned and the
+ * author check below would simply not apply to it. Naming the return type in terms of them
+ * makes that a compile error — a new writable field has to be declared shared or author-only
+ * before it can be accepted.
+ */
+type ClientWritableField = (typeof SHARED_FIELDS)[number] | (typeof AUTHOR_ONLY_FIELDS)[number];
+
+type ThoughtPatch = Partial<Pick<Thought, ClientWritableField>>;
+
 const META_FIELDS = [
   "activeMode",
   "modeHistory",
@@ -53,8 +66,8 @@ function displayNameFor(email: string): string {
 }
 
 /** Validates the fragment fields a client is allowed to set, ignoring anything else. */
-function sanitizeThoughtPatch(body: any): Partial<Thought> {
-  const patch: Partial<Thought> = {};
+function sanitizeThoughtPatch(body: any): ThoughtPatch {
+  const patch: ThoughtPatch = {};
   const text = str(body?.text, 5000);
   if (text !== undefined) patch.text = text;
 

@@ -1,7 +1,7 @@
 # 009 — The deferred group surface
 
-**Status:** intent, in part. The coverage map — the one entry this file argued for — landed
-2026-09-03. The other seven are unchanged. See [STATUS.md](STATUS.md).
+**Status:** intent, in part — one of the eight is built, seven are not.
+See [STATUS.md](STATUS.md).
 **Written:** 2026-09-03
 
 ## What
@@ -25,31 +25,21 @@ file says which.
 deferred these correctly for a scope it had to close. It did not record _why_ each one, so every
 future reading of the concept bundle re-opens the same eight questions.
 
-**Two of them turn out to be load-bearing for intents already written.** The coverage map is the
-missing half of both [005](005-listening-mode.md) and [007](007-status-board.md); per-viewer
-classification is most of [006](006-local-assists-before-submit.md). Neither connection is
-visible from the plan's one-line list, and both change how cheap those intents are.
+**Two of them turn out to be load-bearing for intents already written.** The coverage map was
+the missing half of both [005](005-listening-mode.md) and [007](007-status-board.md) — which is
+why it is the one that got built; per-viewer classification is most of
+[006](006-local-assists-before-submit.md). Neither connection was visible from the plan's
+one-line list, and both changed how cheap those intents were.
 
 ## The eight, with a read on each
 
-**Coverage map UI — built.** It was the one worth building and it was closer than it looked.
-[CoverageMap.tsx](../../src/components/CoverageMap.tsx) draws it above the group deliverable,
-and it is in the copied markdown as well.
+**Coverage map UI — built**, and no longer deferred. It was the one entry here worth doing:
+[CoverageMap.tsx](../../src/components/CoverageMap.tsx) draws it above the group deliverable and
+into the copied markdown, from a map mirrored onto the session so every viewer gets it with the
+ordinary poll. See [STATUS.md](STATUS.md) for what building it turned out to involve.
 
-Two things the build had to settle that this entry did not anticipate. **The value crossed the
-wire to one person only** — the level set is returned to whoever asked for it, so the map would
-have existed for the facilitator until they reloaded; it is now mirrored onto the session
-alongside `synthesized*`, arrives with the ordinary poll, and is a wall the whole room can
-watch. **A zero only means silence if every fragment was placed.** The classifier can return
-fewer assignments than there are fragments, or names matching no area, and those fragments then
-sit in the pile and in no cell — so the map accounts for the pile explicitly rather than letting
-an unplaced area read as an unspoken one. That distinction is the one thing here that the
-arithmetic could not have told you on its own.
-
-Still the missing piece in [005](005-listening-mode.md)'s live-coverage question — a rendered
-map does not make it live — and it is now an answered half of [007](007-status-board.md)'s open
-question about where coverage belongs: it belongs to the engagement, and 007's board does not
-need to carry it.
+It leaves [005](005-listening-mode.md)'s live-coverage question where it was — a rendered map is
+not a live one, and that still needs a classifier that does not call a model.
 
 **Per-viewer classification — largely superseded by [006](006-local-assists-before-submit.md).**
 Deferred here as a server-side idea; [006](006-local-assists-before-submit.md) arrives at a
@@ -93,9 +83,10 @@ starting from the UI.
 
 ## What the code already supports
 
-- ~~**Coverage is computed, shaped and already on the wire**~~ — and now drawn. `Session.coverage`
-  carries it to every viewer; `ServerMetaPatch` in [store/types.ts](../../server/store/types.ts)
-  is what keeps it server-written, since a client that could set the count could contradict it.
+- **Coverage crosses the wire on the session, not just on the level set.** `Session.coverage`
+  carries it to every viewer, and `ServerMetaPatch` in
+  [store/types.ts](../../server/store/types.ts) is what keeps it server-written — a client that
+  could set the count could contradict it. Anything else built here inherits that pattern.
 - **Attribution, author-only edits and the roster are enforced in the route layer**, so anything
   built on the pile inherits the rules rather than restating them.
 - **`Session` is a shape with a documented allowlist** in
@@ -106,9 +97,6 @@ starting from the UI.
 
 ## Open questions
 
-- ~~Does the coverage map belong to the engagement, to [007](007-status-board.md)'s board, or to
-  both with different framing?~~ Answered by building it: the engagement. It is a fact about one
-  room's pile, not about the instance, and 007's board is about the instance.
 - Are the registers a `kind` on a fragment or four collections? Deciding once settles four items.
 - Is there any appetite for comments at all, or is the immutable attributed pile the better
   product? Worth answering before anyone builds toward it.

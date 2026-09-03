@@ -479,19 +479,15 @@ export default function Workspace({
                   onChange={(e) => setFilterTags(e.target.value as any)}
                   className="text-[10px] bg-white border-2 border-black font-display font-bold uppercase tracking-wider text-black focus:ring-0 outline-none px-2 py-0.5"
                 >
+                  {/* Derived from modesList so the filter cannot name a mode differently
+                      from the card that launches it — which it already did: binary_frame
+                      was "Binary Bracket" on the card and "Binary Frame" here. */}
                   <option value="all">All Modes</option>
-                  <option value="free_stream">Free Stream</option>
-                  <option value="quick_fire">Quick Fire</option>
-                  <option value="guided_drill">Guided Drill</option>
-                  <option value="binary_frame">Binary Frame</option>
-                  <option value="swipe">Swipe Statements</option>
-                  <option value="slider">Intensity Map</option>
-                  <option value="card_sort">Cluster Sorting</option>
-                  <option value="timeline">Temporal Map</option>
-                  <option value="sentence_completion">Sentence Starters</option>
-                  <option value="devils_advocate">Advocate Shock</option>
-                  <option value="letter_writing">Letter Drill</option>
-                  <option value="priority_pile">Priority Eisenhower</option>
+                  {modesList.map(({ mode, label }) => (
+                    <option key={mode} value={mode}>
+                      {label}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>

@@ -1,23 +1,32 @@
 import { randomUUID } from "node:crypto";
 import type { AuthorStamp, ExtractionMode, Session } from "../../src/types.ts";
 
-export const VALID_MODES: ExtractionMode[] = [
-  "free_stream",
-  "quick_fire",
-  "guided_drill",
-  "binary_frame",
-  "swipe",
-  "slider",
-  "card_sort",
-  "timeline",
-  "sentence_completion",
-  "devils_advocate",
-  "letter_writing",
-  "priority_pile",
-];
+/**
+ * Keyed on `ExtractionMode` rather than listed, so a mode added to the union and forgotten
+ * here is a compile error rather than a silent one — the routes filter `mode` through
+ * `VALID_MODES`, so a missing mode meant the server quietly filed those fragments under
+ * whatever `activeMode` happened to be. Its twin on the client is `EMPTY_MODE_PROGRESS`
+ * in src/App.tsx.
+ */
+const EMPTY_MODE_PROGRESS: Record<ExtractionMode, number> = {
+  free_stream: 0,
+  quick_fire: 0,
+  guided_drill: 0,
+  binary_frame: 0,
+  swipe: 0,
+  slider: 0,
+  card_sort: 0,
+  timeline: 0,
+  sentence_completion: 0,
+  devils_advocate: 0,
+  letter_writing: 0,
+  priority_pile: 0,
+};
+
+export const VALID_MODES = Object.keys(EMPTY_MODE_PROGRESS) as ExtractionMode[];
 
 export function emptyModeProgress(): Record<ExtractionMode, number> {
-  return Object.fromEntries(VALID_MODES.map((m) => [m, 0])) as Record<ExtractionMode, number>;
+  return { ...EMPTY_MODE_PROGRESS };
 }
 
 /** The role a creator gets, versus everyone who joins later. */

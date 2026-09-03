@@ -1,8 +1,7 @@
 # 008 — Deploying group mode for the first time
 
-**Status:** intent. Not planned, not scheduled. Two of its preparatory items landed
-2026-09-03 — the store contract now runs against Firestore, and the audience is checked at
-boot. The deploy itself has still not happened. See [STATUS.md](STATUS.md).
+**Status:** intent. Not planned, not scheduled — and not deployed. Two of its preparations are
+done; see [STATUS.md](STATUS.md).
 **Written:** 2026-09-03
 
 ## What
@@ -20,9 +19,8 @@ and the alternative is that it stays in someone's head.
 ## Why
 
 **The adapters that only exist in production are the least exercised.** The store and identity
-seams each have a local implementation and a cloud one, and for most of this repo's life every
-test ran the local one. That is now true of less than it was, and the table says exactly how
-much less:
+seams each have a local implementation and a cloud one, and what runs where is worth stating
+exactly:
 
 | Seam         | Exercised by the suite                                                                     | Never executed                                |
 | :----------- | :----------------------------------------------------------------------------------------- | :-------------------------------------------- |
@@ -31,21 +29,17 @@ much less:
 | **Model**    | The no-Gemini fallback path on every route                                                 | Vertex via ADC as the runtime service account |
 | **Serving**  | `NODE_ENV=production` static branch, via `DIST_DIR`                                        | The actual container, on Cloud Run            |
 
-Updated 2026-09-03. The store row changed because the contract test runs against the Firestore
-emulator — the real `@google-cloud/firestore` client, and the real query, batch, aggregation and
-`FieldPath` semantics the production store depends on. The two implementations agree on all ten
-behaviours. What the emulator cannot tell you is whether ADC resolves, whether the runtime
-service account has the roles, or whether [firestore.rules](../../firestore.rules) denies what it
-means to — so the row is narrower, not gone.
+The store row is narrow because an emulator runs the real client and the real query, batch,
+aggregation and `FieldPath` semantics, but says nothing about whether ADC resolves, whether the
+runtime service account holds the roles, or whether [firestore.rules](../../firestore.rules)
+denies what it means to. Those still first execute in a deployment.
 
-This is not a gap in the testing so much as a property of what those tests can reach — CI holds
-no credentials by design, and says so. But it used to mean that the group-mode rules
+The rest is a property of what tests without credentials can reach, and CI says so. The
+remaining honest gap is a layer up: the group-mode rules
 [sharedPile.test.mjs](../../test/sharedPile.test.mjs) proves — server-side attribution,
-author-only edits, no lost fragment under a stale pile, 304 on an unchanged re-poll — were proven
-against one `EngagementStore` implementation and assumed of the other. The store _contract_ is
-now proven of both, without credentials, against an emulator. The route rules above it are still
-proven only over the file store, and that is the honest remaining half: what the pile guarantees
-is shared, and what the routes guarantee is not yet.
+author-only edits, no lost fragment under a stale pile, 304 on an unchanged re-poll — run over
+the file store only. What the pile guarantees is checked against both stores; what the routes
+guarantee is not.
 
 **The deployment document described a different app than the one it now deploys.** It opened by
 saying it deployed "solo mode, behind IAP. Group mode arrives in later phases." That was true at
@@ -69,8 +63,12 @@ More than expected. The cost work was done before the deploy, which is the right
   reads, Cloud Run requests.
 - **[audit-costs.sh](../../scripts/audit-costs.sh)** is a read-only inventory, for a baseline to
   diff against afterwards.
-- **[DEPLOYMENT.md](../../DEPLOYMENT.md) already carries a verification ladder** — the four
-  IAP checks and the `aiEnabled` check — so "did it work" has a defined answer.
+- **[DEPLOYMENT.md](../../DEPLOYMENT.md) already carries a verification ladder** — the four IAP
+  checks, plus `/healthz` reporting which branch each seam took, so "did it work" has a defined
+  answer and `storage.backend: "file"` on a deployment is visible rather than inferred.
+- **The production store can be exercised without credentials.** `npm run test:firestore` runs
+  [storeContract.test.ts](../../test/storeContract.test.ts) against a Firestore emulator, so the
+  store half of this deploy is checkable before attempting it.
 - **A budget alerts; it does not cap.** The document already says so and points at the Vertex
   quota ceiling as the only hard stop. That distinction is the important one and is already made.
 
@@ -102,20 +100,14 @@ More than expected. The cost work was done before the deploy, which is the right
   is one `gcloud run services update`. The plan's own phase-0 argument — get the deployment
   problems out of the way while the feature surface is zero — applies again here at a smaller
   scale.
-- **Exercise the group rules against Firestore, not just the file store.** The _store_ half is
-  done and automated — `npm run test:firestore` against an emulator. What is still worth doing
-  by hand on the real service is the half above the store: two people contributing at once, one
-  editing another's fragment and being refused, a delete, and a 304 on an idle poll.
-- ~~**Confirm the IAP audience.**~~ Partly handled in code, because "presents as a 401 with
-  nothing to say why" was the whole problem. [authMode.ts](../../server/authMode.ts) now checks
-  it at boot, and the line is drawn narrowly: only an empty path segment is fatal — no audience
-  has one, and it is exactly what a failed substitution in deploy.sh produces. Anything else
-  unrecognised warns and boots, because exiting there would buy diagnosis rather than safety
-  (a wrong audience rejects every assertion, which is broken but not permissive) and would let
-  a stale list of formats in that file take down a working service.
-  [deploy.sh](../../scripts/deploy.sh) also refuses to deploy when the project-number lookup did
-  not resolve. What is left is confirming the audience is the _right_ one, which only a real
-  assertion can tell you.
+- **Exercise the route rules against Firestore.** The store contract is automated
+  (`npm run test:firestore`); the layer above it is not. Worth doing by hand on the real
+  service: two people contributing at once, one editing another's fragment and being refused,
+  a delete, and a 304 on an idle poll.
+- **Confirm the audience is the right one**, which only a real assertion can tell you.
+  [authMode.ts](../../server/authMode.ts) already refuses to boot on an audience that cannot
+  work and [deploy.sh](../../scripts/deploy.sh) refuses to deploy one it could not compute, so
+  what is left is the case where the value is well-formed and wrong.
 - **Set the Artifact Registry cleanup policy** once the first deploy has created the repository.
 
 ## Open questions

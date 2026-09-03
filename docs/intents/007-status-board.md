@@ -1,7 +1,6 @@
 # 007 — A status board that looks like the rest of the app
 
-**Status:** intent, in part. The reporting half landed 2026-09-03; the board has not.
-See [STATUS.md](STATUS.md).
+**Status:** intent, in part — the board has not been built. See [STATUS.md](STATUS.md).
 **Written:** 2026-09-03
 
 ## What
@@ -20,17 +19,13 @@ like it belongs to this app and not to a monitoring vendor.
 
 **The app's central design claim is currently invisible.** _Configuration decides behavior_ —
 identity, storage, and the model each select themselves by the presence of what they need.
-That is the most distinctive thing about how this is built, and until `/healthz` began
-reporting the branches the only ways to observe it were reading `.env`, tailing the boot log,
-or waiting for a coral warning banner to appear. It is now answerable with `curl`, which is
-not the same as legible. A board turns the claim into something you can look at.
+That is the most distinctive thing about how this is built, and the only way to observe it is
+to `curl /healthz` or read `.env`. A board turns the claim into something you can look at.
 
-**Everything needed to draw it now exists in one place.** It used to be five: `authMode`
-resolved at boot, `getEngagementStore()` only logged which store it chose, `getGemini()` knew
-its backend but could not be asked, and `/healthz` and `/api/whoami` each computed `aiEnabled`
-independently. `instanceStatus()` in [status.ts](../../server/status.ts) now assembles all of
-it and `/healthz` serves it, so the board is a rendering job. `source` /
-`X-Extraction-AI-Source` still carry the per-response half.
+**Everything needed to draw it is in one place.** `instanceStatus()` in
+[status.ts](../../server/status.ts) assembles identity, storage and model, and `/healthz`
+serves it, so the board is a rendering job over one value. `source` /
+`X-Extraction-AI-Source` carry the per-response half.
 
 **The state space is about to get much larger.** With [003](003-local-models-in-solo-mode.md),
 [004](004-claude-and-the-gcp-model-gateway.md) and
@@ -98,9 +93,9 @@ design decision rather than an afterthought.
   [test/status.test.ts](../../test/status.test.ts) fails if a project id, IAP audience, model
   id or store path reaches that payload, so the "shapes, not secrets" constraint above is a
   test rather than a note the board has to remember.
-- **The shape already admits what it does not know.** `storage.live` distinguishes a
-  configured store from one this process has actually opened — the first instance of the
-  "say what you cannot see" constraint above being expressed in data.
+- **The shape admits what it does not know.** `storage.live` distinguishes a configured store
+  from one this process has actually opened, which is the "say what you cannot see" constraint
+  above already expressed in data rather than in prose.
 - **`source` / `X-Extraction-AI-Source`** already answer "who wrote this response" per
   request, which is the live half of the board.
 - **`Workspace.tsx` already renders a degradation banner** driven by `/healthz`, so there is
@@ -111,16 +106,11 @@ design decision rather than an afterthought.
 
 ## What would have to change
 
-- ~~**A `/api/status` endpoint** aggregating the five scattered facts into one shape.~~ Done as
-  `instanceStatus()` on `/healthz`, which is the participant-safe view. A separate
-  authenticated route is only needed if the audience decision below calls for a detailed one.
-- ~~**`getEngagementStore()` would have to report its choice, not just log it.**~~ Done:
-  `storeBackend()` and `storeIsLive()`.
-- **A decision about audience.** Operator-facing (what is this deployment) and
-  participant-facing (is the AI on) are different boards with different content and different
-  authorization. Trying to be both is how it ends up being neither. **This is now the only
-  thing blocking the board**, and it was left open on purpose — building the endpoint any
-  further would have answered it by accident.
+- **A decision about audience, which is the only thing blocking this.** Operator-facing (what
+  is this deployment) and participant-facing (is the AI on) are different boards with different
+  content and different authorization. Trying to be both is how it ends up being neither.
+  `/healthz` is the participant-safe view; a detailed operator view would need its own route
+  behind `requireIdentity`, and that split is the decision.
 - **The drawing.** A rendering job over `/healthz`, in the idiom of the mode components.
 
 ## Open questions
@@ -132,9 +122,10 @@ design decision rather than an afterthought.
   browser can currently reach a local runtime.
 - Does it show _per-route_ provider once that exists, or just the default? Per-route is more
   honest and much busier.
-- ~~Is there a place for the coverage map here, or does that belong to the engagement rather
-  than the instance?~~ Settled by [009](009-the-deferred-group-surface.md) building it: the
-  engagement. This board is about the instance, and the map is a fact about one room's pile.
+
+The coverage map is not one of these: it belongs to the engagement rather than to the instance,
+which [009](009-the-deferred-group-surface.md) settled by building it there. This board is about
+what the instance is wired to.
 
 ## Non-goals
 
