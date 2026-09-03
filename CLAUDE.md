@@ -18,8 +18,8 @@ solo (fragments in `localStorage`) and group (a shared pile on the server, behin
 Healthy `npm run check` ends with:
 
 ```
-# tests 40
-# pass 40
+# tests 45
+# pass 45
 # fail 0
 ```
 
@@ -64,6 +64,14 @@ Every backend picks itself by **presence of configuration**, not by a flag. Read
   [server/ai/sessionPrompts.ts](server/ai/sessionPrompts.ts) (solo) and
   [server/ai/levelSetPrompt.ts](server/ai/levelSetPrompt.ts) (group), so a prompt change is a
   readable diff. Route handlers hold the schema and the plumbing only.
+- The **production** static branch (`NODE_ENV=production`) is only covered by
+  `test/productionServing.test.mjs`, via `DIST_DIR`. Nothing else runs the server in
+  production mode, so a router change can pass every other test and still fail at boot — an
+  Express 4->5 bump did exactly that, because a bare `"*"` route is invalid under
+  path-to-regexp v8. Each server-spawning test file needs its **own port** (node runs test
+  files in parallel), and must actually reap the process in `after` — a spawned server that
+  outlives its test holds the pipes and hangs a CI step long after the suite reports green.
+  `npm test` carries `--test-timeout` so that failure mode fails instead of stalling.
 - Share links are **base64url** ([src/utils/shareLink.ts](src/utils/shareLink.ts)). Standard
   base64's `+` becomes a space in a query string and `atob` then silently drops it. Don't
   reintroduce a bare `btoa`.
