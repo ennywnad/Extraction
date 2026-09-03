@@ -19,9 +19,9 @@ built, and the log says which slice and what it deliberately left alone.
 | [004](004-claude-and-the-gcp-model-gateway.md) | Claude, and the model as a deployment choice       | 002        | Small once 002 exists. The gateway question is resolved: Vertex is it.       |
 | [005](005-listening-mode.md)                   | Listening mode — a kickoff with no model           | —          | Smallest on this list. Mostly already true.                                  |
 | [006](006-local-assists-before-submit.md)      | Local assists before a fragment enters the pile    | —          | Cheap to build, independent of everything else. The cost is setup, not code. |
-| [007](007-status-board.md)                     | A status board that looks like the rest of the app | —          | Small. Every fact it needs is already computed.                              |
+| [007](007-status-board.md)                     | A status board that looks like the rest of the app | —          | Small, and now smaller: the reporting half landed, the drawing has not.      |
 | [008](008-deploying-group-mode.md)             | Deploying group mode for the first time            | —          | Not code, and still not done. Its two code-shaped preparations have landed.  |
-| [009](009-the-deferred-group-surface.md)       | The deferred group surface                         | —          | A catalogue. Most of it should stay deferred; the coverage map should not.   |
+| [009](009-the-deferred-group-surface.md)       | The deferred group surface                         | —          | A catalogue; the coverage map is built, the other seven stay deferred.       |
 
 ## How to read these
 

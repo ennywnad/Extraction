@@ -17,17 +17,17 @@ this file only records which pieces of one have become code.
 
 ## Where each intent stands
 
-| #                                              | Intent                        | State                                      |
-| :--------------------------------------------- | :---------------------------- | :----------------------------------------- |
-| [001](001-mcp-server-over-the-pile.md)         | MCP server over the pile      | unchanged                                  |
-| [002](002-model-provider-seam.md)              | Provider-neutral model seam   | unchanged                                  |
-| [003](003-local-models-in-solo-mode.md)        | Local models in solo mode     | unchanged                                  |
-| [004](004-claude-and-the-gcp-model-gateway.md) | Claude as a deployment choice | unchanged                                  |
-| [005](005-listening-mode.md)                   | Listening mode                | unchanged                                  |
-| [006](006-local-assists-before-submit.md)      | Local assists before submit   | unchanged                                  |
-| [007](007-status-board.md)                     | Status board                  | **in part** — the seams now report (below) |
-| [008](008-deploying-group-mode.md)             | Deploying group mode          | unchanged — still never run off a laptop   |
-| [009](009-the-deferred-group-surface.md)       | The deferred group surface    | unchanged                                  |
+| #                                              | Intent                        | State                                                     |
+| :--------------------------------------------- | :---------------------------- | :-------------------------------------------------------- |
+| [001](001-mcp-server-over-the-pile.md)         | MCP server over the pile      | unchanged                                                 |
+| [002](002-model-provider-seam.md)              | Provider-neutral model seam   | unchanged                                                 |
+| [003](003-local-models-in-solo-mode.md)        | Local models in solo mode     | unchanged                                                 |
+| [004](004-claude-and-the-gcp-model-gateway.md) | Claude as a deployment choice | unchanged                                                 |
+| [005](005-listening-mode.md)                   | Listening mode                | unchanged — but its wall now exists                       |
+| [006](006-local-assists-before-submit.md)      | Local assists before submit   | unchanged                                                 |
+| [007](007-status-board.md)                     | Status board                  | **in part** — the seams now report (below)                |
+| [008](008-deploying-group-mode.md)             | Deploying group mode          | **in part** — two preparatory items; still never deployed |
+| [009](009-the-deferred-group-surface.md)       | The deferred group surface    | **in part** — the coverage map is built                   |
 
 ---
 
@@ -66,11 +66,15 @@ every route with nothing in the response to explain it. It is _computed_ by depl
 substitution to check; [deploy.sh](../../scripts/deploy.sh) refuses to deploy when the project
 number did not resolve at all.
 
-The two strengths are deliberate and are the only interesting decision here. An _unusable_
-audience is fatal, because "an inconsistent identity configuration exits the process" is that
-file's whole design. An _unfamiliar_ one only warns — IAP issues three audience formats
-depending on what sits in front of the service, and failing closed on a hardcoded list would be
-failing closed on an assumption about someone else's deployment.
+Where the fatal line sits is the only interesting decision here, and it moved once during
+review. Exiting the process buys _diagnosis_, not safety: a wrong audience rejects every
+assertion, which is broken but not permissive, and `iapAuth` already logs the expected value on
+each rejection. So the only fatal case is one that cannot be anything but a bug — an empty path
+segment, which no audience has. Everything else unrecognised warns and boots, because whether a
+string is a valid audience is a claim about IAP's product surface rather than about this
+deployment, and a list going stale in that file should not be able to take down a service that
+was working. The first version refused to start on anything outside three known formats, which
+was failing closed on an assumption about somebody else's deployment.
 
 **And the fail-closed resolution finally has tests.** `resolveAuthConfig` is the function whose
 failure is the feature — an earlier design would have turned a deployment into an anonymous

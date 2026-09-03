@@ -105,16 +105,27 @@ describe("auth mode resolution", () => {
     // an empty project number yields exactly this. It deploys fine and 401s everyone.
     const said = refuses(
       { AUTH_MODE: "iap", IAP_AUDIENCE: "/projects//locations/europe-west4/services/extraction" },
-      /not a usable audience/,
+      /empty path segment/,
     );
     assert.match(said, /PROJECT_NUMBER/, "the message has to point at the thing that failed");
   });
 
-  it("refuses an audience that is not an IAP resource path at all", () => {
+  it("refuses a trailing empty segment too, which is the same mistake", () => {
     refuses(
-      { AUTH_MODE: "iap", IAP_AUDIENCE: "extraction-482913.a.run.app" },
-      /not a usable audience/,
+      { AUTH_MODE: "iap", IAP_AUDIENCE: "/projects/482913/locations/europe-west4/services/" },
+      /empty path segment/,
     );
+  });
+
+  it("only warns about an audience that is not a resource path at all", () => {
+    // Deliberately not fatal. Exiting here would buy diagnosis rather than safety — a wrong
+    // audience rejects every assertion, and iapAuth already logs the expected value on each
+    // rejection — so refusing to boot on "this does not look like an audience to me" would
+    // let a stale list in this file take down a service that was working.
+    const aud = "extraction-482913.a.run.app";
+    const config = resolve({ AUTH_MODE: "iap", IAP_AUDIENCE: aud });
+    assert.equal(config.iapAudience, aud);
+    assert.match(logged.join("\n"), /does not match any audience format/);
   });
 
   it("only warns about an audience that is merely unfamiliar", () => {

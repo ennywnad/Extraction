@@ -108,12 +108,14 @@ More than expected. The cost work was done before the deploy, which is the right
   editing another's fragment and being refused, a delete, and a 304 on an idle poll.
 - ~~**Confirm the IAP audience.**~~ Partly handled in code, because "presents as a 401 with
   nothing to say why" was the whole problem. [authMode.ts](../../server/authMode.ts) now checks
-  the audience at boot: an unusable one — an empty segment, which is what a failed substitution
-  in deploy.sh produces — exits the process with the reason, and one that is merely unfamiliar
-  warns and boots, since IAP issues three different formats and refusing on a hardcoded list
-  would be fail-closed on an assumption. [deploy.sh](../../scripts/deploy.sh) also refuses to
-  deploy when the project-number lookup did not resolve. What is left is confirming the audience
-  is the _right_ one, which only a real assertion can tell you.
+  it at boot, and the line is drawn narrowly: only an empty path segment is fatal — no audience
+  has one, and it is exactly what a failed substitution in deploy.sh produces. Anything else
+  unrecognised warns and boots, because exiting there would buy diagnosis rather than safety
+  (a wrong audience rejects every assertion, which is broken but not permissive) and would let
+  a stale list of formats in that file take down a working service.
+  [deploy.sh](../../scripts/deploy.sh) also refuses to deploy when the project-number lookup did
+  not resolve. What is left is confirming the audience is the _right_ one, which only a real
+  assertion can tell you.
 - **Set the Artifact Registry cleanup policy** once the first deploy has created the repository.
 
 ## Open questions
