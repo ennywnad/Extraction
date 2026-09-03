@@ -16,6 +16,7 @@ import {
   Plus,
 } from "lucide-react";
 import { Session } from "../types";
+import { encodeSnapshot } from "../utils/shareLink";
 import CompareSettingsModal from "./CompareSettingsModal";
 
 interface ExportPanelProps {
@@ -167,8 +168,8 @@ export default function ExportPanel({
   };
 
   const handleShare = () => {
-    // Generate a Shareable snapshot that packs the session into a base64 string
-    const stateBlob = btoa(encodeURIComponent(JSON.stringify(session)));
+    // Generate a Shareable snapshot that packs the session into a base64url string
+    const stateBlob = encodeSnapshot(session);
     const shareableUrl = `${window.location.origin}/?snapshot=${stateBlob}`;
     navigator.clipboard.writeText(shareableUrl);
     alert(

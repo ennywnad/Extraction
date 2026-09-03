@@ -4,6 +4,7 @@ import type { AuthorStamp, Session, Thought } from "../src/types.ts";
 import { getEngagementStore } from "./store/index.ts";
 import { CONTRIBUTOR_ROLE, FACILITATOR_ROLE, VALID_MODES } from "./store/shape.ts";
 import { isSynthesisRunning, synthesizeEngagement } from "./ai/synthesis.ts";
+import { sendAiError } from "./ai/respond.ts";
 
 /**
  * Fields any roster member may change on any fragment.
@@ -302,11 +303,12 @@ export function createEngagementRouter() {
       });
       // 202 tells the caller it attached to a run someone else started.
       res.status(joined ? 202 : 200).json(levelSet);
-    } catch (e: any) {
+    } catch (e) {
       // Nothing is written on failure: a placeholder in a shared client deliverable reads
-      // like a real result, and nobody would know to regenerate it.
-      console.error("Synthesis failed:", e?.message || e);
-      res.status(503).json({ error: e?.message || "Synthesis failed" });
+      // like a real result, and nobody would know to regenerate it. 503 rather than 500 is
+      // the point — "nothing was written, try again" — and a 429 passes through so a caller
+      // backs off instead of hammering a quota.
+      sendAiError(res, "Synthesis", e, 503);
     }
   });
 

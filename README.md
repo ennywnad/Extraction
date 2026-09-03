@@ -1,67 +1,163 @@
-# ⊞ EXTRACTION — Cognitive Chamber & Strategic Consultant
+# ⊞ EXTRACTION
 
-**Extraction** is a tactile, highly conversational thought-extraction chamber and executive outline synthesizer. Crafted in a high-contrast Neo-Brutalist design language, it helps you step out of mental paralysis, unpack scattered thought fragments, categorize them into structural dimensions, and synthesize crisp action strategies.
+**Extraction** gets thoughts out of your head and into a structure you can act on. Twelve
+interaction modes surface fragments into a pile; a model synthesizes the pile into an outline,
+a summary, and a list of actions.
 
----
+It runs two ways from one codebase — **solo**, with fragments in `localStorage` and no backend
+to speak of, and **group**, with a whole room contributing to one shared pile on the server
+behind Identity-Aware Proxy. Which one you get is decided by configuration, not by a build flag.
 
-## 🎨 Visual Identity & Core Aesthetic
+![Intake](docs/screenshots/01-intake.png)
 
-The interface rejects generic, soft purple gradients in favor of an **editorial, high-contrast, tactile physical desktop layout**.
-
-- **Neo-Brutalist Frame**: Heavy black outlines (`border-3 border-black`), blocky hard shadows (`shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]`), and rich typography pairings (**Space Grotesk / Outfit** for headers, and **JetBrains Mono / Fira Code** for metadata and data elements).
-- **Functional Pastel Palette**: Dynamic, intentional, soft background fills corresponding to distinct steps and thought types:
-  - ⚡ **Actions**: Pastel Coral (`#FF6B6B` / Red)
-  - 💡 **Insights**: Pastel Pool Blue (`#4DABF7` / Blue)
-  - ⚠️ **Fears/Risks**: Golden Wheat Yellow (`#FFD43B` / Yellow)
-  - 🎯 **Goals**: Emerald Clover Green (`#51CF66` / Green)
+_Screenshots are annotated walkthroughs; numbered callouts mark the pieces described in the
+[design records](planv1/)._
 
 ---
 
-## 🚀 Key Functional Capabilities
+## Configuration decides behavior
 
-### 1. Hands-Free Voice Dictation (Multi-modal)
+There is no `MODE=` switch anywhere in this app. Every backend selects itself by the presence
+of the configuration it needs, which is what lets a fresh clone run end to end with no cloud
+account, no API key, and no setup beyond `npm install`.
 
-Integrated native **Web Speech-to-Text Recognition** allowing you to verbally dump your stream-of-consciousness, either direct into the **Surfaced Pile Scratch Note** or inside your **Guided Drill sessions**.
+| Seam         | Unconfigured                         | Configured                                    |
+| :----------- | :----------------------------------- | :-------------------------------------------- |
+| **Identity** | `AUTH_MODE=dev` asserts a local user | `iap` verifies the IAP JWT on every request   |
+| **Storage**  | JSON file under `.data/`             | Firestore, when `FIRESTORE_PROJECT_ID` is set |
+| **Model**    | Static fallbacks, labelled as such   | Gemini via Vertex ADC, or a Developer API key |
 
-- Tap the microphone icon, speak freely, watch text register in real-time, and let the engine capture your raw brain waves before they slip away.
+Two of those three degrade quietly by design. The third does not, and that distinction is the
+interesting part — see [Degradation is declared](#degradation-is-declared).
 
-### 2. Conversational Dialogue Pivot (Double-Agent Dialogue)
+## The AI layer
 
-When engaging with the **Guided Drill**, you aren't forced into single-direction input answering standard prompts.
+All model calls are proxied server-side under `/api/session/*` and `/api/engagement/*`, so no
+credential ever reaches the browser. Four things are worth reading the code for:
 
-- **Direct Mode**: Answer the questions posed by the AI consultant.
-- **Conversational Mode**: Switch to "Chat Mode" to challenge or query the advisor directly (e.g. _"Why is this bottleneck important?"_ or _"Can you expand on what you mean by risk? "_). The agent dynamically identifies your sidebar pivot, clarifies the perspective, and guides you organically back to the extraction thread.
+**Schema-constrained decoding, not prompt-and-hope.** Every route sends a `responseSchema` with
+`responseMimeType: "application/json"`, so the shape is enforced during decoding rather than
+requested in prose and repaired afterwards. `JSON.parse` on the result is parsing a contract,
+not gambling on one.
 
-### 3. Smart Omni-Search & Categorical Filtration
+**Prompts are pure functions.** They live in [server/ai/sessionPrompts.ts](server/ai/sessionPrompts.ts)
+and [server/ai/levelSetPrompt.ts](server/ai/levelSetPrompt.ts), each a plain function of its
+input with no request plumbing in scope, so a prompt change is a readable diff. The solo
+synthesis prompt and the group level-set prompt are deliberately _not_ reworded versions of
+each other — one is a recap of what one person uncovered, the other states the boundary of an
+ask that ten people will be held to.
 
-The **Surfaced Pile** sidebar houses your extraction history. Key upgrades include:
+**Arithmetic the model is not asked to do.** Coverage — including which areas _nobody_ raised —
+is computed in [server/ai/coverage.ts](server/ai/coverage.ts) from classified fragments. The
+model assigns each fragment to one area from a bounded list, which it is reliable at; counting
+is done in TypeScript, because the headline of a level set is the zero and a zero has to be
+right every time.
 
-- **Search-as-you-type**: Live search over raw contents or modes.
-- **Semantic Filters**: One-tap filters separating **⚡ Actions**, **💡 Insights**, **⚠️ Fears**, and **🎯 Goals** utilizing a lightweight local keyword parsing engine to dynamically bubble structures out of raw text.
+**The model chain only answers one question.** `GEMINI_MODELS` lists ids to try in order,
+because valid ids differ between the Developer API and Vertex and move faster than this repo
+does. That chain advances only for "this id is not served here" — a 400, 401 or 403 answers
+identically for every model, so it stops immediately and reports the real status instead of
+burning a round trip per model and calling it an outage. Transient failures never reach the
+chain at all: the SDK's own backoff handles 408/429/5xx against the same model, so a blip
+never silently demotes a request to a weaker one. Only 429 is passed through to the caller,
+since it is the only status they can act on. See [server/ai/client.ts](server/ai/client.ts).
 
-### 4. Custom Executive Blueprint & Advanced Modifiers
+**One model call per engagement at a time.** Synthesis is single-flight and versioned against
+the pile it was built from, so ten people opening the review panel join one run instead of
+racing ten, and a deliverable built from a stale pile says so.
 
-The final **Export Panel** features an advanced **Re-Format Executive Blueprint Control Center**:
+### Degradation is declared
 
-- **Tone Profiles**: Shift your compiled outline between **Standard Guidance**, a combative & sharp **Socratic Audit**, or a gentle holding-space **Empathetic Mirror**.
-- **Focus Filters**: Tailor the output to either **Comprehensive Deep-dives**, clean **Checklist-only Action Items**, or sequential **Strategic Roadmaps**.
-- **Cognitive Bias Auditing**: Toggle the **Bias Audit** to let Gemini run a cold, diagnostic overlay highlighting blindspots, confirmation biases, sunk-cost hangups, and planning fallacies present in your surfaced thoughts pile.
+Every AI route has a static fallback, and the app stays fully usable with no model configured.
+That is the property that makes this deployable as a workshop exercise on a laptop with no
+key — but canned output is shaped exactly like generated output, so a misconfigured deployment
+otherwise looks like a working one that has gone bland.
 
----
+So the substitution is never silent. It is announced in three places:
 
-## 🧭 Main Cognitive Extraction Modes
+```console
+$ curl -s -D- localhost:3000/api/session/devils-advocate -d '{"topic":"..."}' \
+    -H 'Content-Type: application/json'
+X-Extraction-AI-Source: fallback
+{
+  "challenges": ["..."],
+  "source": "fallback",
+  "notice": "AI is not configured on this server, so this response is a fixed
+             placeholder and is not tailored to the session. ..."
+}
+```
 
-| Mode                    | Visual Theme                | Description                                                                                                              |
-| :---------------------- | :-------------------------- | :----------------------------------------------------------------------------------------------------------------------- |
-| **Guided Drill**        | Heavy Border / Yellow Label | Deep conversational interviews. Dynamically pivots between standard answers and custom sidebar dialogues.                |
-| **Swipe / React Deck**  | Soft Yellow `#FFFEE0`       | Tactile Tinder-style card deck. Read synthetically generated candidate statements, swipe or tap to categorize resonance. |
-| **Free Stream**         | Soft Warm Off-White         | Uninterrupted workspace highlighting block writing and stream-of-consciousness.                                          |
-| **Quick Fire**          | Slate Minimalist            | Lightweight speed-dump box. Write a concept, tap Enter, clear the workspace instantly, build mass density fast.          |
-| **Priority Eisenhower** | Emerald & Teal              | Structural matrices clustering items dynamically based on urgency and strategic leverage.                                |
+— a response header for anything that never parses a body, a `source` field on the body, and a
+banner in the UI driven by `/healthz`. The group level set is the deliberate exception: it
+refuses to generate at all rather than write plausible filler into a document that gets
+circulated to a client. A failure is summarised rather than echoed — Gemini and Firestore error bodies both name
+the project — unless it is explicitly marked as written for the caller. See
+[server/ai/respond.ts](server/ai/respond.ts).
 
----
+## Architecture notes that aren't obvious
 
-## 👥 Group Mode — one shared pile
+- **`Session.engagementId` is the mode switch.** Present means group, absent means solo. One
+  session type, one set of mode components, two persistence paths.
+- **[engagementSync.ts](src/utils/engagementSync.ts) never infers a deletion from a fragment's
+  absence.** Modes compose whole new `thoughts` arrays from a possibly-stale snapshot, so
+  absence means "older than the server", not "removed". Deletion is an explicit call. This
+  looks like an array diff waiting to happen and is deliberately not one.
+- **`AUTH_MODE` fails closed at boot.** [server/authMode.ts](server/authMode.ts) resolves the
+  identity configuration once at startup and **exits the process** on an inconsistent one — a
+  missing `IAP_AUDIENCE` in production, or `dev` in production — rather than discovering it
+  per-request and serving unverified identities in the meantime.
+- **Share links are base64url, not base64.** A session packs into a query parameter, where
+  standard base64's `+` is the wire form of a space; `URLSearchParams` hands back a space,
+  `atob` drops it as whitespace, and every byte after it shifts. A single `~` in a fragment was
+  enough to trigger it. See [shareLink.ts](src/utils/shareLink.ts) and its tests.
+- **The server bundle is built outside `dist/`.** The client bundle is served statically; the
+  compiled server and its sourcemap go to `dist-server/` so they are never fetchable over HTTP.
+
+## The twelve modes
+
+Each mode is a different way of getting a fragment out of someone. They write into one pile,
+and the pile is what gets synthesized.
+
+| Mode                    | What it does                                                                      |
+| :---------------------- | :-------------------------------------------------------------------------------- |
+| **Guided Drill**        | Adaptive interview. Answer, or switch to chat and challenge the interviewer back. |
+| **Free Stream**         | Uninterrupted block writing. A nudge appears only after ten idle seconds.         |
+| **Quick Fire**          | Speed dump. Write, Enter, cleared — build mass fast.                              |
+| **Swipe / React**       | Card deck of generated candidate statements; swipe to categorize resonance.       |
+| **Binary Frame**        | Two opposing first-person framings; pick the one that stings.                     |
+| **Slider Map**          | Rate a fragment on urgency, certainty, or emotional charge.                       |
+| **Card Sort**           | Cluster loose fragments into buckets you name yourself.                           |
+| **Timeline**            | Sort fragments by when they matter — before, now, after.                          |
+| **Sentence Completion** | Finish the stem. Bypasses the editing voice.                                      |
+| **Devil's Advocate**    | Three sharp challenges to whatever you have surfaced so far.                      |
+| **Letter Writing**      | Write to a person involved, or to yourself in a year, without sending.            |
+| **Priority Pile**       | Triage the pile into act on this, worth watching, and leave it.                   |
+
+Adding one means touching `VALID_MODES` in both [src/App.tsx](src/App.tsx) and
+[server/store/shape.ts](server/store/shape.ts).
+
+|                                                         |                                                          |
+| :------------------------------------------------------ | :------------------------------------------------------- |
+| ![Guided drill](docs/screenshots/03-guided-drill.png)   | ![Swipe deck](docs/screenshots/04-swipe-deck.png)        |
+| **Guided Drill** — adaptive interview with a chat pivot | **Swipe / React** — categorize by resonance              |
+| ![Cluster sort](docs/screenshots/05-cluster-sort.png)   | ![Temporal map](docs/screenshots/06-temporal-map.png)    |
+| **Card Sort** — cluster into buckets you name           | **Timeline** — before, now, after                        |
+| ![Intensity map](docs/screenshots/07-intensity-map.png) | ![Priority](docs/screenshots/08-priority-eisenhower.png) |
+| **Slider Map** — rate urgency, certainty, charge        | **Priority Pile** — act, watch, or leave it              |
+
+### Synthesis
+
+The pile becomes a summary, a markdown outline, and an action list — re-formattable without
+re-running the session. Tone (standard / Socratic / empathetic), output filter (full blueprint
+/ milestones / checklist) and an optional cognitive-bias audit are prompt parameters, and the
+same tone the user picks at intake is the one they meet in the drill, in the sidebar dialogue,
+and again here.
+
+![Executive blueprint](docs/screenshots/09-executive-blueprint.png)
+
+![Compare settings](docs/screenshots/02-compare-settings.png)
+
+## 👥 Group mode — one shared pile
 
 Extraction also runs as a **hosted, authenticated instance** where a whole room contributes to
 a single pile over an engagement. The twelve extraction modes are unchanged; what changes is
@@ -86,11 +182,44 @@ who can reach the pile and whether a fragment remembers who said it.
 Solo mode is untouched: sessions still live in `localStorage`, and a session with no
 engagement renders exactly as it always has.
 
+## 🚀 Running it
+
+```bash
+npm install
+npm run dev          # :3000, AUTH_MODE=dev identity, no configuration required
+```
+
+That is the whole setup. With nothing configured the app runs solo against a local JSON store
+with labelled fallback prompts. Add a `GEMINI_API_KEY` to `.env` (`cp .env.example .env`) for
+real generation; add `FIRESTORE_PROJECT_ID` and `AUTH_MODE=iap` for the group path.
+
+| Command         | What it does                                                           |
+| :-------------- | :--------------------------------------------------------------------- |
+| `npm run dev`   | Server + Vite middleware on :3000.                                     |
+| `npm run check` | The verification loop: `format:check`, `lint`, `test`.                 |
+| `npm run lint`  | `tsc --noEmit`.                                                        |
+| `npm run build` | Vite client build + esbuild server bundle to `dist-server/server.cjs`. |
+| `npm test`      | `node:test` via tsx.                                                   |
+
+For a two-person local test of the shared pile, run one server and pin a different identity
+per browser profile with `?dev_user=someone@example.com`.
+
+### Tests
+
+```bash
+npm test
+```
+
+Boots a real server against an isolated file store, with no cloud configuration and no Gemini
+key. Covers attribution, field-level authorship, the concurrent-contribution regression, ETag
+revalidation, the CSRF content-type gate, synthesis failure handling, share-link encoding and
+the coverage arithmetic.
+
 ## ☁️ Deployment
 
 The app deploys to **Cloud Run behind IAP**, with **Firestore** holding the shared pile and
-**Vertex AI** serving Gemini as the runtime service account — so a deployment holds no API key
-material at all.
+**Vertex AI** serving the model as the runtime service account — so a deployment holds no API
+key material at all.
 
 ```bash
 export PROJECT=your-project-id
@@ -101,64 +230,10 @@ export PROJECT=your-project-id
 See **[DEPLOYMENT.md](DEPLOYMENT.md)** for the full walkthrough, including the one manual
 console step and how to grant the engagement group access.
 
-## 🛠️ Architecture & Setup Guidelines
+## 🔒 Environment
 
-### Full-Stack Express + Vite (Type-Safe Bundle)
-
-The platform utilizes a robust Express API proxy in tandem with **Vite** and TypeScript. To safely bypass strict Node ES Module runtime checks and speed up cold-starts, the server-side code compiles on build into a single stand-alone target via `esbuild`.
-
-The client bundle is built to `dist/` and served statically; the server bundle is built to
-`dist-server/` deliberately **outside** that directory, so the compiled server and its
-sourcemap are never fetchable over HTTP.
-
-#### Key Node Scripts
-
-```json
-{
-  "scripts": {
-    "dev": "tsx server.ts",
-    "build": "vite build && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist-server/server.cjs",
-    "start": "node dist-server/server.cjs",
-    "lint": "tsc --noEmit",
-    "test": "tsx --test test/*.test.ts test/*.test.mjs"
-  }
-}
-```
-
-#### Run Local Development Server
-
-```bash
-# Install package dependencies
-npm install
-
-# Copy the sample environment (optional — the app runs with no configuration at all)
-cp .env.example .env
-
-# Start full-stack local server (defaults to :3000, override with PORT)
-npm run dev
-```
-
-#### Tests
-
-```bash
-npm test
-```
-
-Boots a real server against an isolated file store, with no cloud configuration and no
-Gemini key. Covers attribution, field-level authorship, the concurrent-contribution
-regression, ETag revalidation, the CSRF content-type gate, synthesis failure handling and
-the coverage arithmetic.
-
----
-
-## 🔒 API Keys, Identity & Environment
-
-All AI calls are proxied server-side (`/api/session/*`, `/api/engagement/*`) so credentials
-are never exposed to client-side network inspectors. Never prefix a secret with `VITE_` — that
-publishes it to the browser.
-
-Everything below is optional: with no configuration at all, the app runs solo with canned
-prompts. See [`.env.example`](.env.example) for the annotated list.
+Everything below is optional. Never prefix a secret with `VITE_` — that publishes it to the
+browser. See [`.env.example`](.env.example) for the annotated list.
 
 | Variable                           | Purpose                                                                   |
 | :--------------------------------- | :------------------------------------------------------------------------ |
@@ -172,10 +247,22 @@ prompts. See [`.env.example`](.env.example) for the annotated list.
 | `DEV_USER_EMAIL` / `DEV_USER_NAME` | The identity assumed under `AUTH_MODE=dev`.                               |
 | `PORT`                             | Listen port. Defaults to 3000; Cloud Run injects its own.                 |
 
-**`AUTH_MODE` fails closed.** It resolves to `iap` under `NODE_ENV=production` and `dev`
-otherwise, and the process exits at startup on an inconsistent configuration — a missing
-`IAP_AUDIENCE` in production, or `dev` in production — rather than quietly serving unverified
-identities.
+## 🎨 Design language
 
-For a two-person local test of the shared pile, run one server and pin a different identity
-per browser profile with `?dev_user=someone@example.com`.
+The interface is Neo-Brutalist and deliberately physical: heavy black outlines
+(`border-3 border-black`), hard offset shadows
+(`shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]`), no gradients, and Space Grotesk / JetBrains Mono
+pairings. Colour is functional rather than decorative — each fragment type carries one:
+⚡ actions coral, 💡 insights blue, ⚠️ risks yellow, 🎯 goals green.
+
+Tailwind v4, no component library. New mode components match their neighbours in
+[src/components/Modes/](src/components/Modes/) rather than inventing styling.
+
+## Stack
+
+TypeScript ESM throughout. React 19 + Vite + Tailwind v4 on the client; Express on the server,
+run by `tsx` in development and bundled by `esbuild` for production. `@google/genai` against
+Vertex AI or the Gemini Developer API. Firestore or a local JSON file. Cloud Run behind IAP.
+No ESLint — `tsc --noEmit` is the lint step.
+
+Design records and plans live in [planv1/](planv1/), committed with their provenance.

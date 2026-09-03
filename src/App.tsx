@@ -3,6 +3,7 @@ import { loadSessions, persistSession, deleteSession } from "./utils/localDB";
 import * as engagementAPI from "./utils/engagementAPI";
 import type { EngagementSummary, ViewerIdentity } from "./utils/engagementAPI";
 import { pushSessionUpdate } from "./utils/engagementSync";
+import { decodeSnapshot } from "./utils/shareLink";
 import { Session, Thought, ExtractionMode } from "./types";
 
 // Intake/Shell layouts
@@ -281,11 +282,11 @@ export default function App() {
         setViewer(null);
       });
 
-    // Decode base64 snapshot if loaded
+    // Decode base64url snapshot if loaded
     const snapshot = params.get("snapshot");
     if (snapshot) {
       try {
-        const decoded = JSON.parse(decodeURIComponent(atob(snapshot)));
+        const decoded = decodeSnapshot(snapshot);
         const validated = validateAndSanitizeSnapshot(decoded);
         if (validated) {
           // Open as currently active session
