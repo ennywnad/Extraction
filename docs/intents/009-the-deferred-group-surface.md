@@ -1,6 +1,7 @@
 # 009 — The deferred group surface
 
-**Status:** intent. Not planned, not scheduled.
+**Status:** intent, in part. The coverage map — the one entry this file argued for — landed
+2026-09-03. The other seven are unchanged. See [STATUS.md](STATUS.md).
 **Written:** 2026-09-03
 
 ## What
@@ -31,16 +32,24 @@ visible from the plan's one-line list, and both change how cheap those intents a
 
 ## The eight, with a read on each
 
-**Coverage map UI — the one worth building, and closer than it looks.** The arithmetic is done:
-[coverage.ts](../../server/ai/coverage.ts) computes per-area status deliberately outside the
-model so a count of zero is right every time, [synthesis.ts](../../server/ai/synthesis.ts)
-returns it on the `LevelSet`, and the level-set prompt already consumes a summary of it. Then it
-stops — the string `coverage` does not appear anywhere in [src/](../../src/). A computed map of
-what a room has _not_ discussed is arguably the most distinctive thing this app produces, and it
-is currently visible only in so far as a model chose to mention it in prose. This is a rendering
-job over a value that already crosses the wire. It is also the missing piece in
-[005](005-listening-mode.md)'s live-coverage question and an open question in
-[007](007-status-board.md).
+**Coverage map UI — built.** It was the one worth building and it was closer than it looked.
+[CoverageMap.tsx](../../src/components/CoverageMap.tsx) draws it above the group deliverable,
+and it is in the copied markdown as well.
+
+Two things the build had to settle that this entry did not anticipate. **The value crossed the
+wire to one person only** — the level set is returned to whoever asked for it, so the map would
+have existed for the facilitator until they reloaded; it is now mirrored onto the session
+alongside `synthesized*`, arrives with the ordinary poll, and is a wall the whole room can
+watch. **A zero only means silence if every fragment was placed.** The classifier can return
+fewer assignments than there are fragments, or names matching no area, and those fragments then
+sit in the pile and in no cell — so the map accounts for the pile explicitly rather than letting
+an unplaced area read as an unspoken one. That distinction is the one thing here that the
+arithmetic could not have told you on its own.
+
+Still the missing piece in [005](005-listening-mode.md)'s live-coverage question — a rendered
+map does not make it live — and it is now an answered half of [007](007-status-board.md)'s open
+question about where coverage belongs: it belongs to the engagement, and 007's board does not
+need to carry it.
 
 **Per-viewer classification — largely superseded by [006](006-local-assists-before-submit.md).**
 Deferred here as a server-side idea; [006](006-local-assists-before-submit.md) arrives at a
@@ -84,8 +93,9 @@ starting from the UI.
 
 ## What the code already supports
 
-- **Coverage is computed, shaped and already on the wire** — see above. This is the only one of
-  the eight where the server half exists.
+- ~~**Coverage is computed, shaped and already on the wire**~~ — and now drawn. `Session.coverage`
+  carries it to every viewer; `ServerMetaPatch` in [store/types.ts](../../server/store/types.ts)
+  is what keeps it server-written, since a client that could set the count could contradict it.
 - **Attribution, author-only edits and the roster are enforced in the route layer**, so anything
   built on the pile inherits the rules rather than restating them.
 - **`Session` is a shape with a documented allowlist** in
@@ -96,8 +106,9 @@ starting from the UI.
 
 ## Open questions
 
-- Does the coverage map belong to the engagement, to [007](007-status-board.md)'s board, or to
-  both with different framing? [007](007-status-board.md) already asks this from its side.
+- ~~Does the coverage map belong to the engagement, to [007](007-status-board.md)'s board, or to
+  both with different framing?~~ Answered by building it: the engagement. It is a fact about one
+  room's pile, not about the instance, and 007's board is about the instance.
 - Are the registers a `kind` on a fragment or four collections? Deciding once settles four items.
 - Is there any appetite for comments at all, or is the immutable attributed pile the better
   product? Worth answering before anyone builds toward it.

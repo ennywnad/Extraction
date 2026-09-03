@@ -135,11 +135,17 @@ export async function synthesizeEngagement(
   const run = runSynthesis(session, generatedBy, settings).then(async (levelSet) => {
     // Mirrored onto the session's synthesized* fields so ExportPanel's existing render path
     // needs no knowledge of versions.
+    //
+    // `coverage` is mirrored for a different reason: the level set itself is returned only to
+    // whoever asked for it, so without this the map of what the room has *not* discussed
+    // would exist for one participant until they reloaded. Sending it with the pile makes it
+    // something the whole room can watch, which is the only form it is useful in.
     const store = await getEngagementStore();
     await store.patchEngagement(session.id, {
       synthesizedSummary: levelSet.summary,
       synthesizedOutline: levelSet.outline,
       synthesizedActionItems: levelSet.openQuestions,
+      coverage: levelSet.coverage,
       status: "review",
     });
     return levelSet;

@@ -132,8 +132,9 @@ design decision rather than an afterthought.
   browser can currently reach a local runtime.
 - Does it show _per-route_ provider once that exists, or just the default? Per-route is more
   honest and much busier.
-- Is there a place for the coverage map here, or does that belong to the engagement rather
-  than the instance?
+- ~~Is there a place for the coverage map here, or does that belong to the engagement rather
+  than the instance?~~ Settled by [009](009-the-deferred-group-surface.md) building it: the
+  engagement. This board is about the instance, and the map is a fact about one room's pile.
 
 ## Non-goals
 

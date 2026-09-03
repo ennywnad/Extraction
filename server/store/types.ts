@@ -18,6 +18,17 @@ export type SessionMetaPatch = Partial<
 >;
 
 /**
+ * What the server itself may write, which is strictly more.
+ *
+ * `coverage` is arithmetic over the pile, computed at synthesis time and deliberately not
+ * delegated to the model so that a count of zero is right every time. Letting a client set
+ * it would put the one number nobody should be able to argue with back under a caller's
+ * control — so it is outside `SessionMetaPatch` and outside the route layer's `META_FIELDS`,
+ * and the two exclusions are the same decision expressed twice.
+ */
+export type ServerMetaPatch = SessionMetaPatch & Partial<Pick<Session, "coverage">>;
+
+/**
  * Just enough to build an ETag: the pair the poll compares, with none of the pile behind it.
  * Kept separate from EngagementSummary so an implementation can serve it without reading
  * every fragment — see `getVersion`.
@@ -68,7 +79,7 @@ export interface EngagementStore {
    */
   getVersion(id: string): Promise<EngagementVersion | null>;
 
-  patchEngagement(id: string, patch: SessionMetaPatch): Promise<Session | null>;
+  patchEngagement(id: string, patch: ServerMetaPatch): Promise<Session | null>;
 
   addThought(id: string, thought: Thought): Promise<Thought | null>;
   getThought(id: string, thoughtId: string): Promise<Thought | null>;

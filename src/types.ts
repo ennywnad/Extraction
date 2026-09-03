@@ -84,6 +84,12 @@ export interface Session {
   synthesizedOutline?: string;
   synthesizedSummary?: string;
   synthesizedActionItems?: string[];
+  /**
+   * Per-area coverage from the last level set. Engagements only, and server-written: it is
+   * arithmetic over the pile (see server/ai/coverage.ts), so a client that could set it
+   * could contradict the count. Absent until a level set has been generated.
+   */
+  coverage?: AreaCoverage[];
 
   createdAt: string;
   updatedAt: string;
@@ -92,6 +98,23 @@ export interface Session {
     outputFilter: "comprehensive" | "actions" | "roadmap";
     cognitiveBiasAudit: "include" | "exclude";
   };
+}
+
+export type AreaStatus = "defined" | "partial" | "dark";
+
+/**
+ * How thoroughly one area of the topic has been spoken into.
+ *
+ * Lives here rather than beside the arithmetic that produces it because it crosses the wire
+ * in both directions — on the level set, and on the engagement it is mirrored onto.
+ */
+export interface AreaCoverage {
+  area: string;
+  status: AreaStatus;
+  fragments: number;
+  /** Distinct contributor roles that have spoken into this area. */
+  voices: number;
+  fragmentIds: string[];
 }
 
 export interface QuickFirePrompt {

@@ -110,9 +110,10 @@ so the Firestore store, IAP verification and Vertex have not executed once. Buil
 of that is building on an untested floor. It is also the cheapest item here in code terms,
 because it is not code.
 
-**009 is a catalogue rather than a step**, but it holds one thing the ordering above wants: the
-coverage map is computed, shipped across the wire and never rendered, and it is the missing half
-of both 005 and 007. If either of those gets built, that is where to start.
+**009 is a catalogue rather than a step**, but it held one thing the ordering above wanted: the
+coverage map was computed, shipped across the wire and never rendered. That one is now built
+(2026-09-03), which settles where coverage lives — with the engagement, not on 007's board — and
+leaves 005 needing a classifier rather than a wall.
 
 One item is not an ordering question but has a deadline attached: 002 and 004 both rename
 `GEMINI_API_KEY`, `GEMINI_MODELS` and `GENAI_BACKEND`, and both note that renaming breaks a
