@@ -30,6 +30,21 @@ trusting least over time and checking first — it describes the repository as o
 the file, and the whole point of writing it down was to find out which of these intents the
 existing seams already fit and which ones they do not.
 
+**An intent file states the direction and the current truth of the code. It does not record how
+the code got there** — that is [STATUS.md](STATUS.md)'s job, and keeping the two apart is what
+stops these from turning into changelogs. So when a slice lands: the facts it created are
+restated in "What the code already supports" in the present tense, the finished item leaves
+"What would have to change", and a question it answered leaves "Open questions" with the answer
+folded into the body where a reader would otherwise re-open it. What does not belong in either
+file is the middle state — a struck-through item with a "done as X" note beside it, which reads
+as a diff against a version of the repo nobody can see any more.
+
+A **resolved question** is the exception and stays put, struck through with its answer, as in
+[002](002-model-provider-seam.md) and [004](004-claude-and-the-gcp-model-gateway.md). Deciding
+something is not the same as building it: the answer and the reasoning are part of the brief,
+there is no code and so no log entry to point at, and a bare question with no visible answer is
+one somebody re-opens.
+
 Three findings from writing them, worth stating up front:
 
 - **The store seam is in good shape and the model seam is not.** `EngagementStore` is an
@@ -107,17 +122,13 @@ v1 is genuinely additive. Its only tie to the rest is a panel in 007.
 **008 comes before all of it, and is not really in this ordering.** Every intent above assumes a
 deployment that has never been exercised: group mode is built and has only ever run on a laptop,
 so IAP verification and Vertex have not executed once. Building more on top of that is building
-on an untested floor. It is also the cheapest item here in code terms, because it is not code.
-
-The two parts of it that _were_ code have since landed (2026-09-03): the store contract runs
-against Firestore under an emulator, so the production store has at least executed, and the IAP
-audience is checked at boot rather than presenting as a 401 wall. Neither is a deploy. The floor
-is better lit and still untested.
+on an untested floor. It is also the cheapest item here in code terms, because it is not code —
+and the parts of it that were code are done, which lit the floor without testing it.
 
 **009 is a catalogue rather than a step**, but it held one thing the ordering above wanted: the
-coverage map was computed, shipped across the wire and never rendered. That one is now built
-(2026-09-03), which settles where coverage lives — with the engagement, not on 007's board — and
-leaves 005 needing a classifier rather than a wall.
+coverage map, which was computed, shipped across the wire and never rendered. That one is built,
+which settles where coverage lives — with the engagement, not on 007's board — and leaves 005
+needing a classifier rather than a wall.
 
 One item is not an ordering question but has a deadline attached: 002 and 004 both rename
 `GEMINI_API_KEY`, `GEMINI_MODELS` and `GENAI_BACKEND`, and both note that renaming breaks a

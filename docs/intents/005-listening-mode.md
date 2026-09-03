@@ -92,13 +92,11 @@ Nearly all of it:
   model is configured — which makes every area report zero and read as dark. So live coverage
   needs either a classification pass run at the end of listening (easy, but not live), or a
   non-model classifier over the ten areas (live, and a real piece of work). The keyword filters
-  above are the closest existing thing and are not close enough.
-  **The wall itself now exists** — [CoverageMap.tsx](../../src/components/CoverageMap.tsx),
-  drawn from a map that arrives with the ordinary poll (see [009](009-the-deferred-group-surface.md)) —
-  so what is left of this question is only the classification, not the rendering. It also
-  hardened the distinction this question depends on: the map states how many fragments were
-  actually placed, so a classifier that returns nothing reads as "not placed" rather than as a
-  room that said nothing.
+  above are the closest existing thing and are not close enough. What is left of this question
+  is only the classification: the wall itself is built
+  ([CoverageMap.tsx](../../src/components/CoverageMap.tsx), from a map that arrives with the
+  ordinary poll), and it already distinguishes a fragment nobody placed from an area nobody
+  spoke into — so a classifier returning nothing reads as unplaced rather than as silence.
 
 ## Non-goals
 
