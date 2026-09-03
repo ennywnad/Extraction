@@ -265,4 +265,9 @@ run by `tsx` in development and bundled by `esbuild` for production. `@google/ge
 Vertex AI or the Gemini Developer API. Firestore or a local JSON file. Cloud Run behind IAP.
 No ESLint — `tsc --noEmit` is the lint step.
 
-Design records and plans live in [planv1/](planv1/), committed with their provenance.
+Design records and plans live in [planv1/](planv1/), committed with their provenance. Where
+this is likely to go next — an MCP server over the pile, a provider-neutral model seam, local
+models in solo mode, Claude served from the same GCP project, a no-model listening mode,
+a status board in the same visual idiom, and optional local assists on a draft before it is
+submitted —
+is written up in [docs/intents/](docs/intents/).
