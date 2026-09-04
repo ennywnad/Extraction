@@ -27,11 +27,14 @@ ENV_VARS+=",IAP_AUDIENCE=${IAP_AUDIENCE}"
 ENV_VARS+=",FIRESTORE_PROJECT_ID=${PROJECT}"
 ENV_VARS+=",GENAI_BACKEND=${GENAI_BACKEND}"
 if [[ "${GENAI_BACKEND}" == "vertex" ]]; then
-  ENV_VARS+=",VERTEX_LOCATION=${REGION}"
+  ENV_VARS+=",VERTEX_LOCATION=${VERTEX_LOCATION}"
 fi
 
 echo "==> Deploying ${SERVICE} to ${REGION}"
-echo "    IAP audience: ${IAP_AUDIENCE}"
+echo "    IAP audience:    ${IAP_AUDIENCE}"
+if [[ "${GENAI_BACKEND}" == "vertex" ]]; then
+  echo "    Vertex location: ${VERTEX_LOCATION}"
+fi
 
 DEPLOY_ARGS=(
   run deploy "${SERVICE}"
@@ -44,6 +47,14 @@ DEPLOY_ARGS=(
   --min-instances=0
   --max-instances=3
   --concurrency=80
+  # 512Mi is the default and is thin for Node holding the Firestore and genai SDKs at
+  # concurrency=80. A Cloud Run OOM presents as a 503 with nothing in the application log,
+  # which is the worst thing to be debugging during a workshop. Memory is billed per
+  # request-second, so at min-instances=0 an idle service pays for none of it.
+  --memory=1Gi
+  # Startup CPU boost: 2 CPU for container start plus 10s after, billed only for that window.
+  # min-instances=0 means every workshop opens with a cold start pulling in both SDKs.
+  --cpu-boost
 )
 # Vertex uses ADC as the runtime service account, so there is no secret to mount.
 if [[ "${GENAI_BACKEND}" == "apikey" ]]; then

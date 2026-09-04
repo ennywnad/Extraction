@@ -17,6 +17,12 @@ source "$(dirname "$0")/config.sh"
 echo "==> Project ${PROJECT}, region ${REGION}, service ${SERVICE}, backend ${GENAI_BACKEND}"
 gcloud config set project "${PROJECT}" >/dev/null
 
+PROJECT_NUMBER="$(gcloud projects describe "${PROJECT}" --format='value(projectNumber)')"
+if [[ ! "${PROJECT_NUMBER}" =~ ^[0-9]+$ ]]; then
+  echo "FATAL: could not resolve the project number for '${PROJECT}' (got '${PROJECT_NUMBER}')." >&2
+  exit 1
+fi
+
 echo "==> Enabling APIs"
 APIS=(
   run.googleapis.com
@@ -60,7 +66,6 @@ grant roles/datastore.user
 if [[ "${GENAI_BACKEND}" == "vertex" ]]; then
   grant roles/aiplatform.user
 else
-  grant roles/secretmanager.secretAccessor
   echo "==> Gemini API key secret"
   if gcloud secrets describe gemini-api-key >/dev/null 2>&1; then
     echo "    gemini-api-key already exists; add a version with:"
@@ -69,6 +74,49 @@ else
     : "${GEMINI_KEY:?set GEMINI_KEY when GENAI_BACKEND=apikey}"
     printf '%s' "${GEMINI_KEY}" | gcloud secrets create gemini-api-key --data-file=-
   fi
+  # Bound to the one secret, not the project. secretAccessor at project scope would let the
+  # runtime read every secret anyone ever adds here, which is the same mistake as using the
+  # default compute service account — just smaller today.
+  echo "    granting roles/secretmanager.secretAccessor on gemini-api-key only"
+  gcloud secrets add-iam-policy-binding gemini-api-key \
+    --member="serviceAccount:${RUNTIME_SA}" \
+    --role=roles/secretmanager.secretAccessor --condition=None --quiet >/dev/null
+fi
+
+# --- Build identity ------------------------------------------------------------------------
+#
+# deploy.sh builds with `--source .`, which hands the build to Cloud Build. For any project
+# where Cloud Build was enabled on or after 2024-04-29 the build runs as the *Compute Engine
+# default* service account, and Google deliberately ships that account without enough
+# permission to do the build. Without roles/run.builder the first deploy fails inside Cloud
+# Build with a permission error that names a service account nothing in this repo mentions.
+#
+# This is separate from the runtime identity above and stays that way: the build principal
+# needs to push images, the runtime principal needs Firestore and Vertex, and neither should
+# hold the other's roles.
+echo "==> Cloud Build identity for --source deploys"
+BUILD_SA="${PROJECT_NUMBER}-compute@developer.gserviceaccount.com"
+echo "    granting roles/run.builder to ${BUILD_SA}"
+gcloud projects add-iam-policy-binding "${PROJECT}" \
+  --member="serviceAccount:${BUILD_SA}" --role=roles/run.builder \
+  --condition=None --quiet >/dev/null
+
+# Whoever runs deploy.sh passes --service-account, which is an act-as on the runtime account.
+# Granted to the caller rather than assumed, so a second person deploying gets a clear error
+# from this script's absence rather than an opaque one from gcloud.
+DEPLOYER="$(gcloud config get-value account 2>/dev/null || true)"
+if [[ -n "${DEPLOYER}" && "${DEPLOYER}" != "(unset)" ]]; then
+  echo "    letting ${DEPLOYER} act as ${RUNTIME_SA}"
+  gcloud iam service-accounts add-iam-policy-binding "${RUNTIME_SA}" \
+    --member="user:${DEPLOYER}" --role=roles/iam.serviceAccountUser --quiet >/dev/null
+  for role in roles/run.sourceDeveloper roles/serviceusage.serviceUsageConsumer; do
+    echo "    granting ${role} to ${DEPLOYER}"
+    gcloud projects add-iam-policy-binding "${PROJECT}" \
+      --member="user:${DEPLOYER}" --role="${role}" --condition=None --quiet >/dev/null
+  done
+else
+  echo "    !! could not resolve the active account; grant the deployer roles/run.sourceDeveloper," >&2
+  echo "       roles/serviceusage.serviceUsageConsumer, and serviceAccountUser on ${RUNTIME_SA}." >&2
 fi
 
 # No Artifact Registry repository is created here. deploy.sh builds with `--source .`, which
