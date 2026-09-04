@@ -9,3 +9,12 @@ dist-server/
 planv1/
 
 package-lock.json
+
+# Installed agent skills (google/skills, pinned by skills-lock.json). Vendored third-party
+# content: reformatting it would make every upgrade a diff against our own formatter rather
+# than against upstream. 517 files here fail format:check on install, which silently breaks
+# `npm run check` — the repo's verification loop — for a reason that has nothing to do with
+# this codebase.
+.agents/
+.claude/skills/
+skills-lock.json

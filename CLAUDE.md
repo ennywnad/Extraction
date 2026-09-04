@@ -19,8 +19,8 @@ solo (fragments in `localStorage`) and group (a shared pile on the server, behin
 Healthy `npm run check` ends with:
 
 ```
-# tests 79
-# pass 78
+# tests 83
+# pass 82
 # fail 0
 # skipped 1
 ```
@@ -30,7 +30,7 @@ The skip is `FirestoreEngagementStore` in
 
 ```
 gcloud emulators firestore start --host-port=localhost:8484   # needs a JRE on PATH
-npm run test:firestore                                        # 88 tests, 0 skipped
+npm run test:firestore                                        # 93 tests, 0 skipped
 ```
 
 ## Configuration decides behavior
