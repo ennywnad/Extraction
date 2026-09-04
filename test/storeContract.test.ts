@@ -113,6 +113,28 @@ function contractSuite(label: string, makeStore: () => Promise<EngagementStore>)
       );
     });
 
+    it("keeps the reported count equal to the pile through adds and deletes", async () => {
+      // The production store answers this from a stored counter rather than by counting, so
+      // the count and the pile are two facts that can disagree. Every path that changes one
+      // has to change the other, and only a test that deletes will notice if one stops.
+      const { id } = await seed();
+      const ids = Array.from({ length: 4 }, (_, i) => fragment(`f${i}`, i));
+      for (const f of ids) await store.addThought(id, f);
+
+      const agrees = async (expected: number, when: string) => {
+        assert.equal((await store.getVersion(id))?.thoughtCount, expected, `getVersion ${when}`);
+        assert.equal((await store.getEngagement(id))?.thoughts.length, expected, `pile ${when}`);
+        const shelf = (await store.listEngagements()).find((e) => e.id === id);
+        assert.equal(shelf?.thoughtCount, expected, `shelf ${when}`);
+      };
+
+      await agrees(4, "after four contributions");
+      assert.equal(await store.deleteThought(id, ids[0].id), true);
+      await agrees(3, "after a deletion");
+      assert.equal(await store.deleteThought(id, ids[0].id), false, "deleting twice");
+      await agrees(3, "after a deletion that removed nothing");
+    });
+
     it("patches metadata and the server-owned coverage map together", async () => {
       const { id } = await seed();
       const patched = await store.patchEngagement(id, {
