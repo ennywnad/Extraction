@@ -22,6 +22,7 @@ built, and the log says which slice and what it deliberately left alone.
 | [007](007-status-board.md)                     | A status board that looks like the rest of the app | —          | Small, and now smaller: the reporting half landed, the drawing has not.      |
 | [008](008-deploying-group-mode.md)             | Deploying group mode for the first time            | —          | Not code, and still not done. Its two code-shaped preparations have landed.  |
 | [009](009-the-deferred-group-surface.md)       | The deferred group surface                         | —          | A catalogue; the coverage map is built, the other seven stay deferred.       |
+| [010](010-model-armor.md)                      | Model Armor over the prompt boundary               | —          | Unknown until someone prices it. One seam to change; the policy is the work. |
 
 ## How to read these
 

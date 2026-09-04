@@ -28,6 +28,7 @@ this file only records which pieces of one have become code.
 | [007](007-status-board.md)                     | Status board                  | **in part** — the seams now report (below)                |
 | [008](008-deploying-group-mode.md)             | Deploying group mode          | **in part** — two preparatory items; still never deployed |
 | [009](009-the-deferred-group-surface.md)       | The deferred group surface    | **in part** — the coverage map is built                   |
+| [010](010-model-armor.md)                      | Model Armor at the prompt     | unchanged                                                 |
 
 ---
 
