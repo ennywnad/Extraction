@@ -32,12 +32,72 @@ const PORT = Number(process.env.PORT) || 3000;
 // request on the proxy address, so all users share one bucket.
 app.set("trust proxy", 1);
 
+const WINDOW_MS = 15 * 60 * 1000;
+
+/**
+ * Solo routes, keyed on IP because that is all there is.
+ *
+ * `/api/session/*` has no identity requirement — in a group deployment IAP has already gated
+ * the whole service, so asking again would be theatre. The consequence is that a *solo*
+ * instance deployed without IAP has only this between the open internet and project-billed
+ * Gemini calls, and an in-memory per-instance counter is a soft bound at best: with
+ * max-instances=3 the real ceiling is three times this number, and it resets on every cold
+ * start. It bounds an accident, not an adversary. See docs/intents/010-model-armor.md for
+ * why screening is not the answer to that either.
+ */
 const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per 15 minutes
+  windowMs: WINDOW_MS,
+  max: 100,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: "Too many requests from this IP, please try again after 15 minutes" },
+});
+
+/**
+ * Group routes, keyed on the verified identity rather than the address it arrived from.
+ *
+ * Everything under `/api/engagement` runs behind `requireIdentity`, so `req.identity` is
+ * always set by the time these run — a request without one is already a 401 and never
+ * reaches here. That makes the email the right key and removes the usual problem with
+ * IP keying, where a room sharing one office NAT shares one bucket.
+ *
+ * The ceiling has to clear the poll, which is the floor of normal use rather than a burst:
+ * `POLL_INTERVAL_MS` is 15s in src/App.tsx, so one open tab spends 4 requests a minute, or
+ * **60 per window, doing nothing at all**. A facilitator with three tabs open and an active
+ * quick-fire round lands near 300. 600 is double that and still an order of magnitude under
+ * a client stuck in a retry loop, which is the only thing this is here to catch.
+ */
+const engagementLimiter = rateLimit({
+  windowMs: WINDOW_MS,
+  max: 600,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => req.identity!.email,
+  message: { error: "Too many requests, please slow down and try again shortly" },
+});
+
+/**
+ * Synthesis, which is the one route worth counting separately.
+ *
+ * It is by far the most expensive thing the app does — two Gemini calls over the whole pile,
+ * classify then level set — and `synthesizeEngagement` is single-flight *per engagement*, so
+ * the in-process guard does nothing to stop one person starting a run on every engagement on
+ * the shelf in turn.
+ *
+ * Ten per window is generous for the real behaviour, which is a facilitator regenerating a
+ * level set a few times as the pile fills. `skip` narrows this to the POST: the sibling
+ * `/synthesize/status` is a cheap GET that exists to be polled while a run is in flight, and
+ * folding it into this budget would rate-limit the progress indicator for the long
+ * generation it is reporting on.
+ */
+const synthesisLimiter = rateLimit({
+  windowMs: WINDOW_MS,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => req.identity!.email,
+  skip: (req) => req.method !== "POST",
+  message: { error: "Too many synthesis requests. Wait a few minutes before regenerating." },
 });
 
 app.use(express.json());
@@ -404,7 +464,12 @@ app.post("/api/session/synthesize", async (req, res) => {
 
 // Group mode. Everything under here requires an identity; the Gemini routes above do not,
 // because in production IAP has already gated the whole service.
-app.use("/api/engagement", requireIdentity, createEngagementRouter());
+// Three mounts rather than one, so `requireIdentity` runs once and both limiters can key on
+// the identity it establishes. Order is load-bearing: identity, then the general ceiling,
+// then the narrow one on synthesis, then the routes.
+app.use("/api/engagement", requireIdentity, engagementLimiter);
+app.use("/api/engagement/:id/synthesize", synthesisLimiter);
+app.use("/api/engagement", createEngagementRouter());
 
 // Initialize dev server or static server
 async function startServer() {
