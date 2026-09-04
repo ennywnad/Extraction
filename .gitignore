@@ -16,3 +16,10 @@ coverage/
 
 # Archives — the design bundle is committed extracted, under planv1/
 *.zip
+
+# Installed agent skills (google/skills). skills-lock.json is committed and the trees are
+# not, for the same reason package-lock.json is committed and node_modules is not: the lock
+# is the reproducible artifact, and 5.8M of vendored vendor documentation would make every
+# upgrade a several-hundred-file diff. .claude/skills/ is symlinks into .agents/skills/.
+.agents/
+.claude/skills/
