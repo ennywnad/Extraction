@@ -66,6 +66,14 @@ so Cloud Build pushes to the `cloud-run-source-deploy` repository gcloud makes o
 present and falls back to buildpacks when it is not — so deleting or renaming it silently
 changes how the image is produced, rather than failing.
 
+The image itself has been built and run locally, which is the one thing in this document that
+is no longer only a claim. On 2026-09-04 it built clean, booted under `NODE_ENV=production`
+with `AUTH_MODE=iap`, served the client and answered `/healthz`, ran as `uid=1000(node)`
+rather than root, and carried the six production dependencies with every devDependency pruned
+out — 435MB. What that does _not_ cover is Cloud Run itself: ADC, the runtime service
+account's roles, IAP verification against a real assertion. Those still first execute in a
+deployment.
+
 > **The Firestore location is permanent.** It is set to `$REGION` and cannot be changed
 > afterwards without recreating the database. Pick the region you want before running this.
 
