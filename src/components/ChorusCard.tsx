@@ -40,8 +40,8 @@ export default function ChorusCard({ echo, onDismiss }: { echo: Echo; onDismiss:
       // was gone, the one failure a card reporting on the pile must not have.
       initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`w-full mb-4 border-3 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] ${
-        echo.isolated ? "bg-black text-white" : "bg-[#D0EBFF] text-black"
+      className={`w-full mb-4 border-3 border-black shadow-hard-4 ${
+        echo.isolated ? "bg-black text-white" : "bg-sky text-black"
       }`}
       id="chorus-card"
     >
@@ -85,7 +85,7 @@ export default function ChorusCard({ echo, onDismiss }: { echo: Echo; onDismiss:
                   {n.shared.map((term) => (
                     <span
                       key={term}
-                      className="border border-black bg-[#FFF3BF] px-1 py-px text-[8px] font-mono font-bold lowercase"
+                      className="border border-black bg-butter px-1 py-px text-[8px] font-mono font-bold lowercase"
                     >
                       {term}
                     </span>

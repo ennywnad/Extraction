@@ -19,8 +19,8 @@ solo (fragments in `localStorage`) and group (a shared pile on the server, behin
 Healthy `npm run check` ends with:
 
 ```
-# tests 143
-# pass 142
+# tests 154
+# pass 153
 # fail 0
 # skipped 1
 ```
@@ -30,7 +30,7 @@ The skip is `FirestoreEngagementStore` in
 
 ```
 gcloud emulators firestore start --host-port=localhost:8484   # needs a JRE on PATH
-npm run test:firestore                                        # 153 tests, 0 skipped
+npm run test:firestore                                        # 164 tests, 0 skipped
 ```
 
 ## Configuration decides behavior
@@ -108,9 +108,16 @@ Every backend picks itself by **presence of configuration**, not by a flag. Read
 ## Conventions
 
 - TypeScript ESM throughout; server imports carry the `.ts` extension (tsx/esbuild resolve it).
-- UI is Tailwind v4 in a Neo-Brutalist idiom: `border-3 border-black`,
-  `shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]`, pastel fills. Match the neighbouring mode
-  component in [src/components/Modes/](src/components/Modes/) rather than inventing styling.
+- UI is Tailwind v4 in a Neo-Brutalist idiom: `border-3 border-black`, `shadow-hard-4`, pastel
+  fills. Match the neighbouring mode component in [src/components/Modes/](src/components/Modes/)
+  rather than inventing styling.
+- **Every colour a component names must be a token in [src/index.css](src/index.css)** —
+  `bg-paper`, `bg-butter`, `shadow-hard-4` — never `bg-[#F8F7F4]` and never a hex in a JS
+  value. That file remaps the custom properties Tailwind v4 already compiles every utility
+  into, so the dark theme is one block there and **no component contains a `dark:` variant**.
+  An arbitrary value compiles to a literal, cannot be reached by the remapping, and shows up
+  as a patch of daylight in a dark room. [test/theme.test.ts](test/theme.test.ts) fails on
+  one, on a hue with no dark ramp, and on a hard shadow written out longhand.
 - Plans and design records live in [planv1/](planv1/) and are committed with their provenance.
 - Roadmap direction lives in [docs/intents/](docs/intents/): one file per idea, each carrying an
   honest read of how far the current seams already go. Not plans, not scheduled. If work starts

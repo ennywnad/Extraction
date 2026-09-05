@@ -22,8 +22,8 @@ import { AreaCoverage, AreaStatus } from "../types";
  * rather than leaving the reader to assume it balanced.
  */
 const STATUS: Record<AreaStatus, { cell: string; text: string; label: string }> = {
-  defined: { cell: "bg-[#51CF66]", text: "text-black", label: "Defined" },
-  partial: { cell: "bg-[#FFD43B]", text: "text-black", label: "Partial" },
+  defined: { cell: "bg-signal-green", text: "text-black", label: "Defined" },
+  partial: { cell: "bg-signal-amber", text: "text-black", label: "Partial" },
   dark: { cell: "bg-black", text: "text-white", label: "Dark" },
 };
 
@@ -48,10 +48,7 @@ export default function CoverageMap({
   const unplaced = Math.max(0, pileSize - placed);
 
   return (
-    <div
-      className="bg-white border-3 border-black p-6 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] space-y-5"
-      id="coverage-map"
-    >
+    <div className="bg-white border-3 border-black p-6 shadow-hard-6 space-y-5" id="coverage-map">
       <div>
         <span className="text-[9px] uppercase tracking-widest font-mono font-bold text-black flex items-center gap-1.5">
           <EyeOff className="w-3.5 h-3.5" />

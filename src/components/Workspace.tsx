@@ -358,7 +358,7 @@ export default function Workspace({
 
   return (
     <div
-      className="flex flex-col h-[calc(100vh-10px)] max-h-[1400px] overflow-hidden bg-[#F8F7F4] font-sans"
+      className="flex flex-col h-[calc(100vh-10px)] max-h-[1400px] overflow-hidden bg-paper font-sans"
       id="workspace-root"
     >
       {/* Dynamic Session Sticky Header Banner */}
@@ -366,7 +366,7 @@ export default function Workspace({
         <div className="flex items-center gap-4 w-full md:w-auto">
           <button
             onClick={onExit}
-            className="p-2 border-2 border-black bg-white hover:bg-zinc-50 text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition cursor-pointer"
+            className="p-2 border-2 border-black bg-white hover:bg-zinc-50 text-black shadow-hard-2 transition cursor-pointer"
             title="Return to Dashboard"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -394,9 +394,9 @@ export default function Workspace({
                 ? "Chorus is on: after you contribute, the pile shows who else is near you"
                 : "Chorus is off: the pile stays silent when you contribute"
             }
-            className={`px-3.5 py-1.5 border-2 border-black text-xs font-bold font-display uppercase tracking-wider flex items-center gap-1.5 cursor-pointer shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all ${
+            className={`px-3.5 py-1.5 border-2 border-black text-xs font-bold font-display uppercase tracking-wider flex items-center gap-1.5 cursor-pointer shadow-hard-2 transition-all ${
               chorusEnabled
-                ? "bg-[#D0EBFF] text-black hover:bg-[#A5D8FF]"
+                ? "bg-sky text-black hover:bg-azure"
                 : "bg-white text-zinc-400 hover:bg-zinc-50"
             }`}
           >
@@ -406,7 +406,7 @@ export default function Workspace({
 
           <button
             onClick={() => setShowDirectInput((prev) => !prev)}
-            className="px-3.5 py-1.5 border-2 border-black bg-white hover:bg-zinc-50 text-black text-xs font-bold font-display uppercase tracking-wider flex items-center gap-1.5 cursor-pointer shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
+            className="px-3.5 py-1.5 border-2 border-black bg-white hover:bg-zinc-50 text-black text-xs font-bold font-display uppercase tracking-wider flex items-center gap-1.5 cursor-pointer shadow-hard-2 transition-all"
           >
             <Plus className="w-3.5 h-3.5" />
             Scratch Note
@@ -414,7 +414,7 @@ export default function Workspace({
 
           <button
             onClick={onSynthesize}
-            className="px-4 py-2 border-2 border-black bg-black text-white hover:bg-[#F8F7F4] hover:text-black text-xs font-black font-display uppercase tracking-wider flex items-center gap-2 cursor-pointer shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all"
+            className="px-4 py-2 border-2 border-black bg-black text-white hover:bg-paper hover:text-black text-xs font-black font-display uppercase tracking-wider flex items-center gap-2 cursor-pointer shadow-hard-3 transition-all"
           >
             <Sparkles className="w-3.5 h-3.5" />
             Finish & Organize Outline
@@ -446,7 +446,7 @@ export default function Workspace({
               className={`px-3 py-2 border-2 border-black flex items-center justify-center cursor-pointer transition-all ${
                 isRecordingDirect
                   ? "bg-red-500 text-white animate-pulse"
-                  : "bg-white hover:bg-zinc-100 text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                  : "bg-white hover:bg-zinc-100 text-black shadow-hard-2"
               }`}
               title="Record scratch note"
             >
@@ -506,12 +506,12 @@ export default function Workspace({
         {/* Main Mode Interactive Playground area */}
         <main
           ref={modePaneRef}
-          className="flex-1 p-6 overflow-y-auto bg-[#F8F7F4] flex flex-col justify-between"
+          className="flex-1 p-6 overflow-y-auto bg-paper flex flex-col justify-between"
         >
           {/* Degradation has to be visible. Without this the modes quietly serve generic
               canned prompts, which in a paid workshop is worse than an outright error. */}
           {!aiEnabled && (
-            <div className="max-w-3xl mx-auto w-full mb-4 border-3 border-black bg-[#FFD5CC] p-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            <div className="max-w-3xl mx-auto w-full mb-4 border-3 border-black bg-coral p-3 shadow-hard-4">
               <p className="text-[11px] font-mono font-bold uppercase tracking-wider text-black">
                 AI is unavailable
               </p>
@@ -541,7 +541,7 @@ export default function Workspace({
           <div className="p-4 border-b-2 border-black bg-zinc-50 space-y-3 shrink-0">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="px-2.5 py-1 bg-black text-white text-xs font-mono font-black border border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] animate-pulse">
+                <div className="px-2.5 py-1 bg-black text-white text-xs font-mono font-black border border-black shadow-hard-1 animate-pulse">
                   {filteredThoughts.length}
                 </div>
                 <h3 className="text-xs font-black text-black font-display uppercase tracking-wider">
@@ -596,22 +596,22 @@ export default function Workspace({
                 {
                   label: "⚡ Actions",
                   id: "action",
-                  activeStyle: "bg-[#FF6B6B] text-black border-black",
+                  activeStyle: "bg-signal-red text-black border-black",
                 },
                 {
                   label: "💡 Insights",
                   id: "insight",
-                  activeStyle: "bg-[#4DABF7] text-black border-black",
+                  activeStyle: "bg-signal-blue text-black border-black",
                 },
                 {
                   label: "⚠️ Fears",
                   id: "fear",
-                  activeStyle: "bg-[#FFD43B] text-black border-black",
+                  activeStyle: "bg-signal-amber text-black border-black",
                 },
                 {
                   label: "🎯 Goals",
                   id: "goal",
-                  activeStyle: "bg-[#51CF66] text-black border-black",
+                  activeStyle: "bg-signal-green text-black border-black",
                 },
                 // Black rather than a pastel, for the reason a dark coverage cell is black:
                 // a fragment nobody echoed is a finding, not something that went wrong.
@@ -630,9 +630,9 @@ export default function Workspace({
                   <button
                     key={cat.id}
                     onClick={() => setSelectedCategory(cat.id as any)}
-                    className={`text-[9px] font-mono uppercase tracking-tight font-extrabold px-1.5 py-0.5 border-2 border-black transition cursor-pointer shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] ${
+                    className={`text-[9px] font-mono uppercase tracking-tight font-extrabold px-1.5 py-0.5 border-2 border-black transition cursor-pointer shadow-hard-1 ${
                       isSelected
-                        ? `${cat.activeStyle} shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] font-black`
+                        ? `${cat.activeStyle} shadow-hard-2 font-black`
                         : "bg-white hover:bg-zinc-50 text-black"
                     }`}
                   >
@@ -644,7 +644,7 @@ export default function Workspace({
           </div>
 
           {/* Core Pile scroll content */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-[#F8F7F4] custom-scrollbar">
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-paper custom-scrollbar">
             {filteredThoughts.length === 0 ? (
               <div className="text-center py-24 text-zinc-400 border-2 border-dashed border-zinc-300 p-4">
                 <Brain className="w-10 h-10 mx-auto opacity-50 stroke-1 mb-2 text-black" />
@@ -668,7 +668,7 @@ export default function Workspace({
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
-                    className="p-3.5 bg-white border-2 border-black hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:translate-x-0.5 hover:translate-y-0.5 transition-all relative group"
+                    className="p-3.5 bg-white border-2 border-black hover:shadow-hard-3 hover:translate-x-0.5 hover:translate-y-0.5 transition-all relative group"
                   >
                     {/* Header bar metadata. Attributed fragments lead with the contributor;
                         solo fragments render exactly as they always have. */}
@@ -676,7 +676,7 @@ export default function Workspace({
                       <div className="flex justify-between items-start shrink-0 mb-2 gap-2">
                         <span className="flex items-center gap-2 min-w-0">
                           <span
-                            className="w-[22px] h-[22px] shrink-0 border-2 border-black bg-[#FFF3BF] flex items-center justify-center text-[9px] font-extrabold font-mono text-black"
+                            className="w-[22px] h-[22px] shrink-0 border-2 border-black bg-butter flex items-center justify-center text-[9px] font-extrabold font-mono text-black"
                             title={thought.author.email}
                           >
                             {initialsOf(thought.author.name)}
@@ -772,7 +772,7 @@ export default function Workspace({
                         )}
 
                         {thought.clusterCategory && (
-                          <div className="mt-2 inline-flex items-center gap-1 border border-black bg-[#EFEFEF] px-1.5 py-0.5 text-[8px] font-mono uppercase font-bold">
+                          <div className="mt-2 inline-flex items-center gap-1 border border-black bg-smoke px-1.5 py-0.5 text-[8px] font-mono uppercase font-bold">
                             CLUSTER: {thought.clusterCategory}
                           </div>
                         )}

@@ -33,6 +33,76 @@ this file only records which pieces of one have become code.
 
 ---
 
+## 2026-09-05 — Dark mode, as one file rather than thirteen hundred variants
+
+**Against no intent, and asked for directly.** The app had no dark mode of any kind: no
+`prefers-color-scheme`, no `color-scheme`, nothing. It answered a system set to dark with a
+full-brightness white page.
+
+**The shape of the problem, before the shape of the fix.** There are roughly thirteen hundred
+colour utilities across twenty components, so the obvious approach — a `dark:` variant beside
+each — means editing all of them, and editing all of them again for every colour anyone adds
+after. It also puts the theme in twenty files, where half of it will be forgotten.
+
+**What made a better one available.** Tailwind v4 compiles every palette utility to a custom
+property: `bg-white` emits `background-color: var(--color-white)`. Redefining those properties
+under one selector re-themes everything that uses them. So the entire theme is a block in
+[src/index.css](../../src/index.css) and **no component contains a `dark:` variant** — or knows
+a theme exists at all.
+
+**The inversion is a decision, not an algorithm.** Neo-Brutalism is ink on paper: flat fill,
+heavy border, hard shadow. Dark mode does not soften any of that — it swaps which one is ink.
+`--color-black` becomes a warm off-white and `--color-white` becomes a raised surface, so every
+`border-black`, `text-black`, `bg-white` and `shadow-hard-*` follows, and `bg-black text-white`
+inverts with them and stays the loudest thing on screen — which CoverageMap's dark cell and the
+Chorus isolation card both depend on.
+
+**What landed.**
+
+- [src/index.css](../../src/index.css) — the palette named (`paper`, `butter`, `peach`,
+  `signal-green`…), the hard shadow as `--shadow-hard-*` resolving `--color-black`, and the dark
+  block: ink and paper, the pastels as tinted darks, the signals deep enough to take light ink,
+  and the neutral and hue ramps mirrored around step 500.
+- [src/utils/themePrefs.ts](../../src/utils/themePrefs.ts) — `system | light | dark`, per viewer
+  in `localStorage`, alongside boardPrefs and chorusPrefs and for the same reason. The stored
+  value is the _choice_: storing the resolved colour is how an app stops following the setting
+  it was asked to follow.
+- The control beside the instance-status button in [App.tsx](../../src/App.tsx), so it is
+  reachable from the dashboard, the workspace and the export panel without being added to three
+  headers.
+- A pre-paint script in [index.html](../../index.html), so a viewer on dark mode never gets a
+  white frame while the bundle loads.
+- ~100 arbitrary values and 87 longhand hard shadows converted to tokens; StatusBoard's swatch
+  colours moved from JS hex constants to `var(--color-*)`, since no stylesheet can reach those
+  either.
+- 11 tests.
+
+**Only `[data-theme]`, never `prefers-color-scheme`, in the CSS.** The app resolves "system"
+itself and always writes a concrete value to the attribute. That keeps the dark block from
+having to exist twice — once for the attribute and once inside a media query — which is the
+usual way a theme drifts out of step with itself. The cost is that the resolution exists twice
+in _code_ instead, once in `themePrefs.ts` and once inline in `index.html`; the test holds the
+two together on the storage key.
+
+**The hue ramps are generated, not chosen.** Mirroring step 50 onto 950 and so on, from
+Tailwind's own `theme.css`, keeps every pairing the app already relies on: a tint used as a
+soft card becomes a deep one, accent text moves up the ramp and stays legible, and a filled
+button (`bg-indigo-600 text-white`) becomes a light fill with dark type rather than white type
+on a mid tone. That last case is where picking dark values by eye goes wrong, and it did — the
+first pass remapped only the app's own tokens, and the mode-count badges came out as light ink
+on bright yellow.
+
+**A finding, recorded rather than fixed.** Twenty-one classes in the app name Tailwind steps
+that have never existed — `zinc-650`, `slate-205`, `red-650`, `indigo-505` and others — so they
+emit no CSS and the element falls through to whatever is behind it. Pre-existing, unrelated to
+the theme, and not fixed here because fixing one means guessing which step was meant.
+[test/theme.test.ts](../../test/theme.test.ts) pins the list so it cannot grow.
+
+**One deliberate pixel change.** `#FFFDE0` and `#FFFEE0` were both in the tree, one green value
+apart, and are now the single `cream` token.
+
+---
+
 ## 2026-09-05 — Chorus: the second silence
 
 **Against no intent, which is why it is written down here at all.** Nothing in the table above

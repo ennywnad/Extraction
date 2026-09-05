@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
-import { Cpu } from "lucide-react";
+import { Cpu, Monitor, Moon, Sun } from "lucide-react";
 import { loadSessions, persistSession, deleteSession } from "./utils/localDB";
 import * as engagementAPI from "./utils/engagementAPI";
 import type { EngagementSummary, ViewerIdentity } from "./utils/engagementAPI";
@@ -15,6 +15,18 @@ import {
   saveChorusPrefs,
   type ChorusPrefs,
 } from "./utils/chorusPrefs";
+import {
+  DEFAULT_THEME,
+  THEME_LABEL,
+  THEME_ORDER,
+  applyTheme,
+  loadThemeChoice,
+  resolveTheme,
+  saveThemeChoice,
+  systemPrefersDark,
+  watchSystemTheme,
+  type ThemeChoice,
+} from "./utils/themePrefs";
 
 // Intake/Shell layouts
 import IntakeForm from "./components/IntakeForm";
@@ -249,6 +261,7 @@ export default function App() {
   const [boardSettingsOpen, setBoardSettingsOpen] = useState(false);
   const [boardPrefs, setBoardPrefs] = useState<BoardPrefs>(DEFAULT_PREFS);
   const [chorusPrefs, setChorusPrefs] = useState<ChorusPrefs>(DEFAULT_CHORUS);
+  const [themeChoice, setThemeChoice] = useState<ThemeChoice>(DEFAULT_THEME);
   /**
    * The fragment this viewer contributed last, and the only one the pile answers about.
    *
@@ -290,6 +303,7 @@ export default function App() {
 
     setBoardPrefs(loadPrefs());
     setChorusPrefs(loadChorusPrefs());
+    setThemeChoice(loadThemeChoice());
 
     // Group mode is available only when the server says who we are.
     engagementAPI
@@ -600,6 +614,25 @@ export default function App() {
     [chorusIndex],
   );
 
+  /**
+   * Keeps the root attribute in step with the choice, and with the system while the choice is
+   * to follow it. The subscription is unconditional rather than only while on "system":
+   * switching back to it has to land on what the OS says now, not on what it said at boot.
+   */
+  useEffect(() => {
+    const paint = () => applyTheme(resolveTheme(themeChoice, systemPrefersDark()));
+    paint();
+    return watchSystemTheme(paint);
+  }, [themeChoice]);
+
+  const handleThemeCycle = useCallback(() => {
+    setThemeChoice((prev) => {
+      const next = THEME_ORDER[(THEME_ORDER.indexOf(prev) + 1) % THEME_ORDER.length];
+      saveThemeChoice(next);
+      return next;
+    });
+  }, []);
+
   const handleChorusToggle = useCallback(() => {
     setChorusPrefs((prev) => {
       const next = { enabled: !prev.enabled };
@@ -774,15 +807,30 @@ export default function App() {
         onClick={() => setBoardOpen((open) => !open)}
         aria-label="Instance status"
         title="What this instance is wired to"
-        className="fixed bottom-4 left-4 z-40 w-11 h-11 bg-white border-3 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center cursor-pointer hover:-translate-y-0.5 transition-transform"
+        className="fixed bottom-4 left-4 z-40 w-11 h-11 bg-white border-3 border-black shadow-hard-4 flex items-center justify-center cursor-pointer hover:-translate-y-0.5 transition-transform"
       >
         <Cpu className="w-5 h-5" />
+      </button>
+
+      <button
+        onClick={handleThemeCycle}
+        aria-label={THEME_LABEL[themeChoice]}
+        title={`${THEME_LABEL[themeChoice]} — click to change`}
+        className="fixed bottom-4 left-[68px] z-40 w-11 h-11 bg-white border-3 border-black shadow-hard-4 flex items-center justify-center cursor-pointer hover:-translate-y-0.5 transition-transform"
+      >
+        {themeChoice === "system" ? (
+          <Monitor className="w-5 h-5" />
+        ) : themeChoice === "light" ? (
+          <Sun className="w-5 h-5" />
+        ) : (
+          <Moon className="w-5 h-5" />
+        )}
       </button>
 
       {boardOpen &&
         (boardExpanded ? (
           <div className="fixed inset-0 z-50 bg-black/40 flex items-start justify-center p-4 overflow-y-auto">
-            <div className="w-full max-w-5xl border-3 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] my-6">
+            <div className="w-full max-w-5xl border-3 border-black shadow-hard-8 my-6">
               <StatusBoard
                 status={instanceStatus}
                 stats={boardStats}
@@ -811,7 +859,7 @@ export default function App() {
         ))}
 
       {toastMessage && (
-        <div className="fixed bottom-4 right-4 z-50 bg-[#FFF3BF] border-3 border-black p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center justify-between gap-4 max-w-sm">
+        <div className="fixed bottom-4 right-4 z-50 bg-butter border-3 border-black p-4 shadow-hard-4 flex items-center justify-between gap-4 max-w-sm">
           <p className="text-xs font-mono font-bold text-black">{toastMessage}</p>
           <button
             onClick={() => setToastMessage(null)}

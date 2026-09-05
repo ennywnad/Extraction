@@ -127,7 +127,7 @@ export default function SwipeReact({ topic, onAddThought, thoughts }: SwipeReact
 
   return (
     <div className="space-y-6 flex flex-col h-[520px]" id="swipe-mode">
-      <div className="bg-[#FFFDF0] border-2 border-black p-4.5 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-start gap-4 shrink-0">
+      <div className="bg-ivory border-2 border-black p-4.5 shadow-hard-4 flex items-start gap-4 shrink-0">
         <Layers className="w-5 h-5 text-black shrink-0 mt-0.5" />
         <div className="flex-1">
           <h3 className="font-bold text-xs uppercase text-black font-display tracking-tight">
@@ -140,7 +140,7 @@ export default function SwipeReact({ topic, onAddThought, thoughts }: SwipeReact
         </div>
         <button
           onClick={generateCandidates}
-          className="p-1.5 px-3 bg-[#FFE8CC] hover:bg-[#FFE0B2] border-2 border-black text-black text-[10px] font-black uppercase tracking-wider shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] cursor-pointer transition-all active:translate-x-0.5 active:translate-y-0.5 font-mono"
+          className="p-1.5 px-3 bg-peach hover:bg-apricot border-2 border-black text-black text-[10px] font-black uppercase tracking-wider shadow-hard-2 cursor-pointer transition-all active:translate-x-0.5 active:translate-y-0.5 font-mono"
           disabled={loading}
         >
           Re-Synthesize Deck
@@ -173,9 +173,9 @@ export default function SwipeReact({ topic, onAddThought, thoughts }: SwipeReact
                 initial={{ opacity: 0, scale: 0.95, y: 15 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: -15 }}
-                className="w-full max-w-md p-8 md:p-10 bg-[#FFFEE0] border-3 border-black text-center shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] transition-all duration-350 flex flex-col justify-between items-center min-h-[220px]"
+                className="w-full max-w-md p-8 md:p-10 bg-cream border-3 border-black text-center shadow-hard-6 hover:shadow-hard-10 transition-all duration-350 flex flex-col justify-between items-center min-h-[220px]"
               >
-                <div className="inline-flex p-2 bg-white border border-black rounded-none text-black mb-4 shrink-0 shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]">
+                <div className="inline-flex p-2 bg-white border border-black rounded-none text-black mb-4 shrink-0 shadow-hard-1">
                   <Sparkles className="w-4 h-4 text-amber-500" />
                 </div>
                 <p className="text-sm md:text-base text-black font-extrabold leading-relaxed font-sans flex-1 flex items-center justify-center">
@@ -190,7 +190,7 @@ export default function SwipeReact({ topic, onAddThought, thoughts }: SwipeReact
             {/* Left Button - Reject */}
             <button
               onClick={() => handleSwipe("dislike")}
-              className="w-14 h-14 bg-[#FF6B6B] border-2 border-black text-black rounded-none hover:bg-red-400 active:translate-x-0.5 active:translate-y-0.5 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] cursor-pointer flex items-center justify-center transition-all"
+              className="w-14 h-14 bg-signal-red border-2 border-black text-black rounded-none hover:bg-red-400 active:translate-x-0.5 active:translate-y-0.5 shadow-hard-3 hover:shadow-hard-5 cursor-pointer flex items-center justify-center transition-all"
               title="Doesn't Resonate (or Press Left Arrow)"
             >
               <ThumbsDown className="w-5 h-5 font-bold" />
@@ -199,7 +199,7 @@ export default function SwipeReact({ topic, onAddThought, thoughts }: SwipeReact
             {/* Down Button - Maybe */}
             <button
               onClick={() => handleSwipe("maybe")}
-              className="px-6 h-14 bg-[#D2E3FC] hover:bg-blue-300 border-2 border-black text-black rounded-none text-xs font-black uppercase tracking-wider hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] active:translate-x-0.5 active:translate-y-0.5 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] cursor-pointer flex items-center gap-1.5 transition-all font-display"
+              className="px-6 h-14 bg-powder hover:bg-blue-300 border-2 border-black text-black rounded-none text-xs font-black uppercase tracking-wider hover:shadow-hard-5 active:translate-x-0.5 active:translate-y-0.5 shadow-hard-3 cursor-pointer flex items-center gap-1.5 transition-all font-display"
               title="Maybe / Undecided (or Press Down Arrow)"
             >
               <HelpCircle className="w-4 h-4 text-black" />
@@ -209,7 +209,7 @@ export default function SwipeReact({ topic, onAddThought, thoughts }: SwipeReact
             {/* Right Button - Like */}
             <button
               onClick={() => handleSwipe("like")}
-              className="w-14 h-14 bg-[#51CF66] border-2 border-black text-black rounded-none hover:bg-[#40C057] active:translate-x-0.5 active:translate-y-0.5 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] cursor-pointer flex items-center justify-center transition-all"
+              className="w-14 h-14 bg-signal-green border-2 border-black text-black rounded-none hover:bg-signal-green-deep active:translate-x-0.5 active:translate-y-0.5 shadow-hard-3 hover:shadow-hard-5 cursor-pointer flex items-center justify-center transition-all"
               title="Resonates Deeply (or Press Right Arrow)"
             >
               <ThumbsUp className="w-5 h-5 font-bold" />
@@ -218,7 +218,7 @@ export default function SwipeReact({ topic, onAddThought, thoughts }: SwipeReact
         </div>
       ) : (
         <div className="flex-1 flex flex-col items-center justify-center text-center p-8 space-y-4">
-          <div className="p-3.5 bg-[#E6F4EA] rounded-none text-black border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+          <div className="p-3.5 bg-mint rounded-none text-black border-2 border-black shadow-hard-3">
             <Check className="w-8 h-8 font-black" />
           </div>
           <h2 className="text-sm font-black text-black uppercase font-display tracking-tight">
@@ -230,7 +230,7 @@ export default function SwipeReact({ topic, onAddThought, thoughts }: SwipeReact
           </p>
           <button
             onClick={generateCandidates}
-            className="px-5 py-2.5 bg-black text-white hover:bg-[#F8F7F4] hover:text-black border-2 border-black rounded-none text-xs font-display font-bold uppercase tracking-wider shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] cursor-pointer transition-all active:translate-x-0.5 active:translate-y-0.5"
+            className="px-5 py-2.5 bg-black text-white hover:bg-paper hover:text-black border-2 border-black rounded-none text-xs font-display font-bold uppercase tracking-wider shadow-hard-3 cursor-pointer transition-all active:translate-x-0.5 active:translate-y-0.5"
           >
             <RotateCcw className="w-4 h-4" />
             Restart Swiping Deck
