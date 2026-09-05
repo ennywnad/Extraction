@@ -51,6 +51,16 @@ what a group has not discussed is a genuinely different thing from asking it to 
 decoding well and has no agentic surface at all. An MCP server over a real domain model with a
 real authorization story demonstrates the thing; reshuffling the existing JSON calls would not.
 
+**Two of those four do not survive the obvious test, which is whether the Copy button already
+gets you there.** [ExportPanel.tsx](../../src/components/ExportPanel.tsx) renders the level set
+and the coverage map as markdown, and an engagement is a few KB, so "let an assistant read one
+pile" is a convenience over Cmd-C. The provenance argument survives only for questions spanning
+_several_ engagements — and that is a gap in the product rather than a protocol problem: the
+store holds every pile, `listEngagements()` already returns them, and the app has no
+cross-engagement surface of any kind. The coverage argument does not survive at all, because
+the map is built and drawn. What is left after removing them is `contribute_fragment`. See the
+first resolved question below.
+
 ## How
 
 ### Where it sits
@@ -89,6 +99,16 @@ is this, and by what evidence? Three shapes, in increasing order of both usefuln
 Starting at 1 and leaving 3 as the open door seems right. Going straight to 3 means designing
 a token lifecycle before knowing whether anyone wants to write to a pile from an agent.
 
+**Check IAP's own programmatic path before designing option 3.** IAP documents a non-browser
+flow in which a client presents an OIDC ID token as `Authorization: Bearer`, audienced to the
+OAuth client id, and IAP converts it into the same signed assertion header
+[iapAuth.ts](../../server/iapAuth.ts) already verifies. If that holds for this deployment,
+option 3 is not a token lifecycle this repo owns — it is `gcloud auth print-identity-token` for
+a person and a service account for an agent, and `createRequireIdentity` needs no parallel path
+at all. Unverified, and two things decide it: whether it composes with the **direct `--iap`
+Cloud Run integration** this deployment uses rather than load-balancer IAP, and what the
+one-hour token lifetime does to a client config meant to be set once.
+
 **A lead worth checking before designing option 3 by hand.**
 [GCP Agent Gateway](https://docs.cloud.google.com/gemini-enterprise-agent-platform/govern/gateways/agent-gateway-overview)
 governs agent-to-agent and agent-to-tool traffic, explicitly including MCP, over mTLS with Agent
@@ -121,7 +141,10 @@ Better than expected on the data side:
   over that store, so the MCP adapter inherits the model rather than reinventing it.
 - **Coverage and synthesis are already functions, not handlers** —
   [coverage.ts](../../server/ai/coverage.ts) and [synthesis.ts](../../server/ai/synthesis.ts)
-  are callable directly, including the single-flight map.
+  are callable directly, including the single-flight map. One caveat that matters for a
+  resource: `computeCoverage` is arithmetic, but its input is `classify()`, a model call, and
+  the result is mirrored onto the session at synthesis time. So a coverage resource serves the
+  last synthesize rather than the current pile, and would have to say so.
 - **`renderCorpus`** in [corpus.ts](../../server/ai/corpus.ts) already renders a pile
   role-labelled and name-free for a model to read. That is close to the resource format.
 
@@ -139,13 +162,31 @@ Better than expected on the data side:
 ## Open questions
 
 - Transport: stdio for local use, streamable HTTP for the hosted instance, or both?
-- Read-only v1, or is a write tool the whole point?
-- Does `synthesize` belong as a tool at all?
+- ~~Read-only v1, or is a write tool the whole point?~~ **Resolved: neither, which is also the
+  answer to whether to build this now.** The two surfaces worth reading are better served off
+  this protocol — cross-engagement questions want a surface in the app, and computed absence is
+  already drawn — so a read-only v1 is a second door onto the Copy button. That leaves the write
+  tool carrying the whole of the remaining value, and it serves a facilitator who has the
+  browser open, against a group mode [008](008-deploying-group-mode.md) says has never run
+  outside a laptop. **Not now.** Two things reopen it: a deployed group mode with piles worth
+  querying from outside, or a client that is genuinely not a browser — an agent doing prep
+  between sessions rather than a person mid-call.
+- ~~Does `synthesize` belong as a tool at all?~~ **Resolved: not in a v1.** It spends money, it
+  is single-flight per engagement, and an MCP transport has no limiter in front of it.
+  `get_level_set` is cheaper and more useful anyway: it returns the stored deliverable and
+  whether `pileVersion` has moved since, so a caller learns the level set is stale instead of
+  silently paying to rebuild it.
 - Resources or tools for the pile? Resources are the better semantic fit; tools get used more
   reliably by more clients today.
-- If an agent contributes a fragment, what role does it get stamped with? "Agent" as a
-  first-class role is a product question, not a plumbing one — the level set reasons about
-  roles, so a new one changes the deliverable.
+- ~~If an agent contributes a fragment, what role does it get stamped with?~~ **Resolved: the
+  operator's own role, with the provenance carried in `mode` instead.** The instinct to add an
+  "agent" role is the expensive one: [corpus.ts](../../server/ai/corpus.ts) labels every
+  fragment by role and the level set reasons about which roles have spoken, so a new role
+  changes the deliverable. `Thought.mode` is already `ExtractionMode | "system"`, and `"system"`
+  is already handled as a non-mode — accepted on import in [App.tsx](../../src/App.tsx),
+  excluded from `modesUsed` in
+  [engagementStats.ts](../../src/utils/engagementStats.ts) — so it needs no card in `MODE_CARDS`
+  and no case in the render switch.
 
 ## Non-goals
 

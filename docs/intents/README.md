@@ -13,7 +13,7 @@ built, and the log says which slice and what it deliberately left alone.
 
 | #                                              | Intent                                             | Depends on | Cost if attempted today                                                      |
 | :--------------------------------------------- | :------------------------------------------------- | :--------- | :--------------------------------------------------------------------------- |
-| [001](001-mcp-server-over-the-pile.md)         | An MCP server over the pile                        | —          | Medium. The store seam fits; identity is the real work.                      |
+| [001](001-mcp-server-over-the-pile.md)         | An MCP server over the pile                        | —          | Assessed and parked. Not cost — the value went elsewhere. See its file.      |
 | [002](002-model-provider-seam.md)              | A provider-neutral model seam                      | —          | Medium, and the prerequisite for 003 and 004. Shape settled: in-process.     |
 | [003](003-local-models-in-solo-mode.md)        | Local models in solo mode                          | 002        | Small once 002 exists.                                                       |
 | [004](004-claude-and-the-gcp-model-gateway.md) | Claude, and the model as a deployment choice       | 002        | Small once 002 exists. The gateway question is resolved: Vertex is it.       |
@@ -116,9 +116,13 @@ argues for 006's in-page WebGPU fork over the localhost one: localhost works onl
 participant who set `OLLAMA_ORIGINS`, which is no use for a coverage wall the whole room is
 meant to watch.
 
-**001 is orthogonal.** It adapts the store seam, not the model seam, and its identity problem
-shares nothing with the cluster. Judge it on its own merits and build it whenever — the read-only
-v1 is genuinely additive. Its only tie to the rest is a panel in 007.
+**001 is orthogonal, and on its own merits it is parked.** It adapts the store seam, not the
+model seam, so nothing in the cluster waits on it — but the question its file now answers is not
+a sequencing one. Two of its four reasons turn out not to need the protocol: cross-engagement
+queries are a missing surface in the app rather than a missing door onto it, and the coverage
+map is already drawn. What is left is a write tool for a facilitator who has the browser open,
+against a group mode that has never been deployed. Its only tie to the rest is a panel in 007,
+which is drawn grey and says so.
 
 **008 comes before all of it, and is not really in this ordering.** Every intent above assumes a
 deployment that has never been exercised: group mode is built and has only ever run on a laptop,
