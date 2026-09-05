@@ -29,6 +29,71 @@ this file only records which pieces of one have become code.
 | [008](008-deploying-group-mode.md)             | Deploying group mode          | **in part** — two preparatory items; still never deployed |
 | [009](009-the-deferred-group-surface.md)       | The deferred group surface    | **in part** — the coverage map is built                   |
 | [010](010-model-armor.md)                      | Model Armor at the prompt     | unchanged                                                 |
+| [011](011-the-role-brief.md)                   | The role brief                | unchanged                                                 |
+
+---
+
+## 2026-09-05 — Chorus: the second silence
+
+**Against no intent, which is why it is written down here at all.** Nothing in the table above
+proposed this, and a reader of these files a year from now would otherwise find a feature in
+`main` with no record of what it was for. The nearest neighbours are all near misses:
+[006](006-local-assists-before-submit.md) works on a draft _before_ it is submitted and this
+deliberately waits until after; [005](005-listening-mode.md) wants a model-free classifier over
+the ten coverage areas and this classifies nothing; [009](009-the-deferred-group-surface.md)
+catalogued comments and +1s, which change what the pile _is_, and this changes nothing about
+the pile at all.
+
+**The finding it exists for.** `server/ai/coverage.ts` answers _which areas has nobody spoken
+into_, and it is the best idea in the app. It cannot answer _which things did only one person
+say_ — and those are different silences. An area can hold twelve fragments from three roles and
+have every one of them be a lone voice nobody else ever touched, and that engagement reads green
+on the coverage map. Nothing in the codebase computed the second number.
+
+**What landed.**
+
+- [src/utils/chorus.ts](../../src/utils/chorus.ts) — the arithmetic. An index over the pile
+  (stems, adjacent pairs, posting lists, the topic's own words excluded because everyone is
+  using them), `echoFor` for one fragment's neighbours, `tally` for the whole pile's lone
+  voices. Deterministic end to end, every tie broken on the text.
+- [src/components/ChorusCard.tsx](../../src/components/ChorusCard.tsx) — what the pile answers,
+  in two states, the second of which is the reason for the feature.
+- [src/utils/chorusPrefs.ts](../../src/utils/chorusPrefs.ts) — one boolean, per viewer, in
+  `localStorage`, for the reason `sanitizeMetaPatch` already strips `promptingStyle` out of
+  shared settings: what one person is shown while they think is theirs.
+- The lone-voice filter in [Workspace.tsx](../../src/components/Workspace.tsx), so the finding
+  is available to a facilitator and not only to whoever happened to be typing.
+- 30 tests across three files.
+
+**No model, and that is the decision rather than a fallback.** It fires on every fragment from
+every participant, so a route here would be the highest-volume AI call in the app by a wide
+margin — past synthesis, which is single-flight per engagement and rate-limited to ten per
+window because it is expensive. And the only thing a model would contribute is the phrasing,
+which is the one part that must not editorialise. So there is no route, no prompt module and no
+`sendFallback`, because there is nothing to fall back from: the feature is identical on a
+deployment with Gemini unconfigured. `docs/half-life-test.md` is the relevant instinct — this is
+the coverage discipline applied to a second axis.
+
+**After the fragment, never during it.** The card appears only once a contribution is committed.
+Shown while somebody is typing it would be an anchoring machine, and the independence of what
+each person writes is the entire reason a shared pile is worth having. That ordering is a
+property of the design, not a mitigation, and it is what makes on-by-default defensible against
+the interference objection [005](005-listening-mode.md) would fairly raise.
+
+**Two defects it shipped with, both found by driving the real app rather than the tests.** The
+card rendered correctly into a scrollable pane and landed above its top, so the person it was
+computed for never saw it. And turning the feature off while the lone filter was active emptied
+the sidebar, because the chips and the filter resolved the vanished category in two different
+places. Both are covered now by
+[test/workspaceChorus.test.ts](../../test/workspaceChorus.test.ts), which exists because the two
+suites either side of it — the arithmetic and the wording — were both green throughout.
+
+**What it deliberately is not.** It matches words, not meaning, so two people saying the same
+thing differently are two lone voices; the card prints that limit in both states rather than
+implying a comprehension it does not have. It makes no claim that anybody agrees or disagrees —
+that is the contradiction detection that was considered and rejected, because a false positive
+manufactures a conflict between two named roles in front of a client, and unlike a count of
+zero there is no arithmetic underneath it to keep it honest.
 
 ---
 

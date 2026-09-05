@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   ArrowLeft,
@@ -16,14 +16,25 @@ import {
   BookOpen,
   Mic,
   MicOff,
+  Waves,
 } from "lucide-react";
 import { Session, Thought, ExtractionMode } from "../types";
+import ChorusCard from "./ChorusCard";
+import type { Echo } from "../utils/chorus";
 
 interface WorkspaceProps {
   session: Session;
   onUpdateSession: (updates: Partial<Session>) => void;
   /** Explicit, so a deletion is never inferred from a shrinking thoughts array. */
   onDeleteThought: (id: string) => void;
+  /**
+   * The one funnel every new fragment goes through, including the scratch note below.
+   *
+   * The scratch note used to compose its own `Thought` and hand it back inside a whole-session
+   * update, which was a second copy of the parent's construction — and a second place a
+   * fragment could enter the pile without the parent knowing one had.
+   */
+  onAddThought: (text: string) => void;
   onExit: () => void;
   onSynthesize: () => void;
   /** Lets the parent pause polling while a fragment is being edited. */
@@ -32,6 +43,19 @@ interface WorkspaceProps {
   viewerEmail?: string;
   /** False when the AI proxy is unreachable and every mode is serving canned prompts. */
   aiEnabled?: boolean;
+  /** Per viewer; see src/utils/chorusPrefs.ts for why it is not a fact about the room. */
+  chorusEnabled?: boolean;
+  onChorusToggle?: () => void;
+  /**
+   * What the pile answered to the fragment this viewer just contributed, and which fragment
+   * it answered about. The key is carried because the echo is recomputed on every poll —
+   * without it there is no way to tell "the room moved" from "this person just contributed",
+   * and the pane would jump under a reader every fifteen seconds.
+   */
+  chorus?: { key: string; echo: Echo } | null;
+  onChorusDismiss?: () => void;
+  /** Fragments nothing else in the pile echoes. Drives the pile filter, not a claim on a card. */
+  loneIds?: string[];
   children: React.ReactNode;
 }
 
@@ -115,11 +139,17 @@ export default function Workspace({
   session,
   onUpdateSession,
   onDeleteThought,
+  onAddThought,
   onExit,
   onSynthesize,
   onEditingChange,
   viewerEmail,
   aiEnabled = true,
+  chorusEnabled = false,
+  onChorusToggle,
+  chorus,
+  onChorusDismiss,
+  loneIds,
   children,
 }: WorkspaceProps) {
   const [editingThoughtId, setEditingThoughtId] = useState<string | null>(null);
@@ -129,11 +159,21 @@ export default function Workspace({
   const [showDirectInput, setShowDirectInput] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<
-    "all" | "action" | "insight" | "fear" | "goal"
+    "all" | "action" | "insight" | "fear" | "goal" | "lone"
   >("all");
 
   const [isRecordingDirect, setIsRecordingDirect] = useState(false);
   const recognitionDirectRef = React.useRef<any>(null);
+  const modePaneRef = React.useRef<HTMLElement>(null);
+
+  // The echo is inserted above the mode, so with the pane scrolled at all it lands off the top
+  // of it — which is the one way this feature can fail completely: computed, rendered, correct,
+  // and never seen by the person it was computed for. Instant rather than smooth, because the
+  // card animates in at the same moment and a smooth scroll loses the race against it.
+  const chorusKey = chorus?.key;
+  React.useEffect(() => {
+    if (chorusKey) modePaneRef.current?.scrollTo({ top: 0 });
+  }, [chorusKey]);
 
   // Initialize Speech Recognition for Scratch note
   React.useEffect(() => {
@@ -226,15 +266,7 @@ export default function Workspace({
 
   const handleAddDirectThought = () => {
     if (!newThoughtText.trim()) return;
-    const newThought: Thought = {
-      id: crypto.randomUUID(),
-      text: newThoughtText.trim(),
-      timestamp: new Date().toISOString(),
-      mode: session.activeMode,
-    };
-    onUpdateSession({
-      thoughts: [newThought, ...session.thoughts],
-    });
+    onAddThought(newThoughtText.trim());
     setNewThoughtText("");
     setShowDirectInput(false);
   };
@@ -300,12 +332,27 @@ export default function Workspace({
     return true;
   };
 
+  // Ids rather than a predicate over the text: whether a fragment stands alone is a fact
+  // about the whole pile, not about the fragment, so it cannot be decided one card at a time
+  // the way the keyword categories above are.
+  const loneSet = useMemo(() => new Set(loneIds ?? []), [loneIds]);
+  const loneCount = loneIds?.length ?? 0;
+  const showLoneFilter = chorusEnabled && loneCount > 0;
+
+  // A filter pinned to a category that has stopped existing hides the whole pile with no
+  // explanation, and "lone" is the one that can vanish under a viewer: somebody echoing the
+  // last isolated fragment is precisely the event this is watching for, and turning Chorus off
+  // removes the category outright. Resolved once, above the filter and the chips both, because
+  // resolving it for the chips alone is what emptied the pile the first time.
+  const activeCategory = selectedCategory === "lone" && !showLoneFilter ? "all" : selectedCategory;
+
   const filteredThoughts = session.thoughts.filter((t) => {
     const matchesTag = filterTags === "all" || t.mode === filterTags;
     const matchesSearch =
       t.text.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (t.mode && t.mode.toLowerCase().includes(searchQuery.toLowerCase()));
-    const matchesCat = matchesCategory(t.text, selectedCategory);
+    const matchesCat =
+      activeCategory === "lone" ? loneSet.has(t.id) : matchesCategory(t.text, activeCategory);
     return matchesTag && matchesSearch && matchesCat;
   });
 
@@ -339,6 +386,24 @@ export default function Workspace({
 
         {/* Action button header */}
         <div className="flex items-center gap-2.5 w-full md:w-auto justify-end">
+          <button
+            onClick={onChorusToggle}
+            aria-pressed={chorusEnabled}
+            title={
+              chorusEnabled
+                ? "Chorus is on: after you contribute, the pile shows who else is near you"
+                : "Chorus is off: the pile stays silent when you contribute"
+            }
+            className={`px-3.5 py-1.5 border-2 border-black text-xs font-bold font-display uppercase tracking-wider flex items-center gap-1.5 cursor-pointer shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all ${
+              chorusEnabled
+                ? "bg-[#D0EBFF] text-black hover:bg-[#A5D8FF]"
+                : "bg-white text-zinc-400 hover:bg-zinc-50"
+            }`}
+          >
+            <Waves className="w-3.5 h-3.5" />
+            Chorus
+          </button>
+
           <button
             onClick={() => setShowDirectInput((prev) => !prev)}
             className="px-3.5 py-1.5 border-2 border-black bg-white hover:bg-zinc-50 text-black text-xs font-bold font-display uppercase tracking-wider flex items-center gap-1.5 cursor-pointer shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
@@ -439,7 +504,10 @@ export default function Workspace({
       {/* Split Workspace Layout */}
       <div className="flex-1 flex overflow-hidden">
         {/* Main Mode Interactive Playground area */}
-        <main className="flex-1 p-6 overflow-y-auto bg-[#F8F7F4] flex flex-col justify-between">
+        <main
+          ref={modePaneRef}
+          className="flex-1 p-6 overflow-y-auto bg-[#F8F7F4] flex flex-col justify-between"
+        >
           {/* Degradation has to be visible. Without this the modes quietly serve generic
               canned prompts, which in a paid workshop is worse than an outright error. */}
           {!aiEnabled && (
@@ -451,6 +519,15 @@ export default function Workspace({
                 Prompts are falling back to a fixed list and are not tailored to this topic. Check
                 the Gemini configuration before running a session that matters.
               </p>
+            </div>
+          )}
+          {/* Deliberately after the fragment is committed rather than while it is being
+              written: shown to somebody mid-sentence this would be an anchoring machine, and
+              the independence of what each person contributes is the whole point of a pile
+              twelve people write into at once. */}
+          {chorusEnabled && chorus && (
+            <div className="max-w-3xl mx-auto w-full">
+              <ChorusCard echo={chorus.echo} onDismiss={() => onChorusDismiss?.()} />
             </div>
           )}
           <div className="max-w-3xl mx-auto w-full flex-1 flex flex-col justify-center">
@@ -536,8 +613,19 @@ export default function Workspace({
                   id: "goal",
                   activeStyle: "bg-[#51CF66] text-black border-black",
                 },
+                // Black rather than a pastel, for the reason a dark coverage cell is black:
+                // a fragment nobody echoed is a finding, not something that went wrong.
+                ...(showLoneFilter
+                  ? [
+                      {
+                        label: `🔇 Lone ${loneCount}`,
+                        id: "lone",
+                        activeStyle: "bg-black text-white border-black",
+                      },
+                    ]
+                  : []),
               ].map((cat) => {
-                const isSelected = selectedCategory === cat.id;
+                const isSelected = activeCategory === cat.id;
                 return (
                   <button
                     key={cat.id}

@@ -174,6 +174,14 @@ who can reach the pile and whether a fragment remembers who said it.
 - **No accounts.** Identity comes from the client's own directory through Identity-Aware
   Proxy. The app holds no credentials, and removing someone from the group removes their
   access.
+- **The pile answers back.** With **Chorus** on, committing a fragment shows you the ones
+  already in the pile that share its uncommon words, labelled by role — or states that nothing
+  in the pile is near it. Twelve people writing at once is twelve parallel monologues
+  otherwise, and a fragment only one person ever raised is the thing a coverage map cannot
+  see: an area can read green with every fragment in it a lone voice. Lexical and
+  deterministic, computed in the browser, no model involved in either the finding or the
+  wording — and it fires only _after_ a contribution, never while one is being typed, so it
+  cannot anchor the independence it is measuring. Per viewer, one click to turn off.
 - **The level set is a group deliverable.** Explicit and single-flight rather than generated
   on render, versioned against the pile it was built from, and marked stale when the pile
   moves on. Coverage — including which areas _nobody_ raised — is computed by arithmetic over
@@ -212,8 +220,9 @@ npm test
 
 Boots a real server against an isolated file store, with no cloud configuration and no Gemini
 key. Covers attribution, field-level authorship, the concurrent-contribution regression, ETag
-revalidation, the CSRF content-type gate, synthesis failure handling, share-link encoding and
-the coverage arithmetic.
+revalidation, the CSRF content-type gate, synthesis failure handling, share-link encoding, the
+coverage arithmetic, and the chorus — its links, its refusals, and the wording of the card that
+reports them.
 
 ## ☁️ Deployment
 
