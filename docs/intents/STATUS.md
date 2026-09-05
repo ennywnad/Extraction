@@ -25,10 +25,79 @@ this file only records which pieces of one have become code.
 | [004](004-claude-and-the-gcp-model-gateway.md) | Claude as a deployment choice | unchanged                                                 |
 | [005](005-listening-mode.md)                   | Listening mode                | unchanged — but its wall now exists                       |
 | [006](006-local-assists-before-submit.md)      | Local assists before submit   | unchanged                                                 |
-| [007](007-status-board.md)                     | Status board                  | **in part** — the seams now report (below)                |
+| [007](007-status-board.md)                     | Status board                  | **in part** — reported, and now drawn (below)             |
 | [008](008-deploying-group-mode.md)             | Deploying group mode          | **in part** — two preparatory items; still never deployed |
 | [009](009-the-deferred-group-surface.md)       | The deferred group surface    | **in part** — the coverage map is built                   |
 | [010](010-model-armor.md)                      | Model Armor at the prompt     | unchanged                                                 |
+
+---
+
+## 2026-09-05 — 007, in part: the board is drawn
+
+**What landed.** The half of 007 that was still a rendering job:
+
+- [src/components/StatusBoard.tsx](../../src/components/StatusBoard.tsx) — the board. Four
+  boxes (identity, storage, model, and MCP, which is grey and says so), the branch each seam
+  took beside the branches it did not, and the coral line stating the class of failure it
+  cannot see. Two variants from one component: a board you go to look at, and a popup that
+  sits over the workspace.
+- [src/utils/engagementStats.ts](../../src/utils/engagementStats.ts) — the counts a room can
+  be told about itself, as arithmetic over the `Session` the workspace already polls.
+- [server/pollWindow.ts](../../server/pollWindow.ts) — a rolling count of polls per
+  engagement, handed over on `X-Extraction-Polling` from
+  [engagementRoutes.ts](../../server/engagementRoutes.ts).
+- [src/utils/boardPrefs.ts](../../src/utils/boardPrefs.ts) — which boxes and counts to show,
+  one object for both views, in `localStorage`.
+- `InstanceStatus` moved to [src/types.ts](../../src/types.ts) (re-exported from
+  [status.ts](../../server/status.ts)) for the reason `AreaCoverage` did: a client component
+  now draws it. The server still assigns its own union types into that shape, so a new branch
+  on any seam nobody declared is a compile error rather than a cell the board cannot render.
+- 30 tests across three files.
+
+**The audience question is answered, and narrowly.** 007 said audience was the only thing
+blocking this, and the answer is: **the participant-safe view only.** Everything drawn comes
+from `/healthz`, which is already guarded by [test/status.test.ts](../../test/status.test.ts)
+against project ids, audiences, model ids and store paths. No new authenticated route, and so
+no operator view — that stays open, and is cheaper to add later than to unpick if it turned
+out nobody wanted it. The two smaller questions went the same conservative way: an overlay
+rather than a route, and a boot-time snapshot rather than a poll, because nothing in that
+payload can change without a restart.
+
+**The stats forced the audience line to be drawn twice.** Instance facts are unauthenticated;
+engagement counts are not, and they are also not the instance's business. So they arrive by a
+different path entirely — tallied in the browser from the pile it already polls, never through
+`/healthz`. Seven of the eight cost nothing: roster, voices, roles, fragments, last-5-min,
+modes used and dark areas are all arithmetic over a `Session` the client is already holding.
+
+**The eighth is the only new thing the server learned to do, and it is deliberately small.**
+"Polling now" counts _requests_ in a 60-second window, not people. Keying that map on the
+identity the poll already carries would have cost the same code and made a presence claim the
+data cannot support, so it counts requests and the tile says "two tabs, two counts". It is in
+memory and per instance, because persisting it would mean a store write per poll — exactly
+what the 304 path in `engagementRoutes.ts` was written to avoid. It rides a response header
+rather than the body, because almost every poll _is_ a 304: a count that only moved when the
+pile moved would sit still in exactly the quiet room it exists to describe.
+
+**Two bugs the tests could not have found, both caught by opening a browser.** The
+[009](009-the-deferred-group-surface.md) increment below shipped a component that had never
+been looked at, and said so; this one was looked at. The popup's heading broke into four lines
+of one word each, because at 380px the badge and three buttons left the title a ten-character
+column. And the model card drew three chain slots beside the words "2 deep" — the board
+overstating what the server had told it, which is the one thing it exists not to do. Both are
+now fixed, and the chain has a test that counts the slots.
+
+**What it deliberately did not do.** No operator view, and no `/api/status` — see above. The
+board does **not** show "last response: model or fallback", which the design had: `source` is
+a per-response header read by whichever mode component made the call, so surfacing it means
+threading that through every mode's fetch, and that is a change to nine call sites rather than
+a rendering job. The AI-unavailable banner is untouched, as 007 asks — that warning is in the
+way on purpose; this is somewhere you go to look.
+
+**Next, if picking up here.** The MCP box is drawn and grey, which makes
+[001](001-mcp-server-over-the-pile.md) the intent with a visible hole waiting for it. If the
+"last response" line is wanted, the honest version is a small shared store for the last
+`X-Extraction-AI-Source` seen, written where responses are read rather than where they are
+rendered.
 
 ---
 

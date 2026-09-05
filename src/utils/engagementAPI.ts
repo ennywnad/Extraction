@@ -68,18 +68,24 @@ export async function joinEngagement(id: string): Promise<Session> {
 
 /**
  * Fetches an engagement, using the ETag to skip the payload when nothing has changed.
- * Returns null on 304 so the caller can leave its state alone.
+ *
+ * `session` is null on a 304 so the caller can leave its state alone. `polling` always
+ * answers, because it rides a header rather than the body: almost every poll is a 304, and a
+ * count of who is here that only moved when the pile moved would sit still in exactly the
+ * quiet room it exists to describe.
  */
 export async function fetchEngagement(
   id: string,
   etag?: string,
-): Promise<{ session: Session; etag: string | null } | null> {
+): Promise<{ session: Session | null; etag: string | null; polling: number | null }> {
   const res = await fetch(`/api/engagement/${id}`, {
     headers: etag ? { "If-None-Match": etag } : {},
   });
-  if (res.status === 304) return null;
+  const header = res.headers.get("X-Extraction-Polling");
+  const polling = header !== null && Number.isFinite(Number(header)) ? Number(header) : null;
+  if (res.status === 304) return { session: null, etag: etag ?? null, polling };
   const session = await json<Session>(res);
-  return { session, etag: res.headers.get("ETag") };
+  return { session, etag: res.headers.get("ETag"), polling };
 }
 
 export async function patchEngagement(id: string, updates: Partial<Session>): Promise<Session> {

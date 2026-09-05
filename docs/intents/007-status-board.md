@@ -1,6 +1,6 @@
 # 007 — A status board that looks like the rest of the app
 
-**Status:** intent, in part — the board has not been built. See [STATUS.md](STATUS.md).
+**Status:** intent, in part — the participant-facing board is built. See [STATUS.md](STATUS.md).
 **Written:** 2026-09-03
 
 ## What
@@ -103,23 +103,49 @@ design decision rather than an afterthought.
   the visual language from.
 - **The design language is settled and documented**, so this is a layout problem rather than
   a design problem.
+- **The board itself exists**, at [StatusBoard.tsx](../../src/components/StatusBoard.tsx):
+  four boxes — identity, storage, model, and an MCP box that is grey because
+  [001](001-mcp-server-over-the-pile.md) is not built — each showing the branch taken beside
+  the branches not taken, and a coral line stating the class of failure the board structurally
+  cannot see. One component, two variants: a full board and a popup that sits over the
+  workspace. Reachable from a fixed control on every screen.
+- **Engagement counts ride a different path from instance facts**, deliberately.
+  [engagementStats.ts](../../src/utils/engagementStats.ts) tallies roster, voices, roles,
+  fragments, last-five-minutes, modes used and dark areas from the `Session` the workspace
+  already polls, so none of it goes near the unauthenticated payload. "Polling now" is the one
+  thing the server had to learn: [pollWindow.ts](../../server/pollWindow.ts) counts requests
+  per engagement in a 60-second window, in memory, and hands the number over on a response
+  header so it answers on a 304 as well as a 200.
+- **Which boxes and counts a viewer wants is one object**, in `localStorage`
+  ([boardPrefs.ts](../../src/utils/boardPrefs.ts)) — shared by both variants and never sent to
+  the server, because it is a preference rather than a fact about the engagement.
 
 ## What would have to change
 
-- **A decision about audience, which is the only thing blocking this.** Operator-facing (what
-  is this deployment) and participant-facing (is the AI on) are different boards with different
-  content and different authorization. Trying to be both is how it ends up being neither.
-  `/healthz` is the participant-safe view; a detailed operator view would need its own route
-  behind `requireIdentity`, and that split is the decision.
-- **The drawing.** A rendering job over `/healthz`, in the idiom of the mode components.
+The audience decision has been made and taken the narrow branch: **the participant-safe view
+only.** Everything the board draws comes from `/healthz`, so it inherits that payload's
+disclosure test rather than needing one of its own. What is left is the other half of that
+split, and one line the design asked for:
+
+- **An operator view, if it turns out to be wanted.** What is this deployment, in more detail
+  than an unauthenticated payload may carry — which means its own route behind
+  `requireIdentity` and its own disclosure rule. Deliberately not built on the argument that it
+  is cheaper to add later than to unpick.
+- **"Last response: model or fallback."** The live half of the board, and the one design
+  element not built. `source` / `X-Extraction-AI-Source` are read by whichever mode component
+  made the call, so surfacing it means threading the last-seen value out of nine fetches into
+  somewhere shared — a change to the modes rather than a rendering job.
 
 ## Open questions
 
-- Its own route, an overlay, or a panel on the dashboard?
-- Does it poll, or is a boot-time snapshot enough? Most of it cannot change without a restart
-  — model backend, auth mode, store — so the only genuinely live parts are "did the last call
-  succeed", MCP connections, and (with [006](006-local-assists-before-submit.md)) whether this
-  browser can currently reach a local runtime.
+- ~~Its own route, an overlay, or a panel on the dashboard?~~ **Resolved: an overlay**, opened
+  from a fixed control present on every screen. A route would have made it a place you navigate
+  away to, and the thing it answers — am I wired the way I think I am — is asked while looking
+  at something else.
+- ~~Does it poll, or is a boot-time snapshot enough?~~ **Resolved: a snapshot**, taken with the
+  `/healthz` call the app already makes at load. Nothing in that payload can change without a
+  restart. The engagement counts beside it are a different matter and do move: they are
+  recomputed from each poll the workspace was already making.
 - Does it show _per-route_ provider once that exists, or just the default? Per-route is more
   honest and much busier.
 

@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import express, { type Request, type Response } from "express";
 import type { AuthorStamp, Session, Thought } from "../src/types.ts";
 import { getEngagementStore } from "./store/index.ts";
+import { recordPoll } from "./pollWindow.ts";
 import { CONTRIBUTOR_ROLE, FACILITATOR_ROLE, VALID_MODES } from "./store/shape.ts";
 import { isSynthesisRunning, synthesizeEngagement } from "./ai/synthesis.ts";
 import { sendAiError } from "./ai/respond.ts";
@@ -197,6 +198,10 @@ export function createEngagementRouter() {
   router.get("/:id", async (req, res) => {
     const store = await getEngagementStore();
     const inbound = req.get("if-none-match");
+    // On the header rather than in the body, because almost every poll is a 304 and a 304
+    // carries no body — a count that only arrived when the pile changed would sit still in
+    // exactly the room this is meant to describe.
+    res.setHeader("X-Extraction-Polling", String(recordPoll(req.params.id)));
     if (inbound) {
       const version = await store.getVersion(req.params.id);
       if (!version) return res.status(404).json({ error: "No such engagement" });

@@ -136,3 +136,33 @@ export interface SentencePrompt {
   prefix: string;
   completed?: string;
 }
+
+/**
+ * What one running instance is wired to, as served unauthenticated by `/healthz`.
+ *
+ * Lives here rather than beside `instanceStatus()` for the same reason `AreaCoverage` does:
+ * it crosses the wire, and the board that draws it is a client component. `server/status.ts`
+ * re-exports it so the assembling code can keep importing the type from beside itself.
+ *
+ * Shapes, not secrets: every field is a branch name or a count. Never a project id, an IAP
+ * audience, a model id or a store path — `test/status.test.ts` fails if one appears.
+ */
+export interface InstanceStatus {
+  ok: true;
+  identity: {
+    mode: "iap" | "dev";
+    /** Whether identities are verified (IAP) or asserted (dev). */
+    verified: boolean;
+  };
+  storage: {
+    backend: "firestore" | "file";
+    /** Whether that branch has been taken in this process yet. */
+    live: boolean;
+  };
+  model: {
+    backend: "vertex" | "apikey" | "none";
+    /** How many model ids the chain will try, not which ones. */
+    chainLength: number;
+  };
+  aiEnabled: boolean;
+}

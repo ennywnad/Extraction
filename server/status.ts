@@ -22,32 +22,20 @@
  * `source` and X-Extraction-AI-Source.
  */
 import type { AuthConfig } from "./authMode.ts";
-import { geminiBackend, modelChain, type GeminiBackend } from "./ai/client.ts";
-import { storeBackend, storeIsLive, type StoreBackend } from "./store/index.ts";
+import { geminiBackend, modelChain } from "./ai/client.ts";
+import { storeBackend, storeIsLive } from "./store/index.ts";
+import type { InstanceStatus } from "../src/types.ts";
 
-export interface InstanceStatus {
-  ok: true;
-  identity: {
-    mode: AuthConfig["mode"];
-    /** Whether identities are verified (IAP) or asserted (dev). */
-    verified: boolean;
-  };
-  storage: {
-    backend: StoreBackend;
-    /** Whether that branch has been taken in this process yet. */
-    live: boolean;
-  };
-  model: {
-    backend: GeminiBackend;
-    /** How many model ids the chain will try, not which ones. */
-    chainLength: number;
-  };
-  /**
-   * Retained under its original name because the client's degradation banner reads it, and a
-   * fresh clone silently serving canned prompts is the failure nobody notices in time.
-   */
-  aiEnabled: boolean;
-}
+/**
+ * Re-exported from src/types.ts, where the shape is declared with the rest of what crosses
+ * the wire: the board that draws it ([src/components/StatusBoard.tsx]) is a client component,
+ * and a type it and this file both depend on cannot live only on the server side.
+ *
+ * The unions there are spelled out literally; this file assigns `AuthConfig["mode"]`,
+ * `StoreBackend` and `GeminiBackend` into them, so a new branch on any seam that nobody
+ * declared is a compile error rather than a field the board silently cannot render.
+ */
+export type { InstanceStatus };
 
 export function instanceStatus(auth: AuthConfig): InstanceStatus {
   const model = geminiBackend();

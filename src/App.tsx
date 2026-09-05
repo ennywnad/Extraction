@@ -1,14 +1,18 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { Cpu } from "lucide-react";
 import { loadSessions, persistSession, deleteSession } from "./utils/localDB";
 import * as engagementAPI from "./utils/engagementAPI";
 import type { EngagementSummary, ViewerIdentity } from "./utils/engagementAPI";
 import { pushSessionUpdate } from "./utils/engagementSync";
 import { decodeSnapshot } from "./utils/shareLink";
-import { Session, Thought, ExtractionMode } from "./types";
+import { Session, Thought, ExtractionMode, InstanceStatus } from "./types";
+import { engagementStats } from "./utils/engagementStats";
+import { DEFAULT_PREFS, loadPrefs, savePrefs, type BoardPrefs } from "./utils/boardPrefs";
 
 // Intake/Shell layouts
 import IntakeForm from "./components/IntakeForm";
 import Workspace from "./components/Workspace";
+import StatusBoard from "./components/StatusBoard";
 import ExportPanel from "./components/ExportPanel";
 
 // Core action modes
@@ -231,7 +235,13 @@ export default function App() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [viewer, setViewer] = useState<ViewerIdentity | null>(null);
   const [engagements, setEngagements] = useState<EngagementSummary[]>([]);
-  const [aiEnabled, setAiEnabled] = useState(true);
+  const [instanceStatus, setInstanceStatus] = useState<InstanceStatus | null>(null);
+  const [pollingNow, setPollingNow] = useState<number | null>(null);
+  const [boardOpen, setBoardOpen] = useState(false);
+  const [boardExpanded, setBoardExpanded] = useState(false);
+  const [boardSettingsOpen, setBoardSettingsOpen] = useState(false);
+  const [boardPrefs, setBoardPrefs] = useState<BoardPrefs>(DEFAULT_PREFS);
+  const aiEnabled = instanceStatus?.aiEnabled !== false;
 
   // Held in refs so the polling effect can read them without resubscribing every render.
   const engagementEtag = useRef<string | null>(null);
@@ -259,8 +269,10 @@ export default function App() {
     // prompts is the failure nobody notices until a workshop has already gone badly.
     fetch("/healthz")
       .then((r) => r.json())
-      .then((h) => setAiEnabled(h.aiEnabled !== false))
+      .then((h) => setInstanceStatus(h as InstanceStatus))
       .catch(() => undefined);
+
+    setBoardPrefs(loadPrefs());
 
     // Group mode is available only when the server says who we are.
     engagementAPI
@@ -505,10 +517,13 @@ export default function App() {
           engagementEtag.current ?? undefined,
         );
         failures = 0;
-        if (cancelled || !result) return; // null means 304: nothing changed
+        if (cancelled) return;
+        setPollingNow(result.polling);
+        if (!result.session) return; // a 304: the pile has not moved
         engagementEtag.current = result.etag;
+        const fresh = result.session;
         setCurrentSession((prev) =>
-          prev?.engagementId === engagementId ? { ...prev, ...result.session } : prev,
+          prev?.engagementId === engagementId ? { ...prev, ...fresh } : prev,
         );
       } catch (e) {
         // Back off rather than hammering a server that is struggling.
@@ -526,6 +541,13 @@ export default function App() {
       window.removeEventListener("focus", poll);
     };
   }, [engagementId]);
+
+  // One object for both views, remembered per viewer. Not room state: turning a tile off on
+  // a projector must not turn it off for everyone looking at the same engagement.
+  const handleBoardPrefs = useCallback((next: BoardPrefs) => {
+    setBoardPrefs(next);
+    savePrefs(next);
+  }, []);
 
   const handleEditingChange = useCallback((editing: boolean) => {
     isEditingRef.current = editing;
@@ -623,6 +645,11 @@ export default function App() {
     }
   };
 
+  // Solo sessions have no engagement id, so there is no roster and no shared pile to count.
+  const boardStats = currentSession?.engagementId
+    ? engagementStats(currentSession, pollingNow)
+    : null;
+
   return (
     <>
       {(() => {
@@ -670,6 +697,46 @@ export default function App() {
           />
         );
       })()}
+
+      <button
+        onClick={() => setBoardOpen((open) => !open)}
+        aria-label="Instance status"
+        title="What this instance is wired to"
+        className="fixed bottom-4 left-4 z-40 w-11 h-11 bg-white border-3 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center cursor-pointer hover:-translate-y-0.5 transition-transform"
+      >
+        <Cpu className="w-5 h-5" />
+      </button>
+
+      {boardOpen &&
+        (boardExpanded ? (
+          <div className="fixed inset-0 z-50 bg-black/40 flex items-start justify-center p-4 overflow-y-auto">
+            <div className="w-full max-w-5xl border-3 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] my-6">
+              <StatusBoard
+                status={instanceStatus}
+                stats={boardStats}
+                prefs={boardPrefs}
+                onPrefsChange={handleBoardPrefs}
+                settingsOpen={boardSettingsOpen}
+                onSettingsToggle={() => setBoardSettingsOpen((open) => !open)}
+                onClose={() => setBoardExpanded(false)}
+              />
+            </div>
+          </div>
+        ) : (
+          <div className="fixed bottom-20 left-4 z-50">
+            <StatusBoard
+              variant="popup"
+              status={instanceStatus}
+              stats={boardStats}
+              prefs={boardPrefs}
+              onPrefsChange={handleBoardPrefs}
+              settingsOpen={boardSettingsOpen}
+              onSettingsToggle={() => setBoardSettingsOpen((open) => !open)}
+              onExpand={() => setBoardExpanded(true)}
+              onClose={() => setBoardOpen(false)}
+            />
+          </div>
+        ))}
 
       {toastMessage && (
         <div className="fixed bottom-4 right-4 z-50 bg-[#FFF3BF] border-3 border-black p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center justify-between gap-4 max-w-sm">
