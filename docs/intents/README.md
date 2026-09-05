@@ -23,6 +23,7 @@ built, and the log says which slice and what it deliberately left alone.
 | [008](008-deploying-group-mode.md)             | Deploying group mode for the first time            | —          | Not code, and still not done. Its two code-shaped preparations have landed.  |
 | [009](009-the-deferred-group-surface.md)       | The deferred group surface                         | —          | A catalogue; the coverage map is built, the other seven stay deferred.       |
 | [010](010-model-armor.md)                      | Model Armor over the prompt boundary               | —          | Unknown until someone prices it. One seam to change; the policy is the work. |
+| [011](011-the-role-brief.md)                   | The role brief, per participant                    | —          | Small on the server, and it fixes a coverage count that is a stub today.     |
 
 ## How to read these
 
