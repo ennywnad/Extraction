@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { Cpu } from "lucide-react";
 import { loadSessions, persistSession, deleteSession } from "./utils/localDB";
 import * as engagementAPI from "./utils/engagementAPI";
@@ -8,6 +8,13 @@ import { decodeSnapshot } from "./utils/shareLink";
 import { Session, Thought, ExtractionMode, InstanceStatus } from "./types";
 import { engagementStats } from "./utils/engagementStats";
 import { DEFAULT_PREFS, loadPrefs, savePrefs, type BoardPrefs } from "./utils/boardPrefs";
+import { buildIndex, echoFor, tally } from "./utils/chorus";
+import {
+  DEFAULT_CHORUS,
+  loadChorusPrefs,
+  saveChorusPrefs,
+  type ChorusPrefs,
+} from "./utils/chorusPrefs";
 
 // Intake/Shell layouts
 import IntakeForm from "./components/IntakeForm";
@@ -241,6 +248,15 @@ export default function App() {
   const [boardExpanded, setBoardExpanded] = useState(false);
   const [boardSettingsOpen, setBoardSettingsOpen] = useState(false);
   const [boardPrefs, setBoardPrefs] = useState<BoardPrefs>(DEFAULT_PREFS);
+  const [chorusPrefs, setChorusPrefs] = useState<ChorusPrefs>(DEFAULT_CHORUS);
+  /**
+   * The fragment this viewer contributed last, and the only one the pile answers about.
+   *
+   * Held here rather than in Workspace because every mode reaches the pile through
+   * `handleAddThought`, so this is the one place that knows a contribution just happened —
+   * as opposed to a poll bringing in somebody else's.
+   */
+  const [lastContributed, setLastContributed] = useState<{ id: string; text: string } | null>(null);
   const aiEnabled = instanceStatus?.aiEnabled !== false;
 
   // Held in refs so the polling effect can read them without resubscribing every render.
@@ -273,6 +289,7 @@ export default function App() {
       .catch(() => undefined);
 
     setBoardPrefs(loadPrefs());
+    setChorusPrefs(loadChorusPrefs());
 
     // Group mode is available only when the server says who we are.
     engagementAPI
@@ -441,6 +458,7 @@ export default function App() {
       swipeStatus,
     };
 
+    setLastContributed({ id: newThought.id, text });
     handleUpdateSession({
       thoughts: [newThought, ...currentSession.thoughts],
     });
@@ -552,6 +570,47 @@ export default function App() {
   const handleEditingChange = useCallback((editing: boolean) => {
     isEditingRef.current = editing;
   }, []);
+
+  /**
+   * The pile, indexed once per change, for both halves of the chorus.
+   *
+   * Rebuilt when the pile moves — which in a shared engagement is every poll that brings
+   * something back — and not at all when the feature is off, so a viewer who turned it off is
+   * paying nothing for it. `topic` is a dependency because the topic's own words are excluded
+   * from linking: everyone is using them, so they join everybody to everybody.
+   */
+  const chorusIndex = useMemo(
+    () => (currentSession && chorusPrefs.enabled ? buildIndex(currentSession) : null),
+    [currentSession?.thoughts, currentSession?.topic, chorusPrefs.enabled],
+  );
+
+  const chorus = useMemo(
+    () =>
+      chorusIndex && lastContributed
+        ? {
+            key: lastContributed.id,
+            echo: echoFor(chorusIndex, { ...lastContributed, authorEmail: viewer?.email }),
+          }
+        : null,
+    [chorusIndex, lastContributed, viewer?.email],
+  );
+
+  const loneIds = useMemo(
+    () => (chorusIndex ? tally(chorusIndex).loneIds : undefined),
+    [chorusIndex],
+  );
+
+  const handleChorusToggle = useCallback(() => {
+    setChorusPrefs((prev) => {
+      const next = { enabled: !prev.enabled };
+      saveChorusPrefs(next);
+      return next;
+    });
+  }, []);
+
+  // An echo is an answer to something you just said, so it does not survive leaving the room
+  // it was said in — including the case where somebody opens a second engagement in the tab.
+  useEffect(() => setLastContributed(null), [currentSession?.id]);
 
   const renderActiveMode = () => {
     if (!currentSession) return null;
@@ -680,11 +739,17 @@ export default function App() {
               session={currentSession}
               onUpdateSession={handleUpdateSession}
               onDeleteThought={handleDeleteThought}
+              onAddThought={(txt) => handleAddThought(txt)}
               onExit={handleExitSession}
               onSynthesize={handleLaunchReview}
               onEditingChange={handleEditingChange}
               viewerEmail={viewer?.email}
               aiEnabled={aiEnabled}
+              chorusEnabled={chorusPrefs.enabled}
+              onChorusToggle={handleChorusToggle}
+              chorus={chorus}
+              onChorusDismiss={() => setLastContributed(null)}
+              loneIds={loneIds}
             >
               {renderActiveMode()}
             </Workspace>

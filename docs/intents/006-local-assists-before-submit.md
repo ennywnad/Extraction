@@ -87,6 +87,13 @@ something hovering while you type. Reformatting is a filing decision, not a writ
   already built.
 - **Fragments already flow through one submission path** with server-side attribution, and this
   changes none of it — an assisted fragment is submitted identically to a typed one.
+- **A model-free lexical layer over the pile now exists in the browser.**
+  [chorus.ts](../../src/utils/chorus.ts) tokenises, stems, indexes and links fragments client
+  side, in both solo and group mode, with no route behind it. It answers a different question —
+  who else is near a fragment, after it is submitted — but the tokenising, the stopword set and
+  the distinctiveness rule are the pieces this intent would otherwise write from scratch, and
+  they are already covered by tests. It also settles by example that a per-viewer client-side
+  reading of the pile is acceptable here, which was an open shape when this was written.
 - **It needs neither 002 nor 003.** Both of those are about the _server's_ model call. This is
   the browser talking to a runtime on the same machine, so it shares no code with them and
   waits for neither. The _code_ is therefore the cheapest non-trivial thing on this list and

@@ -19,8 +19,8 @@ solo (fragments in `localStorage`) and group (a shared pile on the server, behin
 Healthy `npm run check` ends with:
 
 ```
-# tests 113
-# pass 112
+# tests 143
+# pass 142
 # fail 0
 # skipped 1
 ```
@@ -30,7 +30,7 @@ The skip is `FirestoreEngagementStore` in
 
 ```
 gcloud emulators firestore start --host-port=localhost:8484   # needs a JRE on PATH
-npm run test:firestore                                        # 123 tests, 0 skipped
+npm run test:firestore                                        # 153 tests, 0 skipped
 ```
 
 ## Configuration decides behavior
@@ -91,6 +91,16 @@ Every backend picks itself by **presence of configuration**, not by a flag. Read
   files in parallel), and must actually reap the process in `after` — a spawned server that
   outlives its test holds the pipes and hangs a CI step long after the suite reports green.
   `npm test` carries `--test-timeout` so that failure mode fails instead of stalling.
+- **The chorus is arithmetic, and calling a model from it would be the obvious wrong fix.**
+  [src/utils/chorus.ts](src/utils/chorus.ts) links a fragment to the ones sharing its uncommon
+  words, entirely in the browser, in both solo and group mode. It has no route, no prompt module
+  and no `sendFallback`, and that is deliberate twice over: it fires on **every fragment from
+  every participant**, so it would be by a wide margin the highest-volume AI call in the app —
+  well past synthesis, which is single-flight per engagement and capped at ten per window — and
+  the only thing a model would add is the wording, which is the exact part that must not
+  editorialise. "Nobody else has been here" is one careless sentence away from "nobody agrees
+  with you". Same rule as [coverage.ts](server/ai/coverage.ts): counting is not a model's job.
+  The consequence worth keeping is that it behaves identically with Gemini unconfigured.
 - Share links are **base64url** ([src/utils/shareLink.ts](src/utils/shareLink.ts)). Standard
   base64's `+` becomes a space in a query string and `atob` then silently drops it. Don't
   reintroduce a bare `btoa`.
