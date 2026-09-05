@@ -39,7 +39,7 @@ const PRESET_GROUPS = [
   {
     name: "Work",
     icon: Briefcase,
-    color: "bg-[#FFE8CC]", // light orange
+    color: "bg-peach", // light orange
     starters: [
       "Evaluating a career pivot from corporate to freelancing, balancing risk against passion...",
       "Addressing team friction after a conflict regarding project scope and deadlines...",
@@ -49,7 +49,7 @@ const PRESET_GROUPS = [
   {
     name: "Home",
     icon: Home,
-    color: "bg-[#E4F7FB]", // light cyan
+    color: "bg-aqua", // light cyan
     starters: [
       "Planning a major room renovation or physical reorganization for my workspace...",
       "Establishing clear boundaries between personal work-from-home hours and domestic life...",
@@ -59,7 +59,7 @@ const PRESET_GROUPS = [
   {
     name: "Family",
     icon: Users,
-    color: "bg-[#FFF0F6]", // light pink
+    color: "bg-petal", // light pink
     starters: [
       "Preparing for a difficult, direct conversation with my sibling/parent about boundaries...",
       "Balancing familial obligations with my personal goals and ambition to build a business...",
@@ -69,7 +69,7 @@ const PRESET_GROUPS = [
   {
     name: "Tech",
     icon: Laptop,
-    color: "bg-[#E8F0FE]", // light blue
+    color: "bg-frost", // light blue
     starters: [
       "Selecting the right coding stack, databases, and hosting options for my new web app...",
       "Architecting a scalable database schema structure to support multi-tenant workspaces...",
@@ -79,7 +79,7 @@ const PRESET_GROUPS = [
   {
     name: "Economics",
     icon: Coins,
-    color: "bg-[#FEF7E0]", // light yellow
+    color: "bg-sand", // light yellow
     starters: [
       "Weighing cost vs. utility before buying a major premium purchase like a new car...",
       "Formulating a personal savings buffer strategy to prepare for potential market downtime...",
@@ -89,7 +89,7 @@ const PRESET_GROUPS = [
   {
     name: "Project Planning",
     icon: ClipboardList,
-    color: "bg-[#E6F4EA]", // light green
+    color: "bg-mint", // light green
     starters: [
       "Fleshing out a roadmap, milestones, and timeline steps for our Q3 product launch...",
       "Conducting a project retrospective to catalog lessons learned from the team's sprint...",
@@ -273,11 +273,11 @@ export default function IntakeForm({
   return (
     <div className="max-w-5xl mx-auto px-4 py-8 md:py-12" id="intake-root">
       {/* Title block bento card with monospace tag and serif description */}
-      <div className="bg-white border-3 border-black p-8 md:p-10 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] text-center relative overflow-hidden mb-8">
+      <div className="bg-white border-3 border-black p-8 md:p-10 shadow-hard-6 text-center relative overflow-hidden mb-8">
         <div className="absolute top-2 right-2 font-mono text-[9px] text-zinc-400 select-none">
           STRICT_ENG_BUILD_V1 // NO_TRANSLATIONS
         </div>
-        <div className="inline-flex items-center justify-center bg-black text-white p-3.5 mb-4 border border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+        <div className="inline-flex items-center justify-center bg-black text-white p-3.5 mb-4 border border-black shadow-hard-2">
           <Brain className="w-8 h-8 text-white" />
         </div>
         <h1 className="text-3xl font-black tracking-tight text-black sm:text-5xl font-display uppercase">
@@ -291,11 +291,11 @@ export default function IntakeForm({
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Intake Block */}
-        <div className="lg:col-span-2 space-y-8 bg-white border-3 border-black p-6 md:p-8 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
+        <div className="lg:col-span-2 space-y-8 bg-white border-3 border-black p-6 md:p-8 shadow-hard-6">
           <div>
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
               <h2 className="text-base md:text-lg font-black text-black uppercase tracking-wider font-display flex items-center gap-2.5">
-                <span className="bg-[#FF6B6B] text-black border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] px-2.5 py-0.5 text-xs font-mono font-black">
+                <span className="bg-signal-red text-black border-2 border-black shadow-hard-2 px-2.5 py-0.5 text-xs font-mono font-black">
                   01
                 </span>
                 What is this session about?
@@ -306,7 +306,7 @@ export default function IntakeForm({
                   setCompareModalTab("framing");
                   setShowCompareModal(true);
                 }}
-                className="px-2.5 py-1 border border-black bg-white hover:bg-zinc-100 text-black text-[9px] font-mono font-bold uppercase tracking-wider cursor-pointer shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] transition-all active:translate-x-0.5 active:translate-y-0.5"
+                className="px-2.5 py-1 border border-black bg-white hover:bg-zinc-100 text-black text-[9px] font-mono font-bold uppercase tracking-wider cursor-pointer shadow-hard-1 transition-all active:translate-x-0.5 active:translate-y-0.5"
               >
                 ℹ Framing Guide
               </button>
@@ -342,7 +342,7 @@ export default function IntakeForm({
               const Icon = activeGroup.icon;
               return (
                 <div
-                  className={`border-2 border-black p-4 mb-4 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] ${activeGroup.color} transition-all duration-150`}
+                  className={`border-2 border-black p-4 mb-4 shadow-hard-3 ${activeGroup.color} transition-all duration-150`}
                 >
                   <div className="flex items-center gap-2 mb-3 pb-2 border-b border-black/10">
                     <Icon className="w-4 h-4 text-black shrink-0" />
@@ -374,7 +374,7 @@ export default function IntakeForm({
                           if (activeGroup.name === "Project Planning")
                             setIntention("Make a tough choice with clear priority action items");
                         }}
-                        className="text-left bg-white hover:bg-zinc-50 border border-black p-3 text-[10px] font-sans text-zinc-700 leading-relaxed cursor-pointer transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] min-h-[60px] flex flex-col justify-center font-medium"
+                        className="text-left bg-white hover:bg-zinc-50 border border-black p-3 text-[10px] font-sans text-zinc-700 leading-relaxed cursor-pointer transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-hard-1 shadow-hard-1 min-h-[60px] flex flex-col justify-center font-medium"
                         title={starter}
                       >
                         {starter}
@@ -394,7 +394,7 @@ export default function IntakeForm({
               className="w-full text-xs md:text-sm border-2 border-black p-3 focus:outline-none focus:bg-white bg-zinc-50/50 hover:bg-white transition-all font-mono"
             />
 
-            <div className="mt-3.5 bg-[#F8F9FA] border-2 border-black p-3.5 space-y-2.5 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+            <div className="mt-3.5 bg-mist border-2 border-black p-3.5 space-y-2.5 shadow-hard-2">
               <span className="font-bold text-[9px] uppercase font-mono tracking-wider text-zinc-550 block">
                 ⚡ Quick context keywords (click to append to topic)
               </span>
@@ -420,7 +420,7 @@ export default function IntakeForm({
                       className={`px-2 py-1 border text-[9px] font-mono font-bold uppercase transition-all duration-100 ${
                         isAlreadyIncluded
                           ? "bg-zinc-200 text-zinc-400 border-zinc-300 cursor-not-allowed"
-                          : "bg-white hover:bg-zinc-100 text-black border-black cursor-pointer shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px]"
+                          : "bg-white hover:bg-zinc-100 text-black border-black cursor-pointer shadow-hard-1 hover:shadow-hard-2 active:translate-x-[1px] active:translate-y-[1px]"
                       }`}
                     >
                       {tag.label}
@@ -434,7 +434,7 @@ export default function IntakeForm({
           <div>
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
               <h2 className="text-base md:text-lg font-black text-black uppercase tracking-wider font-display flex items-center gap-2.5">
-                <span className="bg-[#4DABF7] text-black border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] px-2.5 py-0.5 text-xs font-mono font-black">
+                <span className="bg-signal-blue text-black border-2 border-black shadow-hard-2 px-2.5 py-0.5 text-xs font-mono font-black">
                   02
                 </span>
                 What do you want to get out of this?
@@ -445,7 +445,7 @@ export default function IntakeForm({
                   setCompareModalTab("intention");
                   setShowCompareModal(true);
                 }}
-                className="px-2.5 py-1 border border-black bg-white hover:bg-zinc-100 text-black text-[9px] font-mono font-bold uppercase tracking-wider cursor-pointer shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] transition-all active:translate-x-0.5 active:translate-y-0.5"
+                className="px-2.5 py-1 border border-black bg-white hover:bg-zinc-100 text-black text-[9px] font-mono font-bold uppercase tracking-wider cursor-pointer shadow-hard-1 transition-all active:translate-x-0.5 active:translate-y-0.5"
               >
                 ℹ Compare Intentions
               </button>
@@ -455,17 +455,17 @@ export default function IntakeForm({
                 {
                   label: "Organize raw thoughts into a structured markdown outline",
                   value: "Organize raw thoughts into a structured markdown outline",
-                  colorClass: "bg-[#E8F0FE]",
+                  colorClass: "bg-frost",
                 },
                 {
                   label: "Make a tough choice with clear priority action items",
                   value: "Make a tough choice with clear priority action items",
-                  colorClass: "bg-[#FFE8CC]",
+                  colorClass: "bg-peach",
                 },
                 {
                   label: "Decompress deep mental fog and find emotional peace",
                   value: "Decompress deep mental fog and find emotional peace",
-                  colorClass: "bg-[#E6F4EA]",
+                  colorClass: "bg-mint",
                 },
                 {
                   label: "custom",
@@ -480,8 +480,8 @@ export default function IntakeForm({
                     key={opt.value}
                     className={`flex items-center gap-3 p-3 border-2 border-black cursor-pointer transition-all text-xs md:text-sm ${
                       isSelected
-                        ? `${opt.colorClass} border-2 border-black text-black font-extrabold shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]`
-                        : "bg-white text-black hover:bg-zinc-50 shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]"
+                        ? `${opt.colorClass} border-2 border-black text-black font-extrabold shadow-hard-3`
+                        : "bg-white text-black hover:bg-zinc-50 shadow-hard-1"
                     }`}
                   >
                     <input
@@ -521,7 +521,7 @@ export default function IntakeForm({
           <div className="border-t-3 border-black pt-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 gap-2">
               <h2 className="text-base md:text-lg font-black text-black uppercase tracking-wider font-display flex items-center gap-2.5">
-                <span className="bg-[#51CF66] text-black border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] px-2.5 py-0.5 text-xs font-mono font-black">
+                <span className="bg-signal-green text-black border-2 border-black shadow-hard-2 px-2.5 py-0.5 text-xs font-mono font-black">
                   03
                 </span>
                 Advanced Synthesis Controls
@@ -532,7 +532,7 @@ export default function IntakeForm({
                   setCompareModalTab("tone");
                   setShowCompareModal(true);
                 }}
-                className="px-2.5 py-1 border border-black bg-white hover:bg-zinc-100 text-black text-[9px] font-mono font-bold uppercase tracking-wider cursor-pointer shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] transition-all active:translate-x-0.5 active:translate-y-0.5"
+                className="px-2.5 py-1 border border-black bg-white hover:bg-zinc-100 text-black text-[9px] font-mono font-bold uppercase tracking-wider cursor-pointer shadow-hard-1 transition-all active:translate-x-0.5 active:translate-y-0.5"
               >
                 ℹ Compare Settings
               </button>
@@ -582,7 +582,7 @@ export default function IntakeForm({
                       key={opt.value}
                       className={`flex flex-col p-2.5 border-2 border-black cursor-pointer transition-all duration-100 ${
                         promptingStyle === opt.value
-                          ? "bg-[#FFE8CC] border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-black"
+                          ? "bg-peach border-black shadow-hard-2 text-black"
                           : "bg-white text-black hover:bg-zinc-50 border-black"
                       }`}
                     >
@@ -647,7 +647,7 @@ export default function IntakeForm({
                       key={opt.value}
                       className={`flex flex-col p-2.5 border-2 border-black cursor-pointer transition-all duration-100 ${
                         outputFilter === opt.value
-                          ? "bg-[#D2E3FC] border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-black"
+                          ? "bg-powder border-black shadow-hard-2 text-black"
                           : "bg-white text-black hover:bg-zinc-50 border-black"
                       }`}
                     >
@@ -707,7 +707,7 @@ export default function IntakeForm({
                       key={opt.value}
                       className={`flex flex-col p-2.5 border-2 border-black cursor-pointer transition-all duration-100 ${
                         cognitiveBiasAudit === opt.value
-                          ? "bg-[#CEEAD6] border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-black"
+                          ? "bg-sage border-black shadow-hard-2 text-black"
                           : "bg-white text-black hover:bg-zinc-50 border-black"
                       }`}
                     >
@@ -742,7 +742,7 @@ export default function IntakeForm({
                 <button
                   disabled={!isFormValid}
                   onClick={() => setShowRecommendationQuiz(true)}
-                  className={`flex-1 flex justify-center items-center gap-2 px-5 py-3 border-2 border-black bg-white hover:bg-zinc-50 text-black font-display font-black text-xs uppercase tracking-wider transition-all duration-150 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] ${
+                  className={`flex-1 flex justify-center items-center gap-2 px-5 py-3 border-2 border-black bg-white hover:bg-zinc-50 text-black font-display font-black text-xs uppercase tracking-wider transition-all duration-150 shadow-hard-3 hover:shadow-hard-5 ${
                     !isFormValid ? "opacity-40 cursor-not-allowed" : "cursor-pointer"
                   }`}
                 >
@@ -752,7 +752,7 @@ export default function IntakeForm({
                 <button
                   disabled={!isFormValid}
                   onClick={() => handleLaunchWithMode("free_stream")}
-                  className={`flex-1 flex justify-center items-center gap-2 px-5 py-3 border-2 border-black bg-black hover:bg-white text-white hover:text-black font-display font-black text-xs uppercase tracking-wider transition-all duration-150 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] ${
+                  className={`flex-1 flex justify-center items-center gap-2 px-5 py-3 border-2 border-black bg-black hover:bg-white text-white hover:text-black font-display font-black text-xs uppercase tracking-wider transition-all duration-150 shadow-hard-3 hover:shadow-hard-5 ${
                     !isFormValid ? "opacity-40 cursor-not-allowed" : "cursor-pointer"
                   }`}
                 >
@@ -922,7 +922,7 @@ export default function IntakeForm({
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="p-5 bg-zinc-50 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] space-y-4"
+                    className="p-5 bg-zinc-50 border-2 border-black shadow-hard-4 space-y-4"
                   >
                     <div className="flex justify-between items-start">
                       <div>
@@ -970,7 +970,7 @@ export default function IntakeForm({
 
         {/* Group engagements. Absent entirely in solo deployments, where whoami() fails. */}
         {onCreateEngagement && (
-          <div className="bg-[#FFF3BF] border-3 border-black p-5 md:p-6 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] flex flex-col gap-3 lg:col-span-3">
+          <div className="bg-butter border-3 border-black p-5 md:p-6 shadow-hard-6 flex flex-col gap-3 lg:col-span-3">
             <div className="flex items-baseline justify-between gap-3 flex-wrap">
               <h2 className="text-base font-black text-black uppercase tracking-wider font-display flex items-center gap-2">
                 <Users className="w-5 h-5 text-black" />
@@ -1019,7 +1019,7 @@ export default function IntakeForm({
                   <button
                     key={e.id}
                     onClick={() => onJoinEngagement?.(e.id)}
-                    className="text-left bg-white border-2 border-black p-3 hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:translate-x-0.5 hover:translate-y-0.5 transition-all cursor-pointer"
+                    className="text-left bg-white border-2 border-black p-3 hover:shadow-hard-3 hover:translate-x-0.5 hover:translate-y-0.5 transition-all cursor-pointer"
                   >
                     <p className="text-xs font-bold text-black truncate">{e.topic}</p>
                     <p className="text-[10px] font-mono uppercase tracking-wider text-zinc-500 mt-1">
@@ -1034,7 +1034,7 @@ export default function IntakeForm({
         )}
 
         {/* History / Sessions Sidebar */}
-        <div className="bg-white border-3 border-black p-5 md:p-6 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] flex flex-col h-full max-h-[600px] overflow-hidden">
+        <div className="bg-white border-3 border-black p-5 md:p-6 shadow-hard-6 flex flex-col h-full max-h-[600px] overflow-hidden">
           <h2 className="text-base font-black text-black uppercase tracking-wider font-display flex items-center gap-2 mb-3 shrink-0">
             <FolderOpen className="w-5 h-5 text-black" />
             Previous Sessions
@@ -1055,7 +1055,7 @@ export default function IntakeForm({
               pastSessions.map((session) => (
                 <div
                   key={session.id}
-                  className="flex justify-between items-center bg-white border-2 border-black p-3 hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all duration-150 group"
+                  className="flex justify-between items-center bg-white border-2 border-black p-3 hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-hard-3 transition-all duration-150 group"
                 >
                   <button
                     onClick={() => onLoadSession(session.id)}

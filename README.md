@@ -260,13 +260,20 @@ browser. See [`.env.example`](.env.example) for the annotated list.
 ## 🎨 Design language
 
 The interface is Neo-Brutalist and deliberately physical: heavy black outlines
-(`border-3 border-black`), hard offset shadows
-(`shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]`), no gradients, and Space Grotesk / JetBrains Mono
-pairings. Colour is functional rather than decorative — each fragment type carries one:
-⚡ actions coral, 💡 insights blue, ⚠️ risks yellow, 🎯 goals green.
+(`border-3 border-black`), hard offset shadows (`shadow-hard-4`), no gradients, and Space
+Grotesk / JetBrains Mono pairings. Colour is functional rather than decorative — each fragment
+type carries one: ⚡ actions coral, 💡 insights blue, ⚠️ risks yellow, 🎯 goals green.
 
 Tailwind v4, no component library. New mode components match their neighbours in
 [src/components/Modes/](src/components/Modes/) rather than inventing styling.
+
+**It follows your system's dark mode, and the control at the bottom left overrides it** —
+system, light, dark. Ink and paper swap rather than soften: the border and the hard shadow
+become light on a dark ground, so the idiom survives instead of dissolving into it. The whole
+theme is one block in [src/index.css](src/index.css), because Tailwind v4 compiles every
+palette utility to a custom property and remapping those re-themes the app without a single
+`dark:` variant in a component. The rule that keeps it working is that a component names a
+token and never a colour; [test/theme.test.ts](test/theme.test.ts) enforces it.
 
 ## Stack
 

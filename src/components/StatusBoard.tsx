@@ -36,9 +36,9 @@ import {
  * and the same preferences object, so a box turned off is off in both.
  */
 
-const GREEN = "#51CF66";
-const GOLD = "#FFD43B";
-const CORAL = "#FF6B6B";
+const GREEN = "var(--color-signal-green)";
+const GOLD = "var(--color-signal-amber)";
+const CORAL = "var(--color-signal-red)";
 
 interface SeamCard {
   key: BoardBox;
@@ -102,7 +102,7 @@ function seamsOf(status: InstanceStatus): SeamCard[] {
       value: "No clients",
       others: [],
       state: "Not served",
-      fill: "#e4e4e7",
+      fill: "var(--color-zinc-200)",
       detail:
         "The store seam it would adapt is real; the server over the pile is not built yet. This box stays grey until it is.",
     },
@@ -208,7 +208,7 @@ function chip(text: string, fill?: string, key?: string) {
 
 function Cannot({ compact }: { compact?: boolean }) {
   return (
-    <div className="border-2 border-black bg-[#FFD5CC] p-3.5 flex gap-3 items-start">
+    <div className="border-2 border-black bg-coral p-3.5 flex gap-3 items-start">
       <EyeOff className="w-4 h-4 shrink-0 mt-0.5" />
       <p className="text-[11px] leading-relaxed text-zinc-800">
         <span className={`text-[10px] ${MONO}`}>
@@ -254,7 +254,7 @@ function SettingsPanel({
               <span
                 className="w-[30px] h-4 border-2 border-black flex items-center p-0.5 shrink-0"
                 style={{
-                  backgroundColor: prefs.boxes[key] ? GREEN : "#fff",
+                  backgroundColor: prefs.boxes[key] ? GREEN : "var(--color-white)",
                   justifyContent: prefs.boxes[key] ? "flex-end" : "flex-start",
                 }}
               >
@@ -287,7 +287,9 @@ function SettingsPanel({
                 >
                   <span
                     className="w-4 h-4 border-2 border-black flex items-center justify-center shrink-0"
-                    style={{ backgroundColor: prefs.stats[tile.key] ? GREEN : "#fff" }}
+                    style={{
+                      backgroundColor: prefs.stats[tile.key] ? GREEN : "var(--color-white)",
+                    }}
                   >
                     {prefs.stats[tile.key] && <Check className="w-2.5 h-2.5" strokeWidth={4} />}
                   </span>
@@ -336,10 +338,7 @@ export default function StatusBoard({
   // board that renders defaults here would be inventing the very facts it exists to report.
   if (!status) {
     return (
-      <div
-        id="status-board"
-        className="bg-white border-3 border-black p-5 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
-      >
+      <div id="status-board" className="bg-white border-3 border-black p-5 shadow-hard-4">
         <span className={`text-[9px] ${MONO}`}>Instance status</span>
         <p className="text-xs text-zinc-700 mt-1">
           The server has not said what it is wired to. Nothing here is a claim about this
@@ -373,7 +372,7 @@ export default function StatusBoard({
 
   const seamCount = (
     <span
-      className={`border-2 border-black px-2.5 py-1 text-[10px] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] ${MONO}`}
+      className={`border-2 border-black px-2.5 py-1 text-[10px] shadow-hard-4 ${MONO}`}
       style={{ backgroundColor: configured === 3 ? GREEN : configured === 0 ? CORAL : GOLD }}
     >
       {configured} of 3 seams configured
@@ -386,7 +385,7 @@ export default function StatusBoard({
         <button
           onClick={onExpand}
           aria-label="Open the full board"
-          className="border-2 border-black bg-white w-9 h-9 flex items-center justify-center shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] cursor-pointer"
+          className="border-2 border-black bg-white w-9 h-9 flex items-center justify-center shadow-hard-3 cursor-pointer"
         >
           <Maximize2 className="w-4 h-4" />
         </button>
@@ -395,8 +394,8 @@ export default function StatusBoard({
         onClick={onSettingsToggle}
         aria-label="What to show"
         aria-expanded={settingsOpen}
-        className="border-2 border-black w-9 h-9 flex items-center justify-center shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] cursor-pointer"
-        style={{ backgroundColor: settingsOpen ? GOLD : "#fff" }}
+        className="border-2 border-black w-9 h-9 flex items-center justify-center shadow-hard-3 cursor-pointer"
+        style={{ backgroundColor: settingsOpen ? GOLD : "var(--color-white)" }}
       >
         <Settings className="w-4 h-4" />
       </button>
@@ -404,7 +403,7 @@ export default function StatusBoard({
         <button
           onClick={onClose}
           aria-label="Close"
-          className="border-2 border-black bg-white w-9 h-9 flex items-center justify-center shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] cursor-pointer"
+          className="border-2 border-black bg-white w-9 h-9 flex items-center justify-center shadow-hard-3 cursor-pointer"
         >
           <X className="w-4 h-4" />
         </button>
@@ -444,7 +443,7 @@ export default function StatusBoard({
 
   const statStrip =
     stats === null ? (
-      <div className="border-2 border-black bg-white p-3.5 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex flex-col gap-1">
+      <div className="border-2 border-black bg-white p-3.5 shadow-hard-4 flex flex-col gap-1">
         <span className={`text-[9px] ${MONO}`}>Engagement stats</span>
         <span className="font-display font-bold uppercase tracking-tight text-zinc-400 text-lg leading-none">
           Solo — none
@@ -464,7 +463,7 @@ export default function StatusBoard({
             variant === "popup" ? (
               <div
                 key={tile.key}
-                className="border-2 border-black bg-[#F8F7F4] px-2.5 py-2 flex items-baseline justify-between gap-2"
+                className="border-2 border-black bg-paper px-2.5 py-2 flex items-baseline justify-between gap-2"
               >
                 <span className={`text-[9px] ${MONO}`}>{tile.label}</span>
                 <span className="font-display font-bold tracking-tight text-lg leading-none text-black">
@@ -474,7 +473,7 @@ export default function StatusBoard({
             ) : (
               <div
                 key={tile.key}
-                className="grow basis-[150px] border-2 border-black bg-white p-3.5 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex flex-col gap-1"
+                className="grow basis-[150px] border-2 border-black bg-white p-3.5 shadow-hard-4 flex flex-col gap-1"
               >
                 <span className={`text-[9px] ${MONO}`}>{tile.label}</span>
                 <span className="font-display font-bold tracking-tight text-3xl leading-none text-black">
@@ -492,20 +491,17 @@ export default function StatusBoard({
     return (
       <div
         id="status-board"
-        className="w-[380px] max-w-[92vw] bg-white border-3 border-black p-5 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col gap-3 max-h-[85vh] overflow-y-auto"
+        className="w-[380px] max-w-[92vw] bg-white border-3 border-black p-5 shadow-hard-8 flex flex-col gap-3 max-h-[85vh] overflow-y-auto"
       >
         {header}
         {settingsOpen && (
-          <div className="border-2 border-black bg-[#F8F7F4] p-3">
+          <div className="border-2 border-black bg-paper p-3">
             <SettingsPanel prefs={prefs} onChange={onPrefsChange} tiles={allTiles} />
           </div>
         )}
         <div className="flex flex-col gap-2.5">
           {seams.map((seam) => (
-            <div
-              key={seam.key}
-              className="border-2 border-black bg-white shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex"
-            >
+            <div key={seam.key} className="border-2 border-black bg-white shadow-hard-3 flex">
               <div
                 className="w-3 border-r-2 border-black shrink-0"
                 style={{ backgroundColor: seam.fill }}
@@ -536,12 +532,12 @@ export default function StatusBoard({
   const rest = seams.filter((s) => s.key !== "model");
 
   return (
-    <div id="status-board" className="bg-[#F8F7F4] p-6 flex flex-col gap-4 relative">
+    <div id="status-board" className="bg-paper p-6 flex flex-col gap-4 relative">
       {header}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
         {model && (
-          <div className="md:col-span-2 md:row-span-2 border-2 border-black bg-white p-5 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex flex-col gap-3.5">
+          <div className="md:col-span-2 md:row-span-2 border-2 border-black bg-white p-5 shadow-hard-4 flex flex-col gap-3.5">
             <div className="flex items-center justify-between gap-3">
               <span className={`text-[10px] ${MONO}`}>Model</span>
               {chip(model.state, model.fill)}
@@ -582,7 +578,7 @@ export default function StatusBoard({
                       key={i}
                       data-chain-slot={i === 0 ? "first" : "later"}
                       className="grow h-5 border-2 border-black"
-                      style={{ backgroundColor: i === 0 ? GREEN : "#fff" }}
+                      style={{ backgroundColor: i === 0 ? GREEN : "var(--color-white)" }}
                     />
                   ))
                 )}
@@ -595,7 +591,7 @@ export default function StatusBoard({
         {rest.map((seam) => (
           <div
             key={seam.key}
-            className="border-2 border-black bg-white p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex flex-col gap-2"
+            className="border-2 border-black bg-white p-4 shadow-hard-4 flex flex-col gap-2"
           >
             <span className={`text-[9px] ${MONO}`}>{seam.label}</span>
             <span className="font-display font-bold uppercase tracking-tight text-2xl leading-none text-black">
@@ -614,7 +610,7 @@ export default function StatusBoard({
       <Cannot />
 
       {settingsOpen && (
-        <div className="absolute top-20 right-6 w-[320px] bg-white border-3 border-black p-4 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] z-10 flex flex-col gap-3">
+        <div className="absolute top-20 right-6 w-[320px] bg-white border-3 border-black p-4 shadow-hard-8 z-10 flex flex-col gap-3">
           <div className="flex items-center justify-between gap-2">
             <span className="font-display font-bold uppercase tracking-tight text-black">
               What to show

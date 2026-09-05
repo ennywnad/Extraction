@@ -250,7 +250,7 @@ export default function GuidedDrill({
   return (
     <div className="space-y-6 flex flex-col h-[520px]" id="guided-drill-mode">
       {/* Header Info */}
-      <div className="bg-white border-3 border-black p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-start gap-4 shrink-0">
+      <div className="bg-white border-3 border-black p-4 shadow-hard-4 flex items-start gap-4 shrink-0">
         <HelpCircle className="w-5 h-5 text-black shrink-0 mt-0.5" />
         <div>
           <h3 className="font-display font-black text-xs uppercase text-black tracking-wider flex items-center gap-2">
@@ -267,7 +267,7 @@ export default function GuidedDrill({
       </div>
 
       {/* Interactive Conversation Timeline Thread block */}
-      <div className="flex-1 overflow-y-auto border-3 border-black bg-[#F8F7F4] p-4 space-y-4 custom-scrollbar">
+      <div className="flex-1 overflow-y-auto border-3 border-black bg-paper p-4 space-y-4 custom-scrollbar">
         {qaHistory.map((h, i) => (
           <div key={i} className="space-y-3">
             {/* AI Question Bubble */}
@@ -319,7 +319,7 @@ export default function GuidedDrill({
                 CRITICAL FOCUS // {contextNote}
               </span>
             )}
-            <div className="bg-white border-2 border-black border-l-8 border-l-black p-4 text-xs text-black font-sans shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+            <div className="bg-white border-2 border-black border-l-8 border-l-black p-4 text-xs text-black font-sans shadow-hard-2">
               {currentQuestion}
             </div>
           </motion.div>
@@ -366,7 +366,7 @@ export default function GuidedDrill({
             className={`px-3 border-2 border-black flex items-center justify-center transition-all cursor-pointer ${
               isRecording
                 ? "bg-red-500 text-white animate-pulse"
-                : "bg-white hover:bg-zinc-100 text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                : "bg-white hover:bg-zinc-100 text-black shadow-hard-2"
             }`}
             title="Speak your answer (Speech-to-Text)"
           >
@@ -376,7 +376,7 @@ export default function GuidedDrill({
           <button
             disabled={!answerDraft.trim() || loading}
             onClick={handleSendAnswer}
-            className="px-5 py-3 border-2 border-black bg-black text-white hover:bg-white hover:text-black font-display font-black text-xs uppercase tracking-wider flex items-center justify-center cursor-pointer shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all"
+            className="px-5 py-3 border-2 border-black bg-black text-white hover:bg-white hover:text-black font-display font-black text-xs uppercase tracking-wider flex items-center justify-center cursor-pointer shadow-hard-3 transition-all"
           >
             <Send className="w-3.5 h-3.5" />
           </button>

@@ -205,7 +205,7 @@ export default function ExportPanel({
   return (
     <div className="max-w-5xl mx-auto px-4 py-8 md:py-12 space-y-6" id="export-panel">
       {/* Upper Navigation Header */}
-      <div className="flex justify-between items-center bg-white p-4.5 border-3 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] shrink-0">
+      <div className="flex justify-between items-center bg-white p-4.5 border-3 border-black shadow-hard-4 shrink-0">
         <button
           onClick={onExitToDashboard}
           className="flex items-center gap-1.5 text-xs border-2 border-black bg-white hover:bg-zinc-50 text-black px-3.5 py-1.5 font-display font-bold uppercase tracking-wider cursor-pointer transition-all"
@@ -229,7 +229,7 @@ export default function ExportPanel({
 
           <button
             onClick={onStartNewSession}
-            className="px-4 py-2 border-2 border-black bg-black text-white hover:bg-[#F8F7F4] hover:text-black text-xs font-black font-display uppercase tracking-wider flex items-center gap-1.5 cursor-pointer transition shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
+            className="px-4 py-2 border-2 border-black bg-black text-white hover:bg-paper hover:text-black text-xs font-black font-display uppercase tracking-wider flex items-center gap-1.5 cursor-pointer transition shadow-hard-3"
           >
             <Plus className="w-3.5 h-3.5" />
             New Extraction
@@ -240,7 +240,7 @@ export default function ExportPanel({
       {/* Group deliverable controls. Explicit, because the level set is shared and the pile
           keeps growing underneath it. */}
       {isEngagement && (
-        <div className="mb-6 bg-[#FFF3BF] border-3 border-black p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex flex-wrap items-center justify-between gap-3">
+        <div className="mb-6 bg-butter border-3 border-black p-4 shadow-hard-4 flex flex-wrap items-center justify-between gap-3">
           <div className="min-w-0">
             <p className="text-xs font-black uppercase tracking-wider font-display text-black">
               Level set
@@ -291,7 +291,7 @@ export default function ExportPanel({
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Document Pane - Outline and summary */}
-          <div className="lg:col-span-2 space-y-6 bg-white border-3 border-black p-6 md:p-8 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
+          <div className="lg:col-span-2 space-y-6 bg-white border-3 border-black p-6 md:p-8 shadow-hard-6">
             {/* Header info */}
             <div>
               <span className="text-[9px] uppercase tracking-widest font-mono font-bold text-black flex items-center gap-1.5">
@@ -327,7 +327,7 @@ export default function ExportPanel({
                     className="w-full text-xs font-mono p-3 bg-zinc-50 border-2 border-black focus:outline-none focus:ring-0 text-zinc-900"
                   />
                 ) : (
-                  <div className="p-5 bg-[#F8F7F4] border-2 border-black whitespace-pre-wrap text-xs md:text-sm leading-relaxed text-black font-mono custom-scrollbar max-h-[460px] overflow-y-auto">
+                  <div className="p-5 bg-paper border-2 border-black whitespace-pre-wrap text-xs md:text-sm leading-relaxed text-black font-mono custom-scrollbar max-h-[460px] overflow-y-auto">
                     {session.synthesizedOutline}
                   </div>
                 )}
@@ -360,7 +360,7 @@ export default function ExportPanel({
           {/* Sidebar - Action list and export options */}
           <div className="space-y-6">
             {/* Dynamic Re-Synthesis Modifier Controls */}
-            <div className="bg-[#FFFDF0] border-3 border-black p-5 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] space-y-4">
+            <div className="bg-ivory border-3 border-black p-5 shadow-hard-4 space-y-4">
               <div className="flex justify-between items-center mb-1">
                 <span className="text-[10px] uppercase font-bold tracking-wider font-display text-black flex items-center gap-1.5 leading-none">
                   <Sparkles className="w-3.5 h-3.5" />
@@ -398,7 +398,7 @@ export default function ExportPanel({
                         className={`text-[8px] font-mono py-1 border border-black cursor-pointer uppercase font-extrabold ${
                           promptingStyle === t.id
                             ? "bg-black text-white font-black"
-                            : "bg-white text-black hover:bg-[#F8F7F4]"
+                            : "bg-white text-black hover:bg-paper"
                         }`}
                       >
                         {t.label}
@@ -436,7 +436,7 @@ export default function ExportPanel({
                         className={`text-[8px] font-mono py-1 border border-black cursor-pointer uppercase font-extrabold leading-none ${
                           outputFilter === f.id
                             ? "bg-black text-white font-black"
-                            : "bg-white text-black hover:bg-[#F8F7F4]"
+                            : "bg-white text-black hover:bg-paper"
                         }`}
                       >
                         {f.label === "Full Summary"
@@ -488,7 +488,7 @@ export default function ExportPanel({
                     triggerSynthesize(promptingStyle, outputFilter, cognitiveBiasAudit)
                   }
                   disabled={loading}
-                  className="w-full py-2 border-2 border-black bg-black text-yellow-300 font-display font-black text-[10px] uppercase tracking-widest cursor-pointer hover:bg-zinc-100 hover:text-black transition-all flex items-center justify-center gap-1.5 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                  className="w-full py-2 border-2 border-black bg-black text-yellow-300 font-display font-black text-[10px] uppercase tracking-widest cursor-pointer hover:bg-zinc-100 hover:text-black transition-all flex items-center justify-center gap-1.5 shadow-hard-2"
                 >
                   <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
                   Regenerate Outline
@@ -497,7 +497,7 @@ export default function ExportPanel({
             </div>
 
             {/* Action items segment block */}
-            <div className="bg-white border-3 border-black p-5 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
+            <div className="bg-white border-3 border-black p-5 shadow-hard-6">
               <span className="block text-[10px] uppercase font-bold tracking-wider font-display text-black flex items-center gap-1.5 mb-3.5">
                 <ListTodo className="w-4 h-4 text-black" />
                 Action Items Pile
@@ -507,7 +507,7 @@ export default function ExportPanel({
                 {(session.synthesizedActionItems || []).map((action, index) => (
                   <div
                     key={index}
-                    className="flex p-3 bg-[#F8F7F4] border-2 border-black text-xs text-black items-start gap-2.5 hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
+                    className="flex p-3 bg-paper border-2 border-black text-xs text-black items-start gap-2.5 hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-hard-2 transition-all"
                   >
                     <input type="checkbox" className="mt-0.5 accent-black" />
                     <span className="leading-relaxed font-semibold font-mono text-[11px]">
@@ -519,7 +519,7 @@ export default function ExportPanel({
             </div>
 
             {/* Sharing & Printing tools */}
-            <div className="bg-white border-3 border-black p-5 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] space-y-4">
+            <div className="bg-white border-3 border-black p-5 shadow-hard-6 space-y-4">
               <span className="block text-[10px] uppercase font-bold tracking-wider font-display text-black">
                 Sharing & Output Tools
               </span>

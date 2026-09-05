@@ -58,7 +58,7 @@ export default function CompareSettingsModal({
           initial={{ opacity: 0, scale: 0.95, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 15 }}
-          className="relative bg-white border-3 border-black p-6 md:p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] z-10 font-sans custom-scrollbar"
+          className="relative bg-white border-3 border-black p-6 md:p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-hard-8 z-10 font-sans custom-scrollbar"
         >
           {/* Header */}
           <div className="flex justify-between items-start border-b-3 border-black pb-4 mb-6">
@@ -73,7 +73,7 @@ export default function CompareSettingsModal({
             </div>
             <button
               onClick={onClose}
-              className="p-1 border-2 border-black bg-white hover:bg-zinc-100 text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition cursor-pointer"
+              className="p-1 border-2 border-black bg-white hover:bg-zinc-100 text-black shadow-hard-2 transition cursor-pointer"
               title="Close modal"
             >
               <X className="w-4 h-4" />
@@ -118,7 +118,7 @@ export default function CompareSettingsModal({
             <div className="pt-2">
               {activeTab === "framing" && (
                 <div className="space-y-6">
-                  <div className="bg-[#FFFDE0] border-2 border-black p-5 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                  <div className="bg-cream border-2 border-black p-5 shadow-hard-4">
                     <span className="font-black uppercase tracking-wider block flex items-center gap-1.5 font-mono text-xs mb-2 text-black">
                       <HelpCircle className="w-4 h-4 text-black" />
                       Session Framing Guide
@@ -135,7 +135,7 @@ export default function CompareSettingsModal({
                     {/* Tip 1 */}
                     <div className="border-2 border-black p-4 bg-zinc-50 flex flex-col justify-between">
                       <div>
-                        <span className="bg-[#FFD2D2] text-black border border-black px-2 py-0.5 text-[9px] font-mono font-bold uppercase tracking-wide inline-block mb-3">
+                        <span className="bg-rose text-black border border-black px-2 py-0.5 text-[9px] font-mono font-bold uppercase tracking-wide inline-block mb-3">
                           Tip 01 // Be Specific
                         </span>
                         <h4 className="text-xs font-black uppercase tracking-tight text-black mb-2">
@@ -163,7 +163,7 @@ export default function CompareSettingsModal({
                     {/* Tip 2 */}
                     <div className="border-2 border-black p-4 bg-zinc-50 flex flex-col justify-between">
                       <div>
-                        <span className="bg-[#D2E3FC] text-black border border-black px-2 py-0.5 text-[9px] font-mono font-bold uppercase tracking-wide inline-block mb-3">
+                        <span className="bg-powder text-black border border-black px-2 py-0.5 text-[9px] font-mono font-bold uppercase tracking-wide inline-block mb-3">
                           Tip 02 // stream-of-consciousness
                         </span>
                         <h4 className="text-xs font-black uppercase tracking-tight text-black mb-2">
@@ -187,7 +187,7 @@ export default function CompareSettingsModal({
                     {/* Tip 3 */}
                     <div className="border-2 border-black p-4 bg-zinc-50 flex flex-col justify-between">
                       <div>
-                        <span className="bg-[#CEEAD6] text-black border border-black px-2 py-0.5 text-[9px] font-mono font-bold uppercase tracking-wide inline-block mb-3">
+                        <span className="bg-sage text-black border border-black px-2 py-0.5 text-[9px] font-mono font-bold uppercase tracking-wide inline-block mb-3">
                           Tip 03 // State constraints
                         </span>
                         <h4 className="text-xs font-black uppercase tracking-tight text-black mb-2">
@@ -218,7 +218,7 @@ export default function CompareSettingsModal({
                   <div className="border-2 border-black p-4 bg-zinc-50 flex flex-col justify-between">
                     <div>
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="bg-[#D2E3FC] text-black border border-black px-2 py-0.5 text-[9px] font-mono font-bold uppercase tracking-wide">
+                        <span className="bg-powder text-black border border-black px-2 py-0.5 text-[9px] font-mono font-bold uppercase tracking-wide">
                           Standard Guide
                         </span>
                       </div>
@@ -261,10 +261,10 @@ export default function CompareSettingsModal({
                   </div>
 
                   {/* Socratic */}
-                  <div className="border-2 border-black p-4 bg-[#FFE8CC] flex flex-col justify-between">
+                  <div className="border-2 border-black p-4 bg-peach flex flex-col justify-between">
                     <div>
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="bg-[#FFE3E3] text-black border border-black px-2 py-0.5 text-[9px] font-mono font-bold uppercase tracking-wide flex items-center gap-1">
+                        <span className="bg-blush text-black border border-black px-2 py-0.5 text-[9px] font-mono font-bold uppercase tracking-wide flex items-center gap-1">
                           <ShieldAlert className="w-3 h-3 text-red-500 shrink-0" />
                           Socratic Pressure
                         </span>
@@ -309,10 +309,10 @@ export default function CompareSettingsModal({
                   </div>
 
                   {/* Empathetic */}
-                  <div className="border-2 border-black p-4 bg-[#E6F4EA] flex flex-col justify-between">
+                  <div className="border-2 border-black p-4 bg-mint flex flex-col justify-between">
                     <div>
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="bg-[#FFF] text-black border border-black px-2 py-0.5 text-[9px] font-mono font-bold uppercase tracking-wide flex items-center gap-1">
+                        <span className="bg-white text-black border border-black px-2 py-0.5 text-[9px] font-mono font-bold uppercase tracking-wide flex items-center gap-1">
                           <Smile className="w-3 h-3 text-green-600 shrink-0" />
                           Empathetic Vent
                         </span>
@@ -362,7 +362,7 @@ export default function CompareSettingsModal({
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {/* Full summary */}
                   <div className="border-2 border-black p-4 bg-zinc-50">
-                    <span className="bg-[#FFFEE0] text-black border border-black px-2 py-0.5 text-[9px] font-mono font-bold uppercase tracking-wide flex items-center gap-1.5 w-max mb-3">
+                    <span className="bg-cream text-black border border-black px-2 py-0.5 text-[9px] font-mono font-bold uppercase tracking-wide flex items-center gap-1.5 w-max mb-3">
                       Full Summary (Blueprint)
                     </span>
                     <h4 className="text-xs font-black uppercase tracking-tight text-black mb-2">
@@ -386,7 +386,7 @@ export default function CompareSettingsModal({
 
                   {/* Milestones focus */}
                   <div className="border-2 border-black p-4 bg-zinc-50">
-                    <span className="bg-[#E8F0FE] text-black border border-black px-2 py-0.5 text-[9px] font-mono font-bold uppercase tracking-wide flex items-center gap-1.5 w-max mb-3">
+                    <span className="bg-frost text-black border border-black px-2 py-0.5 text-[9px] font-mono font-bold uppercase tracking-wide flex items-center gap-1.5 w-max mb-3">
                       <Calendar className="w-3.5 h-3.5 text-blue-500" />
                       Milestones Only (Roadmap)
                     </span>
@@ -411,7 +411,7 @@ export default function CompareSettingsModal({
 
                   {/* Checklists focus */}
                   <div className="border-2 border-black p-4 bg-zinc-50">
-                    <span className="bg-[#E6F4EA] text-black border border-black px-2 py-0.5 text-[9px] font-mono font-bold uppercase tracking-wide flex items-center gap-1.5 w-max mb-3">
+                    <span className="bg-mint text-black border border-black px-2 py-0.5 text-[9px] font-mono font-bold uppercase tracking-wide flex items-center gap-1.5 w-max mb-3">
                       <ListTodo className="w-3.5 h-3.5 text-green-600" />
                       Checklists Only (Actions)
                     </span>
@@ -463,8 +463,8 @@ export default function CompareSettingsModal({
                   </div>
 
                   {/* Audit On */}
-                  <div className="border-2 border-black p-4 bg-[#FFE8CC]">
-                    <span className="bg-[#FFFEE0] text-black border border-black px-2 py-0.5 text-[9px] font-mono font-bold uppercase tracking-wide flex items-center gap-1.5 w-max mb-3 font-black">
+                  <div className="border-2 border-black p-4 bg-peach">
+                    <span className="bg-cream text-black border border-black px-2 py-0.5 text-[9px] font-mono font-bold uppercase tracking-wide flex items-center gap-1.5 w-max mb-3 font-black">
                       <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
                       Audit On (Diagnostics)
                     </span>
@@ -481,7 +481,7 @@ export default function CompareSettingsModal({
                       </span>
                       <div className="p-3 bg-white border border-black text-xs text-zinc-800 leading-relaxed font-sans font-medium italic space-y-2">
                         <p>"We analyzed your career pivot thoughts..."</p>
-                        <div className="bg-[#FFF9DB] border border-black p-2 rounded-none font-mono text-[9px] leading-relaxed text-black not-italic">
+                        <div className="bg-vellum border border-black p-2 rounded-none font-mono text-[9px] leading-relaxed text-black not-italic">
                           <span className="font-bold text-red-650 block uppercase tracking-wider mb-1 flex items-center gap-1">
                             <FolderLock className="w-3 h-3 shrink-0" />
                             Cognitive Bias Audit // Diagnostic Traps:
@@ -505,7 +505,7 @@ export default function CompareSettingsModal({
                   <div className="border-2 border-black p-4 bg-zinc-50 flex flex-col justify-between">
                     <div>
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="bg-[#E8F0FE] text-black border border-black px-2 py-0.5 text-[9px] font-mono font-bold uppercase tracking-wide flex items-center gap-1">
+                        <span className="bg-frost text-black border border-black px-2 py-0.5 text-[9px] font-mono font-bold uppercase tracking-wide flex items-center gap-1">
                           <ListTodo className="w-3 h-3 text-blue-600 shrink-0" />
                           Organize Outline
                         </span>
@@ -548,10 +548,10 @@ export default function CompareSettingsModal({
                   </div>
 
                   {/* Choice/Action Intention */}
-                  <div className="border-2 border-black p-4 bg-[#FFE8CC] flex flex-col justify-between">
+                  <div className="border-2 border-black p-4 bg-peach flex flex-col justify-between">
                     <div>
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="bg-[#FFE3E3] text-black border border-black px-2 py-0.5 text-[9px] font-mono font-bold uppercase tracking-wide flex items-center gap-1">
+                        <span className="bg-blush text-black border border-black px-2 py-0.5 text-[9px] font-mono font-bold uppercase tracking-wide flex items-center gap-1">
                           <Target className="w-3 h-3 text-red-500 shrink-0" />
                           Make a Choice
                         </span>
@@ -594,10 +594,10 @@ export default function CompareSettingsModal({
                   </div>
 
                   {/* Decompress/Peace Intention */}
-                  <div className="border-2 border-black p-4 bg-[#E6F4EA] flex flex-col justify-between">
+                  <div className="border-2 border-black p-4 bg-mint flex flex-col justify-between">
                     <div>
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="bg-[#FFF] text-black border border-black px-2 py-0.5 text-[9px] font-mono font-bold uppercase tracking-wide flex items-center gap-1">
+                        <span className="bg-white text-black border border-black px-2 py-0.5 text-[9px] font-mono font-bold uppercase tracking-wide flex items-center gap-1">
                           <Smile className="w-3 h-3 text-green-600 shrink-0" />
                           Decompress Fog
                         </span>
@@ -647,7 +647,7 @@ export default function CompareSettingsModal({
                   <div className="border-2 border-black p-4 bg-zinc-50 flex flex-col justify-between">
                     <div>
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="bg-[#FFE8CC] text-black border border-black px-2 py-0.5 text-[9px] font-mono font-bold uppercase tracking-wide flex items-center gap-1">
+                        <span className="bg-peach text-black border border-black px-2 py-0.5 text-[9px] font-mono font-bold uppercase tracking-wide flex items-center gap-1">
                           <Brain className="w-3 h-3 text-amber-600 shrink-0" />
                           The Decision Jam
                         </span>
@@ -691,7 +691,7 @@ export default function CompareSettingsModal({
                   <div className="border-2 border-black p-4 bg-zinc-50 flex flex-col justify-between">
                     <div>
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="bg-[#E6F4EA] text-black border border-black px-2 py-0.5 text-[9px] font-mono font-bold uppercase tracking-wide flex items-center gap-1">
+                        <span className="bg-mint text-black border border-black px-2 py-0.5 text-[9px] font-mono font-bold uppercase tracking-wide flex items-center gap-1">
                           <Smile className="w-3 h-3 text-green-600 shrink-0" />
                           The Burnout Vent
                         </span>
@@ -736,7 +736,7 @@ export default function CompareSettingsModal({
                   <div className="border-2 border-black p-4 bg-zinc-50 flex flex-col justify-between">
                     <div>
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="bg-[#E8F0FE] text-black border border-black px-2 py-0.5 text-[9px] font-mono font-bold uppercase tracking-wide flex items-center gap-1">
+                        <span className="bg-frost text-black border border-black px-2 py-0.5 text-[9px] font-mono font-bold uppercase tracking-wide flex items-center gap-1">
                           <Timer className="w-3 h-3 text-blue-600 shrink-0" />
                           The Quick Dump
                         </span>

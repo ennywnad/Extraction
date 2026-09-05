@@ -66,7 +66,7 @@ export default function DevilsAdvocate({ topic, onAddThought, thoughts }: Devils
 
   return (
     <div className="space-y-6" id="devils-advocate-mode">
-      <div className="bg-white border-3 border-black p-4.5 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-start gap-4">
+      <div className="bg-white border-3 border-black p-4.5 shadow-hard-4 flex items-start gap-4">
         <ShieldAlert className="w-5 h-5 text-black shrink-0 mt-0.5" />
         <div className="flex-1">
           <h3 className="font-display font-black text-xs uppercase text-black tracking-wider">
@@ -128,7 +128,7 @@ export default function DevilsAdvocate({ topic, onAddThought, thoughts }: Devils
             <button
               disabled={!response.trim()}
               onClick={handleSave}
-              className="px-5 py-2.5 border-2 border-black bg-black text-white hover:bg-[#F8F7F4] hover:text-black font-display font-black text-xs uppercase tracking-wider flex items-center gap-1.5 transition cursor-pointer shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
+              className="px-5 py-2.5 border-2 border-black bg-black text-white hover:bg-paper hover:text-black font-display font-black text-xs uppercase tracking-wider flex items-center gap-1.5 transition cursor-pointer shadow-hard-3"
             >
               <Send className="w-3.5 h-3.5" />
               Capture Reaction
