@@ -103,24 +103,35 @@ POLICY
 
 echo "==> Usage alert policies"
 
-# ~2M Flash input tokens/hour is far above any real workshop and ~\$0.60/hr if sustained.
+# Every threshold below is a multiple of one measured number, so it can be re-derived rather
+# than trusted. Baseline: src/App.tsx polls every 15s, so one open tab is 4 requests/hour x 60
+# = 240 requests/hour, and a 30-person workshop is ~7,200 requests/hour. Each threshold is set
+# roughly an order of magnitude above that, which is high enough that a page means something
+# is genuinely wrong and low enough to catch a runaway in its first hour rather than its bill.
+
+# ~2M Flash input tokens/hour is far above any real workshop and cheap to sit under. Note a
+# group level set is TWO model calls over the whole pile (classify, then synthesise), so
+# budget synthesis at double what one prompt looks like.
 policy "Extraction: Vertex AI token burn" \
   'metric.type="aiplatform.googleapis.com/publisher/online_serving/token_count"' \
   2000000 3600s \
-  "Vertex AI consumed more than 2M tokens in an hour. A workshop uses a few hundred thousand. Check for a client retry loop against the /api/session/* routes."
+  "Vertex AI consumed more than 2M tokens in an hour. A workshop uses a few hundred thousand, remembering that one level set is two calls over the whole pile. Check for a client retry loop against the /api/session/* routes."
 
-# 1M reads/hour is ~\$0.30/hr, ~\$216/month if it never stops. The 5s client poll is the
-# usual cause: each poll reads the engagement doc plus every fragment in it.
+# 100k reads/hour is ~\$0.03/hr. A 30-person workshop is ~7,200/hr, so this is ~14x steady
+# state. An unchanged poll costs ONE read: the route settles it on the ETag against
+# getVersion, which reads the engagement document alone (thoughtCount is stored on it, not
+# counted). If this fires, the pile is being loaded in full on every poll — look for a client
+# that stopped sending If-None-Match, or an engagement whose updatedAt is moving constantly.
 policy "Extraction: Firestore read burn" \
   'metric.type="firestore.googleapis.com/document/read_count"' \
-  1000000 3600s \
-  "Firestore served more than 1M document reads in an hour. Most likely a browser tab left open on the shared pile: the 5-second poll reads every fragment each time."
+  100000 3600s \
+  "Firestore served more than 100k document reads in an hour, against a steady state of roughly 240 per open tab. An unchanged 15-second poll should cost one read, so this means polls are missing the 304 path and loading the whole pile, or a client is polling far faster than 15s."
 
-# max-instances=3 x concurrency=80 makes this the practical request ceiling.
+# max-instances=3 x concurrency=80 caps compute, so this is about what is downstream.
 policy "Extraction: Cloud Run request burn" \
   'metric.type="run.googleapis.com/request_count"' \
-  200000 3600s \
-  "Cloud Run served more than 200k requests in an hour. Compute cost is capped by max-instances=3, but this usually means something downstream (Vertex, Firestore) is being driven hard."
+  50000 3600s \
+  "Cloud Run served more than 50k requests in an hour, against roughly 240 per open tab. Compute cost is capped by max-instances=3, so the concern is what each request drives: Vertex tokens and Firestore reads. If the solo instance is deployed without IAP, check this first — /api/session/* is unauthenticated there."
 
 cat <<NEXT
 

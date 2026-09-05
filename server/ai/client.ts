@@ -79,12 +79,28 @@ export function geminiBackend(): GeminiBackend {
  * Models to try, in order. Overridable because the valid ids differ between the Developer
  * API and Vertex and move faster than this file does — verify them against the backend you
  * deploy with rather than trusting this default.
+ *
+ * **Verify the retirement dates before trusting this list.** Last checked against the Vertex
+ * release notes on 2026-09-03, and the previous default had already gone dead in place: it
+ * was `["gemini-2.5-flash", "gemini-2.0-flash"]`, and 2.0-flash shut down on 2026-06-01 (and
+ * stopped being available to projects with no prior usage on 2026-02-06). A retired id
+ * answers 404, which is not in FATAL_STATUSES, so the chain advanced to a second dead model
+ * and every request paid two round trips to reach "All models failed". `deploy.sh` sets no
+ * GEMINI_MODELS, so whatever is written here is what production runs.
+ *
+ * Current chain, with the dates that will make it wrong:
+ *   gemini-3.5-flash       stable 2026-05-19, no retirement announced
+ *   gemini-3.5-flash-lite  stable 2026-07-21, no retirement announced
+ *
+ * The second entry is a cheaper model rather than an older one, which is the only fallback
+ * that means anything: the chain advances on "this id is not served here", and a *previous
+ * generation* id is strictly more likely to have been retired than the one that just failed.
  */
 export function modelChain(): string[] {
   const configured = process.env.GEMINI_MODELS?.split(",")
     .map((m) => m.trim())
     .filter(Boolean);
-  return configured?.length ? configured : ["gemini-2.5-flash", "gemini-2.0-flash"];
+  return configured?.length ? configured : ["gemini-3.5-flash", "gemini-3.5-flash-lite"];
 }
 
 /**

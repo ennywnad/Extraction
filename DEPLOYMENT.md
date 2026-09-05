@@ -42,8 +42,37 @@ Idempotent — safe to re-run. It enables the APIs, creates the Firestore databa
 a dedicated `extraction-run` service account (deliberately not the default compute account,
 which carries project Editor) with `datastore.user` + `aiplatform.user`.
 
+It also grants the **build** identity, which is a different principal from the runtime one and
+easy to miss. `deploy.sh` builds with `--source .`, and for any project where Cloud Build was
+enabled on or after 2024-04-29 that build runs as the _Compute Engine default_ service account
+— which Google deliberately ships without enough permission to do it. Without
+`roles/run.builder` the first deploy fails inside Cloud Build, naming a service account that
+appears nowhere else in this repo. Bootstrap grants:
+
+| Principal                       | Role                                      | Why                              |
+| :------------------------------ | :---------------------------------------- | :------------------------------- |
+| `PROJECT_NUMBER-compute@…`      | `roles/run.builder`                       | Runs the source build            |
+| you (the active gcloud account) | `roles/run.sourceDeveloper`               | Deploys from source              |
+| you                             | `roles/serviceusage.serviceUsageConsumer` | Source deploys require it        |
+| you, on `extraction-run`        | `roles/iam.serviceAccountUser`            | `--service-account` is an act-as |
+
+The runtime and build principals stay separate on purpose: the build needs to push images, the
+runtime needs Firestore and Vertex, and neither should hold the other's roles.
+
 It deliberately creates no Artifact Registry repository. `deploy.sh` builds with `--source .`,
 so Cloud Build pushes to the `cloud-run-source-deploy` repository gcloud makes on first use.
+
+**The build uses the repo's `Dockerfile`.** `--source .` prefers a Dockerfile when one is
+present and falls back to buildpacks when it is not — so deleting or renaming it silently
+changes how the image is produced, rather than failing.
+
+The image itself has been built and run locally, which is the one thing in this document that
+is no longer only a claim. On 2026-09-04 it built clean, booted under `NODE_ENV=production`
+with `AUTH_MODE=iap`, served the client and answered `/healthz`, ran as `uid=1000(node)`
+rather than root, and carried the six production dependencies with every devDependency pruned
+out — 435MB. What that does _not_ cover is Cloud Run itself: ADC, the runtime service
+account's roles, IAP verification against a real assertion. Those still first execute in a
+deployment.
 
 > **The Firestore location is permanent.** It is set to `$REGION` and cannot be changed
 > afterwards without recreating the database. Pick the region you want before running this.
@@ -101,6 +130,20 @@ Builds from source, deploys with `--no-allow-unauthenticated --iap`, computes th
 audience (`/projects/PROJECT_NUMBER/locations/REGION/services/SERVICE_NAME` — the Cloud Run
 format, which differs from App Engine and from load-balancer backend services), and grants the
 IAP service agent `run.invoker`.
+
+Two sizing choices are worth knowing rather than discovering. `--memory=1Gi` replaces the 512Mi
+default, which is thin for Node holding the Firestore and genai SDKs at `concurrency=80` — and
+a Cloud Run OOM presents as a 503 with nothing in the application log. `--cpu-boost` gives the
+container 2 CPU for startup plus ten seconds, billed only for that window, because
+`min-instances=0` means every workshop opens on a cold start. Neither costs anything while the
+service is idle.
+
+**`VERTEX_LOCATION` is a decision, not a formatting detail.** It defaults to `global` in
+[scripts/config.sh](scripts/config.sh) and no longer inherits `$REGION`. For stable model
+versions the per-token price is identical globally and regionally, and the global endpoint
+routes to whatever region has capacity — fewer 429s, new model ids sooner. Pin it to a region
+id if a client requires residency; you pay the same and get less capacity, which is the right
+trade when residency is a requirement.
 
 ## Grant access
 
