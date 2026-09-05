@@ -636,12 +636,19 @@ export default function App() {
             onUpdateThoughtPriority={(id, zone) => handleUpdateThoughtPriority(id, zone)}
           />
         );
-      default:
+      default: {
+        // A mode added to `ExtractionMode` with no case above leaves this assignment holding
+        // that mode instead of `never`, so it fails `npm run lint` rather than silently
+        // rendering as unimplemented. The runtime branch stays: `activeMode` is read back from
+        // `localStorage` and from the wire, where a value this build has never heard of is a
+        // real possibility rather than a type error.
+        const unhandled: never = currentSession.activeMode;
         return (
           <div className="text-center py-12 text-slate-400 text-xs">
-            Unimplemented Mode: {currentSession.activeMode}
+            Unimplemented Mode: {unhandled}
           </div>
         );
+      }
     }
   };
 

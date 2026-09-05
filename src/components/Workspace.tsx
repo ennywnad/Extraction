@@ -35,6 +35,82 @@ interface WorkspaceProps {
   children: React.ReactNode;
 }
 
+/**
+ * The card for every extraction mode: its name, its one-line description, and its fill.
+ *
+ * Keyed on `ExtractionMode` rather than listed as an array for the reason `EMPTY_MODE_PROGRESS`
+ * is: a mode added to the union and forgotten here is then a `npm run lint` failure rather than
+ * a mode with no way into it. Declaration order is the order of the cards and of the pile
+ * filter derived from them.
+ */
+const MODE_CARDS: Record<ExtractionMode, { label: string; desc: string; color: string }> = {
+  free_stream: {
+    label: "Free Stream",
+    desc: "No prompts, unfiltered typing",
+    color: "from-amber-400 to-orange-500",
+  },
+  quick_fire: {
+    label: "Quick Fire",
+    desc: "Speed questions, brief answers",
+    color: "from-red-500 to-pink-500",
+  },
+  guided_drill: {
+    label: "Guided Drill",
+    desc: "Adaptive expert interview",
+    color: "from-blue-500 to-indigo-600",
+  },
+  binary_frame: {
+    label: "Binary Bracket",
+    desc: "Choose contrasting framings",
+    color: "from-emerald-500 to-teal-600",
+  },
+  swipe: {
+    label: "Swipe Statements",
+    desc: "Mark statements that resonate",
+    color: "from-purple-500 to-indigo-500",
+  },
+  slider: {
+    label: "Intensity Map",
+    desc: "Rate importance & urgency levels",
+    color: "from-indigo-500 to-purple-600",
+  },
+  card_sort: {
+    label: "Cluster Sorting",
+    desc: "Sort thoughts into folders",
+    color: "from-teal-400 to-cyan-500",
+  },
+  timeline: {
+    label: "Temporal Map",
+    desc: "Organize past, present & futures",
+    color: "from-rose-400 to-red-500",
+  },
+  sentence_completion: {
+    label: "Sentence Starters",
+    desc: "Uncover blocked views",
+    color: "from-violet-500 to-fuchsia-600",
+  },
+  devils_advocate: {
+    label: "Advocate Shock",
+    desc: "Deconstruct your defense",
+    color: "from-amber-600 to-red-700",
+  },
+  letter_writing: {
+    label: "Letter Drill",
+    desc: "Address the deep feelings",
+    color: "from-orange-400 to-amber-600",
+  },
+  priority_pile: {
+    label: "Priority Eisenhower",
+    desc: "Group urgent decision variables",
+    color: "from-teal-600 to-emerald-700",
+  },
+};
+
+const modesList = (Object.keys(MODE_CARDS) as ExtractionMode[]).map((mode) => ({
+  mode,
+  ...MODE_CARDS[mode],
+}));
+
 export default function Workspace({
   session,
   onUpdateSession,
@@ -162,81 +238,6 @@ export default function Workspace({
     setNewThoughtText("");
     setShowDirectInput(false);
   };
-
-  const modesList: { mode: ExtractionMode; label: string; desc: string; color: string }[] = [
-    {
-      mode: "free_stream",
-      label: "Free Stream",
-      desc: "No prompts, unfiltered typing",
-      color: "from-amber-400 to-orange-500",
-    },
-    {
-      mode: "quick_fire",
-      label: "Quick Fire",
-      desc: "Speed questions, brief answers",
-      color: "from-red-500 to-pink-500",
-    },
-    {
-      mode: "guided_drill",
-      label: "Guided Drill",
-      desc: "Adaptive expert interview",
-      color: "from-blue-500 to-indigo-600",
-    },
-    {
-      mode: "binary_frame",
-      label: "Binary Bracket",
-      desc: "Choose contrasting framings",
-      color: "from-emerald-500 to-teal-600",
-    },
-    {
-      mode: "swipe",
-      label: "Swipe Statements",
-      desc: "Mark statements that resonate",
-      color: "from-purple-500 to-indigo-500",
-    },
-    {
-      mode: "slider",
-      label: "Intensity Map",
-      desc: "Rate importance & urgency levels",
-      color: "from-indigo-500 to-purple-600",
-    },
-    {
-      mode: "card_sort",
-      label: "Cluster Sorting",
-      desc: "Sort thoughts into folders",
-      color: "from-teal-400 to-cyan-500",
-    },
-    {
-      mode: "timeline",
-      label: "Temporal Map",
-      desc: "Organize past, present & futures",
-      color: "from-rose-400 to-red-500",
-    },
-    {
-      mode: "sentence_completion",
-      label: "Sentence Starters",
-      desc: "Uncover blocked views",
-      color: "from-violet-500 to-fuchsia-600",
-    },
-    {
-      mode: "devils_advocate",
-      label: "Advocate Shock",
-      desc: "Deconstruct your defense",
-      color: "from-amber-600 to-red-700",
-    },
-    {
-      mode: "letter_writing",
-      label: "Letter Drill",
-      desc: "Address the deep feelings",
-      color: "from-orange-400 to-amber-600",
-    },
-    {
-      mode: "priority_pile",
-      label: "Priority Eisenhower",
-      desc: "Group urgent decision variables",
-      color: "from-teal-600 to-emerald-700",
-    },
-  ];
 
   const matchesCategory = (text: string, cat: string): boolean => {
     if (cat === "all") return true;

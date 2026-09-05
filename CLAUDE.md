@@ -19,8 +19,8 @@ solo (fragments in `localStorage`) and group (a shared pile on the server, behin
 Healthy `npm run check` ends with:
 
 ```
-# tests 83
-# pass 82
+# tests 113
+# pass 112
 # fail 0
 # skipped 1
 ```
@@ -30,7 +30,7 @@ The skip is `FirestoreEngagementStore` in
 
 ```
 gcloud emulators firestore start --host-port=localhost:8484   # needs a JRE on PATH
-npm run test:firestore                                        # 93 tests, 0 skipped
+npm run test:firestore                                        # 123 tests, 0 skipped
 ```
 
 ## Configuration decides behavior
@@ -70,12 +70,15 @@ Every backend picks itself by **presence of configuration**, not by a flag. Read
   because Gemini and Firestore errors both name the project, and `/api/session/*` has no
   identity requirement in a solo deployment. Allowlist, not denylist. A 429 — the only status
   a caller can act on — passes through.
-- Adding an extraction mode means touching both lists, but neither can be forgotten silently
-  any more: each is `Object.keys` over an `EMPTY_MODE_PROGRESS` keyed on `ExtractionMode`
-  ([src/App.tsx](src/App.tsx), [server/store/shape.ts](server/store/shape.ts)), so a missing
-  mode fails `npm run lint`. Two sites are still on you: `modesList` in
-  [src/components/Workspace.tsx](src/components/Workspace.tsx) (the card and, derived from it,
-  the pile filter) and the render `switch` in `App.tsx`.
+- Adding an extraction mode means touching four places, and **a forgotten one is a
+  `npm run lint` failure rather than a mode nobody can reach.** Three are keyed on
+  `ExtractionMode`, so the missing key is the error: `EMPTY_MODE_PROGRESS` in
+  [src/App.tsx](src/App.tsx) and in [server/store/shape.ts](server/store/shape.ts), and
+  `MODE_CARDS` in [src/components/Workspace.tsx](src/components/Workspace.tsx) (the card and,
+  derived from it, the pile filter). The fourth is the render `switch` in `App.tsx`, whose
+  `default` assigns the mode to `never`. That last one only works because `@types/react` is
+  installed — without it `tsc` reads `node_modules/react/index.js` and every value from a hook
+  is `any`, which silently un-checks the whole client. Don't drop those types.
 - **Prompts do not live in route handlers.** They are pure functions in
   [server/ai/sessionPrompts.ts](server/ai/sessionPrompts.ts) (solo) and
   [server/ai/levelSetPrompt.ts](server/ai/levelSetPrompt.ts) (group), so a prompt change is a

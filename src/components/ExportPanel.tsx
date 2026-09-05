@@ -214,8 +214,12 @@ export default function ExportPanel({
           Back to Dashboard
         </button>
         <div className="flex items-center gap-2">
+          {/* Wrapped rather than passed directly: `triggerSynthesize`'s first parameter is
+              `customStyle`, so `onClick={triggerSynthesize}` hands it the click event as the
+              prompting style, which goes into `advancedSettings` and up to the server. The
+              default parameter cannot save it — an event is not `undefined`. */}
           <button
-            onClick={triggerSynthesize}
+            onClick={() => triggerSynthesize()}
             className="p-2 border-2 border-black bg-white hover:bg-zinc-100 text-black rounded-none shrink-0 transition"
             title="Re-Synthesize Outline"
             disabled={loading}
