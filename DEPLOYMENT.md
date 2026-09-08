@@ -147,16 +147,59 @@ trade when residency is a requirement.
 
 ## Grant access
 
-The service is unreachable by everyone, including you, until this runs:
+The service is unreachable by everyone, including you, until someone holds
+`roles/iap.httpsResourceAccessor` on its IAP resource. That one binding is the whole access
+surface: the app keeps no allowlist of its own — [server/iapAuth.ts](server/iapAuth.ts) trusts
+that IAP has already authorised whoever reaches it and only establishes _who_ they are, and the
+engagement roster is auto-join. There is nothing inside the app to keep in step.
+
+[scripts/access.sh](scripts/access.sh) is that binding, plus the things around it that decide
+whether a grant actually works:
 
 ```bash
-gcloud iap web add-iam-policy-binding \
-  --resource-type=cloud-run --service=extraction --region=$REGION \
-  --member="group:your-engagement@yourdomain.com" \
-  --role=roles/iap.httpsResourceAccessor
+./scripts/access.sh list                     # everyone who can get in, and how
+./scripts/access.sh check dan@example.com    # can this person get in, right now?
+./scripts/access.sh grant dan@example.com    # let them in; prints an invite to send them
+./scripts/access.sh grant group:workshop@acme.com --until 2026-10-01
+./scripts/access.sh revoke dan@example.com   # lock them out
 ```
 
-Use `user:someone@example.com` for individuals. Removing someone from the group removes their
+A bare email is read as `user:` and echoed back, because `user:` on a group address is a binding
+that grants nobody and reads as if it worked. `--until YYYY-MM-DD` attaches an IAM condition, so
+a workshop grant offboards itself. `--dry-run` prints the mutating commands instead of running
+them. `allUsers` and `allAuthenticatedUsers` need `--i-mean-it`: on IAP that is anyone with a
+Google account, reading the pile.
+
+`check` exits **0** granted, **1** not granted, **2** undetermined — and reads four things, not
+one, because the other three are invisible from the service's own policy:
+
+| What it reads                         | Why it decides the answer                                                                                                                                                                                        |
+| :------------------------------------ | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| The service's IAP policy              | The binding `grant` writes.                                                                                                                                                                                      |
+| The **project** IAM policy            | A project-level grant of the same role covers every IAP resource here, so reading only the service reports "no access" for someone who has it.                                                                   |
+| Group and domain membership           | Via `gcloud identity groups memberships check-transitive-membership`, which only resolves Cloud Identity / Workspace groups. A plain `groups.google.com` group is unreadable — hence exit 2 rather than a guess. |
+| The IAP service agent's `run.invoker` | Granted by [deploy.sh](scripts/deploy.sh). Without it **everyone** 403s no matter what is granted, and nothing else here would tell you.                                                                         |
+
+IAM changes are not instant. Re-run `check` a minute later, and confirm in an incognito window.
+
+### What the admin needs
+
+`roles/iap.admin` on the project, to read and write the IAP policy. `check` additionally reads
+the project IAM policy (`roles/iam.securityReviewer` or equivalent) and, for groups, Cloud
+Identity. A missing role surfaces as a gcloud permission error rather than as an empty result.
+
+### Two things no IAM read can answer
+
+**The OAuth consent screen decides who can sign in at all, before IAM is consulted.** While it
+is External and in **Testing**, only accounts listed there as test users can complete sign-in —
+an IAM grant alone is not enough, and it fails as a Google sign-in refusal rather than as a 403.
+Add each person as a test user, or publish the screen (this app asks only for the basic profile
+and email scopes, which are not sensitive):
+<https://console.cloud.google.com/auth/audience>
+
+**Revoking does not remove anyone from the pile.** Their fragments stay, attributed to them, and
+their roster entry remains; the app has no notion of removing a participant. Nothing in
+`access.sh` deletes anything. Likewise, removing someone from a Google Group removes their
 access with no change to the app — offboarding is the client directory's job.
 
 ## Verify

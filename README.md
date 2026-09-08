@@ -236,8 +236,18 @@ export PROJECT=your-project-id
 ./scripts/deploy.sh
 ```
 
+Nobody can reach it until they are granted `roles/iap.httpsResourceAccessor` — that binding is
+the entire access surface, since the app keeps no allowlist of its own:
+
+```bash
+./scripts/access.sh grant dan@example.com    # also prints an invite to send them
+./scripts/access.sh check dan@example.com    # 0 granted, 1 not, 2 undetermined
+./scripts/access.sh list
+./scripts/access.sh revoke dan@example.com
+```
+
 See **[DEPLOYMENT.md](DEPLOYMENT.md)** for the full walkthrough, including the one manual
-console step and how to grant the engagement group access.
+console step and the two things about access that no IAM read can answer.
 
 ## 🔒 Environment
 
