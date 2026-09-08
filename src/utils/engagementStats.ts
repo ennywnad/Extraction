@@ -28,6 +28,15 @@ export interface EngagementStats {
   /** Null until a level set has been generated; the coverage map draws this properly. */
   dark: { dark: number; total: number } | null;
   /**
+   * Completed level sets — the only number here that is about what the engagement has cost
+   * rather than what it holds. Two Gemini calls over the whole pile apiece.
+   *
+   * Counts runs that finished, so it is a floor on spend rather than a bill: a run that
+   * failed part-way may still have spent tokens and is not here. Server-written and read
+   * straight off the session, so it needs no endpoint of its own.
+   */
+  levelSets: number;
+  /**
    * Requests in the server's window, not people: one person with two tabs counts twice, and
    * on a multi-instance deployment it is only this instance's share. Null when the server has
    * not said (a 304 with no header, or solo mode, where nothing polls).
@@ -67,6 +76,7 @@ export function engagementStats(
     dark: coverage?.length
       ? { dark: coverage.filter((c) => c.status === "dark").length, total: coverage.length }
       : null,
+    levelSets: session.levelSetRuns ?? 0,
     polling,
   };
 }

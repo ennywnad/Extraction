@@ -13,7 +13,16 @@
 export type BoardBox = "identity" | "storage" | "model" | "mcp";
 
 export type BoardStat =
-  "roster" | "polling" | "fragments" | "voices" | "modes" | "recent" | "roles" | "dark" | "age";
+  | "roster"
+  | "polling"
+  | "fragments"
+  | "voices"
+  | "modes"
+  | "recent"
+  | "roles"
+  | "dark"
+  | "levelSets"
+  | "age";
 
 export interface BoardPrefs {
   boxes: Record<BoardBox, boolean>;
@@ -32,6 +41,7 @@ export const STAT_ORDER: BoardStat[] = [
   "recent",
   "roles",
   "dark",
+  "levelSets",
   "age",
 ];
 
@@ -46,6 +56,11 @@ export const DEFAULT_PREFS: BoardPrefs = {
     recent: false,
     roles: false,
     dark: false,
+    // On by default, unlike the other optional counts. This is the one number whose whole
+    // reason for existing is that nobody was watching it: a pile regenerated fifty times is
+    // the only unbounded cost in the app, and a cost tile defaulted off would reproduce
+    // exactly the blind spot it was added to close.
+    levelSets: true,
     age: false,
   },
 };

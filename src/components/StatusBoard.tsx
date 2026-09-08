@@ -172,6 +172,15 @@ function tilesOf(stats: EngagementStats): StatTile[] {
         : "no level set generated yet",
     },
     {
+      key: "levelSets",
+      label: "Level sets run",
+      value: String(stats.levelSets),
+      // Caveated because the label reads like a bill and is not one: a run that failed
+      // part-way may have spent tokens without finishing, so this is a floor.
+      note: "completed generations over the whole pile — the app's one variable cost",
+      caveat: true,
+    },
+    {
       key: "age",
       label: "Open for",
       value: `${stats.ageMinutes}m`,

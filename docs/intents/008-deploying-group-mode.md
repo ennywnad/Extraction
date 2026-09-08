@@ -94,6 +94,8 @@ More than expected. The cost work was done before the deploy, which is the right
 
 - **Run [cost-guardrails.sh](../../scripts/cost-guardrails.sh) and lower the Vertex quota
   ceiling before anything else**, in that order. The budget is the alarm; the quota is the brake.
+  Both are outside the app and neither can say _why_ a bill moved. `levelSetRuns` is the inside
+  view that answers that, and it needs no setup — see the open question below, now closed.
 - **Deploy with `GENAI_BACKEND` unset first, if the aim is to isolate failures.** The app is
   designed to run with no model and label its fallbacks, so a first deploy can prove IAP,
   Firestore and the container without a single token being spent. Turning Vertex on afterwards
@@ -116,9 +118,13 @@ More than expected. The cost work was done before the deploy, which is the right
   from the same image is cheap and isolates IAP from everything else.
 - What does a real workshop actually cost in Vertex tokens? Unknown until one runs, and it is
   the only number here that cannot be estimated from the code.
-- Should synthesis carry a per-engagement run counter, so a pile cannot be re-synthesised
-  fifty times without anyone noticing? Related to, but smaller than,
-  [007](007-status-board.md).
+- ~~Should synthesis carry a per-engagement run counter, so a pile cannot be re-synthesised
+  fifty times without anyone noticing?~~ **Answered yes, and built** — `levelSetRuns` on the
+  engagement, drawn on 007's board and on by default. See [STATUS.md](STATUS.md). It counts
+  and does not cap: the budget alerts, the Vertex quota brakes, and this makes the thing they
+  are guarding visible from inside the app. What is still open is whether a cap belongs here
+  too, which is a question about interrupting a facilitator mid-workshop rather than about
+  cost, and is not answerable before a real one has run.
 - Does the deferred surface in [009](009-the-deferred-group-surface.md) change any of this? Not
   obviously — none of it adds a cost line — but realtime listeners would replace the polling
   arithmetic above with a different one.

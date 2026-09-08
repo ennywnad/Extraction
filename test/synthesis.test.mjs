@@ -124,3 +124,24 @@ describe("per-viewer prompting style", () => {
     assert.equal(after.advancedSettings.cognitiveBiasAudit, "include");
   });
 });
+
+describe("the level-set run counter", () => {
+  it("does not count a run that produced nothing", async () => {
+    // This suite runs with no Gemini key, so synthesis fails before it reaches the model and
+    // spends nothing. The counter has to agree: it is there to make spend visible, and a
+    // number that ticked on a run which never called anything would be measuring clicks.
+    const eng = await seed("nothing spent", ["fragment"]);
+    const res = await as(A, `/api/engagement/${eng.id}/synthesize`, { method: "POST", body: "{}" });
+    assert.equal(res.status, 503, "no key means no level set");
+
+    const after = await (await as(A, `/api/engagement/${eng.id}`)).json();
+    assert.equal(after.levelSetRuns, undefined, "a failed run must not inflate the cost count");
+  });
+
+  // Not tested here, because it cannot be reached without a key: one completed run increments
+  // by one however many callers received it. That property is structural rather than asserted
+  // — the increment lives inside the single `run` promise in synthesizeEngagement, and a
+  // caller who arrives mid-run awaits that same promise and never executes its body. Counting
+  // callers instead would report ten runs for one pair of Gemini calls, which is precisely the
+  // overstatement this number must not make.
+});

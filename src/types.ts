@@ -90,6 +90,19 @@ export interface Session {
    * could contradict the count. Absent until a level set has been generated.
    */
   coverage?: AreaCoverage[];
+  /**
+   * How many level sets this engagement has produced. Engagements only, and server-written
+   * for the same reason as `coverage`.
+   *
+   * It exists because synthesis is the one thing in this app whose cost scales with use: two
+   * Gemini calls over the entire pile, every time. Everything else is bounded by design —
+   * Cloud Run scales to zero, an idle poll is two Firestore reads — so a pile regenerated
+   * fifty times is the only way this deployment gets an unexpected bill, and until now
+   * nothing anywhere counted it. See docs/intents/008-deploying-group-mode.md.
+   *
+   * Absent on an engagement that has never been synthesised, which reads as zero.
+   */
+  levelSetRuns?: number;
 
   createdAt: string;
   updatedAt: string;

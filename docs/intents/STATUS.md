@@ -17,19 +17,82 @@ this file only records which pieces of one have become code.
 
 ## Where each intent stands
 
-| #                                              | Intent                        | State                                                     |
-| :--------------------------------------------- | :---------------------------- | :-------------------------------------------------------- |
-| [001](001-mcp-server-over-the-pile.md)         | MCP server over the pile      | unchanged                                                 |
-| [002](002-model-provider-seam.md)              | Provider-neutral model seam   | unchanged                                                 |
-| [003](003-local-models-in-solo-mode.md)        | Local models in solo mode     | unchanged                                                 |
-| [004](004-claude-and-the-gcp-model-gateway.md) | Claude as a deployment choice | unchanged                                                 |
-| [005](005-listening-mode.md)                   | Listening mode                | unchanged — but its wall now exists                       |
-| [006](006-local-assists-before-submit.md)      | Local assists before submit   | unchanged                                                 |
-| [007](007-status-board.md)                     | Status board                  | **in part** — reported, and now drawn (below)             |
-| [008](008-deploying-group-mode.md)             | Deploying group mode          | **in part** — two preparatory items; still never deployed |
-| [009](009-the-deferred-group-surface.md)       | The deferred group surface    | **in part** — the coverage map is built                   |
-| [010](010-model-armor.md)                      | Model Armor at the prompt     | unchanged                                                 |
-| [011](011-the-role-brief.md)                   | The role brief                | unchanged                                                 |
+| #                                              | Intent                        | State                                                       |
+| :--------------------------------------------- | :---------------------------- | :---------------------------------------------------------- |
+| [001](001-mcp-server-over-the-pile.md)         | MCP server over the pile      | unchanged                                                   |
+| [002](002-model-provider-seam.md)              | Provider-neutral model seam   | unchanged                                                   |
+| [003](003-local-models-in-solo-mode.md)        | Local models in solo mode     | unchanged                                                   |
+| [004](004-claude-and-the-gcp-model-gateway.md) | Claude as a deployment choice | unchanged                                                   |
+| [005](005-listening-mode.md)                   | Listening mode                | unchanged — but its wall now exists                         |
+| [006](006-local-assists-before-submit.md)      | Local assists before submit   | unchanged                                                   |
+| [007](007-status-board.md)                     | Status board                  | **in part** — reported, and now drawn (below)               |
+| [008](008-deploying-group-mode.md)             | Deploying group mode          | **in part** — three preparatory items; still never deployed |
+| [009](009-the-deferred-group-surface.md)       | The deferred group surface    | **in part** — the coverage map is built                     |
+| [010](010-model-armor.md)                      | Model Armor at the prompt     | unchanged                                                   |
+| [011](011-the-role-brief.md)                   | The role brief                | unchanged                                                   |
+
+---
+
+## 2026-09-08 — 008, in part: the one cost that scales with use is now counted
+
+**Against [008](008-deploying-group-mode.md), and it closes an open question in it.** 008 asks:
+_"Should synthesis carry a per-engagement run counter, so a pile cannot be re-synthesised fifty
+times without anyone noticing?"_ Yes. `levelSetRuns` on the engagement, incremented where a level
+set is persisted, drawn on [007](007-status-board.md)'s board.
+
+**Why this one, out of everything 008 lists.** Almost all of the cost work was already done, and
+done in the right order — Cloud Run scales to zero, `--max-instances=3` bounds a runaway,
+`cost-guardrails.sh` sets a budget with alerts, `audit-costs.sh` takes a baseline. What none of
+those can do is say _why_ a bill moved, because all four live outside the app. And 008's own
+arithmetic shows exactly one line that is not bounded by design: an idle poll is two Firestore
+reads, an idle instance is nothing, but synthesis is two Gemini calls over the **whole pile**,
+every time, and "nothing prevents one person re-running it repeatedly against a pile that keeps
+growing". The existing brake is ten POSTs per fifteen minutes per identity — held in memory, per
+instance, so it resets on every cold start and the real ceiling is three times it. Over a working
+day that is not a bound; it is a speed limit. Nothing anywhere counted the total.
+
+**It counts and deliberately does not cap.** Three brakes, and they are different tools: the
+budget alerts, the Vertex quota is the hard stop, and this is the inside view that makes what
+they are guarding legible without any setup at all. A cap would mean refusing a facilitator
+mid-workshop to save a few cents of tokens, which is the wrong trade in the room this app is for
+— and it is not answerable before a real workshop has run, which is the number 008 says cannot be
+estimated from the code. So the counter is the honest half that can be built now, and 008 records
+the cap as still open rather than pretending it was decided.
+
+**Two decisions, both about not overstating.**
+
+_It counts runs, not callers, and that is structural rather than asserted._ The increment lives
+inside the single `run` promise in `synthesizeEngagement`, so ten people opening the review panel
+join one run and see one increment. Counting callers would have reported ten runs for one pair of
+Gemini calls — an overstatement, on the one number added specifically to be trusted.
+[test/synthesis.test.mjs](../../test/synthesis.test.mjs) says why that property has no test of its
+own: it cannot be reached without a key, and it follows from where the line sits rather than from
+a check.
+
+_It is a floor on spend, not a bill, and the board says so._ A run that failed part-way may still
+have spent tokens and is not counted, so the tile carries the `caveat` flag 007 already had for
+"the number means something narrower than its label suggests". The suite asserts the wording never
+grows into a currency figure. What **is** tested is the case that matters here: with no key
+configured, synthesis fails before reaching the model, spends nothing, and the counter stays at
+zero — a number that ticked there would be measuring clicks.
+
+**Server-written, and gated twice.** `levelSetRuns` is in `ServerMetaPatch` and not in
+`SessionMetaPatch`, so it is outside the route layer's `META_FIELDS` by construction — the same
+two-exclusions-are-one-decision shape `coverage` already has, for a sharper reason: a client that
+could set this could set it back to zero, which defeats the entire point of counting.
+[test/sharedPile.test.mjs](../../test/sharedPile.test.mjs) pins it against a real PATCH.
+
+**On by default, unlike every other optional stat.** `modes`, `recent`, `roles`, `dark` and `age`
+all default off. This one defaults on, because the blind spot _is_ the feature: a cost tile nobody
+turns on rebuilds the thing it was added to close.
+
+**Looked at, in both themes.** The tile was rendered against the built stylesheet and screenshotted
+light and dark before commit, rather than trusted to a string assertion — see the correction in the
+increment below for why that is now the habit.
+
+**What it did not do.** No cap, no per-run history, no "who ran it" — `generatedBy` exists on the
+`LevelSet` and is deliberately not mirrored, because a count answers "is this runaway" and a
+leaderboard answers a question nobody asked. Not deployed; 008's table row is narrower, not gone.
 
 ---
 
@@ -81,6 +144,17 @@ theme would have meant twenty-one new daylight patches.
 typed was mildly inconsistent — the same tip-card paragraph is `zinc-600` in one card set and
 `zinc-700` in another, and both stay. Widening this into "pick better tones" is a different change
 with a different justification, and it would have buried the one being made here.
+
+**A near-miss, recorded because the habit it changed is the useful part.** Proving the new
+assertion fails meant reintroducing a dead class into QuickFire and reverting it with
+`git checkout` — which, run before the commit existed, reverted the file to `main` and silently
+undid all six of that file's real corrections. `npm run check` had been run _before_ that
+experiment and not after, so the first version of this commit shipped three dead classes and a
+green report of a state nobody had tested. Caught by the next increment's own `check` run, and
+amended. The rule it cost: the verification loop runs against the tree that is actually being
+committed, and a `git checkout` on an uncommitted file discards work rather than an experiment.
+This is also why the level-set tile in the increment above was screenshotted rather than trusted
+to its passing string assertion.
 
 **Verified by build, not by eye.** The emitted stylesheet now carries `.text-zinc-600`,
 `.bg-emerald-500\/10`, `.focus\:ring-indigo-500\/10:focus` and the rest, and contains no dead step
