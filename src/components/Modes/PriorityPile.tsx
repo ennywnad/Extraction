@@ -27,13 +27,13 @@ export default function PriorityPile({ thoughts, onUpdateThoughtPriority }: Prio
             key: "act",
             label: "Act On This",
             desc: "Top action goals & focus points",
-            textStyle: "text-emerald-700 bg-emerald-550/10 border-t-emerald-500",
+            textStyle: "text-emerald-700 bg-emerald-500/10 border-t-emerald-500",
           },
           {
             key: "watch",
             label: "Worth Watching",
             desc: "Monitor periodically, medium weight",
-            textStyle: "text-indigo-700 bg-indigo-550/10 border-t-indigo-500",
+            textStyle: "text-indigo-700 bg-indigo-500/10 border-t-indigo-500",
           },
           {
             key: "discard",
@@ -63,7 +63,7 @@ export default function PriorityPile({ thoughts, onUpdateThoughtPriority }: Prio
                     zoneThoughts.map((t) => (
                       <div
                         key={t.id}
-                        className="p-2.5 bg-white border border-slate-150 rounded-xl text-[11px] text-slate-705 shadow-2xs leading-relaxed"
+                        className="p-2.5 bg-white border border-slate-100 rounded-xl text-[11px] text-slate-700 shadow-2xs leading-relaxed"
                       >
                         {t.text}
                       </div>
@@ -84,7 +84,7 @@ export default function PriorityPile({ thoughts, onUpdateThoughtPriority }: Prio
         {thoughts.map((thought) => (
           <div
             key={thought.id}
-            className="p-3 bg-white border border-slate-150 rounded-xl flex flex-col sm:flex-row justify-between gap-4 items-start sm:items-center"
+            className="p-3 bg-white border border-slate-100 rounded-xl flex flex-col sm:flex-row justify-between gap-4 items-start sm:items-center"
           >
             <p className="text-xs text-slate-700 leading-relaxed font-normal flex-1">
               "{thought.text}"
@@ -102,7 +102,7 @@ export default function PriorityPile({ thoughts, onUpdateThoughtPriority }: Prio
                   className={`px-3.5 py-1.5 rounded-lg text-[10px] font-bold transition cursor-pointer ${
                     thought.priorityZone === opt.zone
                       ? "bg-slate-800 text-white"
-                      : "bg-slate-50 hover:bg-slate-100 border border-slate-205 text-slate-505"
+                      : "bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-500"
                   }`}
                 >
                   {opt.label}

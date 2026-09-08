@@ -89,7 +89,7 @@ export default function BinaryFrame({ topic, onAddThought, thoughts }: BinaryFra
       </div>
 
       {loading ? (
-        <div className="py-16 text-center text-slate-450 flex flex-col items-center justify-center gap-2">
+        <div className="py-16 text-center text-slate-400 flex flex-col items-center justify-center gap-2">
           <RefreshCw className="w-6 h-6 animate-spin text-emerald-500" />
           <span className="text-xs font-medium">
             Drilling deep and shaping contrasting framings...
@@ -97,7 +97,7 @@ export default function BinaryFrame({ topic, onAddThought, thoughts }: BinaryFra
         </div>
       ) : currentPair ? (
         <div className="space-y-6">
-          <div className="flex items-center justify-between text-[11px] text-slate-450">
+          <div className="flex items-center justify-between text-[11px] text-slate-400">
             <span>Narrowing down beliefs</span>
             <span>{bracketsCount} brackets resolved</span>
           </div>
@@ -114,7 +114,7 @@ export default function BinaryFrame({ topic, onAddThought, thoughts }: BinaryFra
                 <span className="inline-block bg-emerald-50 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded-full">
                   Framing A
                 </span>
-                <p className="text-slate-750 font-normal leading-relaxed text-xs">
+                <p className="text-slate-700 font-normal leading-relaxed text-xs">
                   "{currentPair.optionA}"
                 </p>
               </div>
@@ -135,7 +135,7 @@ export default function BinaryFrame({ topic, onAddThought, thoughts }: BinaryFra
                 <span className="inline-block bg-teal-50 text-teal-700 text-[10px] font-bold px-2 py-0.5 rounded-full">
                   Framing B
                 </span>
-                <p className="text-slate-750 font-normal leading-relaxed text-xs">
+                <p className="text-slate-700 font-normal leading-relaxed text-xs">
                   "{currentPair.optionB}"
                 </p>
               </div>

@@ -141,18 +141,18 @@ export default function CompareSettingsModal({
                         <h4 className="text-xs font-black uppercase tracking-tight text-black mb-2">
                           Define a concrete problem space
                         </h4>
-                        <p className="text-[10px] text-zinc-650 font-sans leading-relaxed">
+                        <p className="text-[10px] text-zinc-600 font-sans leading-relaxed">
                           Instead of entering general topics like "work problems" or "marketing
                           project", frame it as a specific question, constraint, or goal.
                         </p>
 
                         <div className="mt-4 pt-3 border-t border-dashed border-black/15 font-mono text-[9px] text-zinc-600 leading-normal">
-                          <span className="font-bold text-red-650 uppercase tracking-wide block mb-1">
+                          <span className="font-bold text-red-600 uppercase tracking-wide block mb-1">
                             ❌ Avoid generic topics:
                           </span>
                           "Work problems"
                           <br />
-                          <span className="font-bold text-green-755 uppercase tracking-wide block mt-2 mb-1">
+                          <span className="font-bold text-green-700 uppercase tracking-wide block mt-2 mb-1">
                             ✅ Frame specifically:
                           </span>
                           "Should I delegate core backend work to a contractor next month?"
@@ -169,12 +169,12 @@ export default function CompareSettingsModal({
                         <h4 className="text-xs font-black uppercase tracking-tight text-black mb-2">
                           Don't edit or filter yourself
                         </h4>
-                        <p className="text-[10px] text-zinc-650 font-sans leading-relaxed">
+                        <p className="text-[10px] text-zinc-600 font-sans leading-relaxed">
                           Write exactly as you think. Spill out random thoughts, worries, facts, and
                           tasks. Do not worry about grammar or logical hierarchy.
                         </p>
 
-                        <div className="mt-4 pt-3 border-t border-dashed border-black/15 font-mono text-[9px] text-zinc-650 leading-normal">
+                        <div className="mt-4 pt-3 border-t border-dashed border-black/15 font-mono text-[9px] text-zinc-600 leading-normal">
                           <span className="font-bold text-black uppercase tracking-wide block mb-1">
                             How Gemini Synthesizes:
                           </span>
@@ -193,12 +193,12 @@ export default function CompareSettingsModal({
                         <h4 className="text-xs font-black uppercase tracking-tight text-black mb-2">
                           Include deadlines & blockers
                         </h4>
-                        <p className="text-[10px] text-zinc-650 font-sans leading-relaxed">
+                        <p className="text-[10px] text-zinc-600 font-sans leading-relaxed">
                           Mentioning timelines, budget anxiety, external blockers, or emotional
                           friction points allows Gemini to suggest the most optimal extraction mode.
                         </p>
 
-                        <div className="mt-4 pt-3 border-t border-dashed border-black/15 font-mono text-[9px] text-zinc-650 leading-normal">
+                        <div className="mt-4 pt-3 border-t border-dashed border-black/15 font-mono text-[9px] text-zinc-600 leading-normal">
                           <span className="font-bold text-black uppercase tracking-wide block mb-1">
                             Adaptive Mode Suggestions:
                           </span>
@@ -272,7 +272,7 @@ export default function CompareSettingsModal({
                       <h4 className="text-xs font-black uppercase tracking-tight text-black mb-1.5">
                         Challenging core assumptions
                       </h4>
-                      <p className="text-[10px] text-zinc-755 font-sans leading-relaxed mb-4">
+                      <p className="text-[10px] text-zinc-700 font-sans leading-relaxed mb-4">
                         Forces you to test assumptions, cut through hesitation, and audit
                         rationalizations.
                       </p>
@@ -320,7 +320,7 @@ export default function CompareSettingsModal({
                       <h4 className="text-xs font-black uppercase tracking-tight text-black mb-1.5">
                         Supporting emotional unburdening
                       </h4>
-                      <p className="text-[10px] text-zinc-650 font-sans leading-relaxed mb-4">
+                      <p className="text-[10px] text-zinc-600 font-sans leading-relaxed mb-4">
                         Gives room to decompress burnout fatigue and align choices with emotional
                         security.
                       </p>
@@ -471,7 +471,7 @@ export default function CompareSettingsModal({
                     <h4 className="text-xs font-black uppercase tracking-tight text-black mb-2">
                       Intellectual Fallacy Audit
                     </h4>
-                    <p className="text-[10px] text-zinc-755 font-sans leading-relaxed mb-4">
+                    <p className="text-[10px] text-zinc-700 font-sans leading-relaxed mb-4">
                       Gemini scans your thoughts for logical blocks or psychological fallacies,
                       appending warning overlays.
                     </p>
@@ -482,7 +482,7 @@ export default function CompareSettingsModal({
                       <div className="p-3 bg-white border border-black text-xs text-zinc-800 leading-relaxed font-sans font-medium italic space-y-2">
                         <p>"We analyzed your career pivot thoughts..."</p>
                         <div className="bg-vellum border border-black p-2 rounded-none font-mono text-[9px] leading-relaxed text-black not-italic">
-                          <span className="font-bold text-red-650 block uppercase tracking-wider mb-1 flex items-center gap-1">
+                          <span className="font-bold text-red-600 block uppercase tracking-wider mb-1 flex items-center gap-1">
                             <FolderLock className="w-3 h-3 shrink-0" />
                             Cognitive Bias Audit // Diagnostic Traps:
                           </span>
@@ -559,7 +559,7 @@ export default function CompareSettingsModal({
                       <h4 className="text-xs font-black uppercase tracking-tight text-black mb-1.5">
                         Decisiveness & Priority Actions
                       </h4>
-                      <p className="text-[10px] text-zinc-755 font-sans leading-relaxed mb-4">
+                      <p className="text-[10px] text-zinc-700 font-sans leading-relaxed mb-4">
                         Filters out fluff to highlight tradeoffs, decision-matrices, and immediate
                         actions.
                       </p>
@@ -605,7 +605,7 @@ export default function CompareSettingsModal({
                       <h4 className="text-xs font-black uppercase tracking-tight text-black mb-1.5">
                         Emotional Calm & Validation
                       </h4>
-                      <p className="text-[10px] text-zinc-650 font-sans leading-relaxed mb-4">
+                      <p className="text-[10px] text-zinc-600 font-sans leading-relaxed mb-4">
                         Prioritizes cognitive load reduction, stressor mapping, and emotional
                         de-escalation.
                       </p>
@@ -782,7 +782,7 @@ export default function CompareSettingsModal({
           </div>
 
           {/* Footer info box */}
-          <div className="mt-6 p-3 bg-zinc-100 border-2 border-black text-center font-mono text-[9px] text-zinc-550 uppercase tracking-wide leading-relaxed">
+          <div className="mt-6 p-3 bg-zinc-100 border-2 border-black text-center font-mono text-[9px] text-zinc-500 uppercase tracking-wide leading-relaxed">
             Note: You can re-synthesize your outlines with different blueprint settings at any time
             without losing your thoughts history list!
           </div>

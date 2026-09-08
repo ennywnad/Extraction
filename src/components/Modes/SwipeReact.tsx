@@ -133,7 +133,7 @@ export default function SwipeReact({ topic, onAddThought, thoughts }: SwipeReact
           <h3 className="font-bold text-xs uppercase text-black font-display tracking-tight">
             Swipe / React Statements
           </h3>
-          <p className="text-[11px] text-zinc-650 leading-normal mt-0.5 font-sans">
+          <p className="text-[11px] text-zinc-600 leading-normal mt-0.5 font-sans">
             Calibrate statements generated dynamically based on your topic. Swipe or tap to indicate
             resonance.
           </p>
@@ -224,7 +224,7 @@ export default function SwipeReact({ topic, onAddThought, thoughts }: SwipeReact
           <h2 className="text-sm font-black text-black uppercase font-display tracking-tight">
             Resonating Wave Complete!
           </h2>
-          <p className="text-xs text-zinc-650 max-w-sm font-serif italic">
+          <p className="text-xs text-zinc-600 max-w-sm font-serif italic">
             "You processed all {candidates.length} statements. The accepted thoughts have been added
             directly to your surfaced thoughts sidepile."
           </p>

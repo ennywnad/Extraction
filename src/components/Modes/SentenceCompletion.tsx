@@ -85,14 +85,14 @@ export default function SentenceCompletion({ onAddThought }: SentenceCompletionP
           <div className="flex justify-between items-center">
             <button
               onClick={handleSkip}
-              className="px-4 py-2 border border-slate-200 text-slate-550 rounded-xl text-xs hover:bg-slate-50 transition"
+              className="px-4 py-2 border border-slate-200 text-slate-500 rounded-xl text-xs hover:bg-slate-50 transition"
             >
               Skip
             </button>
             <button
               disabled={!completion.trim()}
               onClick={handleSave}
-              className="px-5 py-2.5 bg-violet-650 hover:bg-violet-700 text-white disabled:opacity-50 text-xs font-semibold rounded-xl flex items-center gap-1 transition cursor-pointer"
+              className="px-5 py-2.5 bg-violet-600 hover:bg-violet-700 text-white disabled:opacity-50 text-xs font-semibold rounded-xl flex items-center gap-1 transition cursor-pointer"
             >
               Save Response
               <ChevronRight className="w-4 h-4" />

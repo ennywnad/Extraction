@@ -140,7 +140,7 @@ export default function SliderMap({ thoughts, onUpdateThought }: SliderMapProps)
                     },
                   ].map((slider) => (
                     <div key={slider.key} className="space-y-1.5">
-                      <div className="flex justify-between items-center text-xs font-semibold text-slate-705">
+                      <div className="flex justify-between items-center text-xs font-semibold text-slate-700">
                         <span>{slider.label}</span>
                         <span className="text-indigo-600 font-bold">{slider.value} / 10</span>
                       </div>

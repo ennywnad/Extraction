@@ -33,6 +33,64 @@ this file only records which pieces of one have become code.
 
 ---
 
+## 2026-09-08 — The twenty-one dead classes, which were never a guess
+
+**Against no intent, and it is the finding the increment below recorded rather than fixed.** The
+dark-mode entry ends with one: twenty-one classes across the components name Tailwind steps that
+have never existed — `zinc-650`, `slate-205`, `red-650`, `indigo-505` and the rest. A class naming
+a step Tailwind never shipped emits no CSS at all, so the element falls through to whatever is
+behind it. Fifty-five call sites, in fifteen components.
+
+**Why it was left, and why that reason turned out not to hold.** It was recorded rather than fixed
+because "fixing one means guessing which step was meant", and a guess is not worth putting in front
+of the twelve modes. But the twenty-one are not twenty-one independent guesses: every one of them is
+a real step with a trailing zero typed as a **5**. `650` is `600`, `205` is `200`, `755` is `700`.
+That account is exceptionless over all twenty-one, and it is the only rule that is — nearest-step
+rounding leaves `450`, `750` and `150` as ties it cannot break.
+
+**It is a derivation because the siblings testify, not because the rule is tidy.** Wherever the
+markup contains an element that could contradict it, the element agrees:
+
+- `bg-emerald-550/10` sits in the same class string as `border-t-emerald-500`, beside a third zone
+  that spells the same idea `bg-slate-200/50`. The tint and its border are one colour.
+- `bg-violet-650 hover:bg-violet-700` and `bg-red-500 hover:bg-red-650` are base/hover pairs, and a
+  hover has to be the darker one. Only `600` puts them in order; `700` collapses the first pair and
+  `800` overshoots the second.
+- `focus:ring-indigo-550/10 focus:border-indigo-500` — a focus ring and its border are one colour.
+- `border-slate-150` is on a card whose own container says `border-slate-100`, and `text-slate-705`
+  on a paragraph whose sibling in the same list says `text-slate-700`.
+- Three tip cards in [CompareSettingsModal](../../src/components/CompareSettingsModal.tsx) are
+  copies of each other; one note block was written `text-zinc-600` and the other two `text-zinc-650`.
+
+So the rule was checked against the markup rather than applied to it, and nothing in fifteen files
+dissents.
+
+**What landed.** The fifty-five corrections, and the test that pinned the list is now the assertion
+that the list is empty. [test/theme.test.ts](../../test/theme.test.ts) asserted only that the set of
+dead classes _did not grow_ — which is what let twenty-one of them sit in the tree — and now fails on
+any dead class at all. The stale count in [CLAUDE.md](../../CLAUDE.md)'s health block was corrected in
+passing: it said 154 tests, and `npm run check` has been ending at 182 since the two increments below.
+
+**Dark mode is why this was safe to do at all.** Every hue involved already has a full mirrored ramp
+in [src/index.css](../../src/index.css), so a corrected class is themed by construction — and the
+theme suite's "every hue the components use has a dark ramp" assertion is what proves it, since it
+skips dead steps and therefore saw all fifty-five of these for the first time. Doing this before the
+theme would have meant twenty-one new daylight patches.
+
+**What it is not.** Not a redesign. The rule reproduces what was typed, including where what was
+typed was mildly inconsistent — the same tip-card paragraph is `zinc-600` in one card set and
+`zinc-700` in another, and both stay. Widening this into "pick better tones" is a different change
+with a different justification, and it would have buried the one being made here.
+
+**Verified by build, not by eye.** The emitted stylesheet now carries `.text-zinc-600`,
+`.bg-emerald-500\/10`, `.focus\:ring-indigo-500\/10:focus` and the rest, and contains no dead step
+anywhere — which is the defect restated as an observation. Nobody has looked at the fifteen
+components in a browser, and the caveat [009](009-the-deferred-group-surface.md) shipped with applies
+unchanged: the claim is that fifty-five elements now take a colour, not that fifty-five elements look
+right.
+
+---
+
 ## 2026-09-05 — Dark mode, as one file rather than thirteen hundred variants
 
 **Against no intent, and asked for directly.** The app had no dark mode of any kind: no
@@ -96,7 +154,8 @@ on bright yellow.
 that have never existed — `zinc-650`, `slate-205`, `red-650`, `indigo-505` and others — so they
 emit no CSS and the element falls through to whatever is behind it. Pre-existing, unrelated to
 the theme, and not fixed here because fixing one means guessing which step was meant.
-[test/theme.test.ts](../../test/theme.test.ts) pins the list so it cannot grow.
+[test/theme.test.ts](../../test/theme.test.ts) pins the list so it cannot grow. (Fixed on
+2026-09-08, above: the guess was avoidable — all twenty-one are one corruption.)
 
 **One deliberate pixel change.** `#FFFDE0` and `#FFFEE0` were both in the tree, one green value
 apart, and are now the single `cream` token.
