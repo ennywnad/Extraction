@@ -128,3 +128,13 @@ Every backend picks itself by **presence of configuration**, not by a flag. Read
 
 `./scripts/deploy.sh` pushes **straight to production** Cloud Run. Never run it unprompted;
 see [DEPLOYMENT.md](DEPLOYMENT.md).
+
+Who can reach a deployment is **entirely** an IAM question — one binding of
+`roles/iap.httpsResourceAccessor` on the service's IAP resource. The app has no allowlist:
+[server/iapAuth.ts](server/iapAuth.ts) trusts that IAP already authorised the caller and only
+establishes who they are, and the engagement roster is auto-join. So an access request means
+[scripts/access.sh](scripts/access.sh) (`list` / `check` / `grant` / `revoke`), never an app
+change. Its `check` reads the project policy, group membership and the IAP service agent's
+`run.invoker` as well as the service's own policy, because a "no" from any of those other three
+is invisible in the obvious one — [test/accessScript.test.mjs](test/accessScript.test.mjs)
+pins that against a stub `gcloud`.
