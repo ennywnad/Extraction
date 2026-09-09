@@ -1,6 +1,7 @@
 # 011 — The role brief: what a consultant learns in a thirty-minute 1:1
 
-**Status:** intent. Not planned, not scheduled.
+**Status:** intent. Not planned, not scheduled — but its mechanical half has landed: roles can
+now be declared, and the stub it describes below is fixed. See [STATUS.md](STATUS.md).
 **Written:** 2026-09-05
 
 ## What
@@ -59,17 +60,19 @@ More than expected on the server, and nothing at all in the UI.
   own `name` and `role` and nobody else's — self-service is decided, and the identity comes from
   the verified stamp rather than the body. A brief would be a third field on the same route, with
   the same rule.
-- **The client function exists too, and nothing calls it.** `updateMyRosterEntry` in
-  [engagementAPI.ts](../../src/utils/engagementAPI.ts) is written and unused; so is the optional
-  `role` on `createEngagement`. There is no component anywhere that reaches either.
-- **So every role in a live engagement today is one of two constants.** `newEngagement` stamps
-  the creator `Facilitator` and `ensureMember` stamps everyone else `Contributor`
-  ([shape.ts](../../server/store/shape.ts)), and since no UI ever overwrites them, that is what
-  the roster holds. Which means `rolesPresent()` returns at most two entries, and the `voices`
-  count in [coverage.ts](../../server/ai/coverage.ts) — a group-by over author roles, and half
-  of the `defined` test — can currently reach 2 and no higher, in a room of any size. **The
-  arithmetic is right and its input is a stub.** Anything that makes people declare a real role
-  fixes a number the deliverable already prints.
+- **The client calls it now.** `updateMyRosterEntry` in
+  [engagementAPI.ts](../../src/utils/engagementAPI.ts) was written and unused until
+  [RosterPanel](../../src/components/RosterPanel.tsx) reached it. The optional `role` on
+  `createEngagement` is still unused.
+- **Roles are declared through a surface, and counted through the roster rather than the
+  stamp.** `newEngagement` still stamps the creator `Facilitator` and `ensureMember` still
+  stamps everyone else `Contributor` ([shape.ts](../../server/store/shape.ts)) — those remain
+  the defaults — but they are now defaults somebody can replace, and `roleOf` in
+  [roster.ts](../../src/utils/roster.ts) resolves a fragment's role through the current roster,
+  so a role declared mid-session applies to what that person already wrote. The `voices` count
+  in [coverage.ts](../../server/ai/coverage.ts) was capped at 2 in a room of any size and is
+  not any more. Where nobody has declared, the coverage map and the status board say so rather
+  than printing the number as though it meant something.
 - **Storage takes it for free.** `upsertRosterEntry` writes a whole `AuthorStamp`, and the
   Firestore implementation writes it at `FieldPath("roster", email)`, so a field added to
   `AuthorStamp` needs no store change and no migration — an old roster entry simply has no brief.
@@ -77,9 +80,11 @@ More than expected on the server, and nothing at all in the UI.
   and never by name, deliberately, so that model-authored characterisations of named individuals
   stay out of a circulated document. A brief is written in the first person about a named person,
   so it is exactly the input that rule exists to constrain — see the open questions.
-- **The one thing genuinely missing is a surface.** There is no roster UI at all: no member list,
-  no "who is here", nowhere a person could be shown their own entry. This intent needs that
-  surface built, and it is most of the work.
+- **The surface exists, and it is where the brief would go.** `RosterPanel` lists the members
+  and gives each person an editable card for their own name and role. This intent's remaining
+  work is the brief itself — a third field on that card, a prompt decision, and the question of
+  whether history is kept — rather than the member list, which was most of the work and is
+  built.
 
 ## What would have to change
 
@@ -87,8 +92,8 @@ More than expected on the server, and nothing at all in the UI.
   the others by `str()` in the route — long enough for three sentences, short enough that nobody
   pastes a CV into it. It rides the roster to every viewer with the ordinary poll, as `coverage`
   already does.
-- **A roster surface**, which does not exist. Minimally: the members of this engagement, their
-  roles, and an editable card for yourself. This is the feature; the field is the easy half.
+- ~~**A roster surface**, which does not exist.~~ Built — see above. What remains is the brief
+  field on the card that now exists.
 - **A decision about the prompt.** The briefs go into the level set as a preamble — _who is in
   the room and what each role means here_ — before the corpus rather than beside each fragment,
   so the prompt cost is one block per engagement instead of one per fragment. That is a change

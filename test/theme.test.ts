@@ -146,48 +146,28 @@ describe("theme — the pre-paint script", () => {
   });
 });
 
-describe("theme — classes that were already dead", () => {
-  it("does not grow the set of Tailwind steps that do not exist", () => {
-    // Pre-existing and not this theme's doing: these name steps Tailwind has never shipped, so
-    // they emit nothing and the element falls through to whatever is behind it. Recorded rather
-    // than fixed, because fixing one means guessing which step was meant. The assertion is that
-    // the list does not get longer.
-    const KNOWN_DEAD = new Set([
-      "emerald-550",
-      "green-755",
-      "indigo-150",
-      "indigo-505",
-      "indigo-550",
-      "orange-450",
-      "orange-505",
-      "red-650",
-      "slate-150",
-      "slate-205",
-      "slate-405",
-      "slate-450",
-      "slate-505",
-      "slate-550",
-      "slate-655",
-      "slate-705",
-      "slate-750",
-      "violet-650",
-      "zinc-550",
-      "zinc-650",
-      "zinc-755",
-    ]);
+describe("theme — every colour class the components name actually exists", () => {
+  it("names no Tailwind step that does not exist", () => {
+    // A class naming a step Tailwind never shipped emits no CSS at all, so the element falls
+    // through to whatever is behind it: a muted paragraph renders as body ink, a tinted pill
+    // renders as no pill. It breaks no build and no render, which is why twenty-one of them
+    // survived in the tree until they were found by this test rather than by anyone looking.
+    //
+    // They were all one corruption — a real step with a trailing zero typed as a 5 —
+    // and are corrected. This asserts the set is empty rather than that it does not grow,
+    // because the weaker assertion is what let them sit there.
     const STEPS = new Set([50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950]);
     const HUE =
       /\b(?:bg|text|border|from|to|via|ring|placeholder|divide|decoration|fill|stroke|shadow|outline|accent)-(red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose|zinc|slate|gray|neutral|stone)-(\d{2,3})\b/g;
 
-    const found = new Set<string>();
-    for (const { text } of components) {
-      for (const [, hue, step] of text.matchAll(HUE)) {
-        if (!STEPS.has(Number(step))) found.add(`${hue}-${step}`);
+    const dead: string[] = [];
+    for (const { file, text } of components) {
+      for (const [match, , step] of text.matchAll(HUE)) {
+        if (!STEPS.has(Number(step))) dead.push(`${file}: ${match}`);
       }
     }
-    const added = [...found].filter((c) => !KNOWN_DEAD.has(c)).sort();
     assert.deepEqual(
-      added,
+      dead,
       [],
       "these name a Tailwind step that does not exist, so they do nothing",
     );

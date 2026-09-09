@@ -69,7 +69,7 @@ Stated intention: "${session.intention}"
 Contributor roles present: ${rolesPresent(session).join(", ") || "unknown"}
 
 Fragments contributed, labelled by the contributor's role:
-${renderCorpus(session.thoughts)}
+${renderCorpus(session)}
 
 Coverage, already computed from the fragments — treat these counts as fact and do not
 recompute or contradict them:

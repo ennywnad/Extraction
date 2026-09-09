@@ -63,7 +63,7 @@ export default function TimelineMode({ thoughts, onUpdateThoughtTimeline }: Time
                     colThoughts.map((t) => (
                       <div
                         key={t.id}
-                        className="p-2.5 bg-white border border-slate-150 rounded-xl text-[11px] text-slate-705 shadow-2xs leading-relaxed"
+                        className="p-2.5 bg-white border border-slate-100 rounded-xl text-[11px] text-slate-700 shadow-2xs leading-relaxed"
                       >
                         {t.text}
                       </div>
@@ -84,7 +84,7 @@ export default function TimelineMode({ thoughts, onUpdateThoughtTimeline }: Time
         {thoughts.map((thought) => (
           <div
             key={thought.id}
-            className="p-3 bg-white border border-slate-150 rounded-xl flex flex-col sm:flex-row justify-between gap-4 items-start sm:items-center"
+            className="p-3 bg-white border border-slate-100 rounded-xl flex flex-col sm:flex-row justify-between gap-4 items-start sm:items-center"
           >
             <p className="text-xs text-slate-700 leading-relaxed font-normal flex-1">
               "{thought.text}"

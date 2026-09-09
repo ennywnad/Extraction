@@ -20,8 +20,11 @@ const area = (over: Partial<AreaCoverage>): AreaCoverage => ({
   ...over,
 });
 
-const render = (coverage: AreaCoverage[], pileSize: number) =>
-  renderToStaticMarkup(createElement(CoverageMap, { coverage, pileSize }));
+const render = (
+  coverage: AreaCoverage[],
+  pileSize: number,
+  rolesDeclared: { declared: number; total: number } | null = null,
+) => renderToStaticMarkup(createElement(CoverageMap, { coverage, pileSize, rolesDeclared }));
 
 describe("coverage map", () => {
   it("leads with the count of dark areas, because that is the finding", () => {
@@ -64,5 +67,40 @@ describe("coverage map", () => {
 
   it("renders nothing at all before a level set has been generated", () => {
     assert.equal(render([], 12), "");
+  });
+});
+
+describe("coverage map — voices, when nobody has declared a role", () => {
+  // `voices` is a group-by over author roles, and an undeclared role is one of two constants
+  // the server assigned. So on a stubbed roster every voice count here is counting defaults,
+  // and the map has to say so for the same reason it already accounts for unplaced fragments:
+  // its claims are only worth having if its limits are on it.
+  const partial = [area({ area: "Systems", status: "partial", fragments: 3, voices: 1 })];
+
+  it("says the voice counts are grouping defaults rather than people", () => {
+    const html = render(partial, 3, { declared: 1, total: 8 });
+    assert.match(html, /Only 1 of 8 have declared a role/);
+    assert.match(html, /rather than the people/);
+  });
+
+  it("drops the qualifier that would otherwise miscount the room", () => {
+    // "one voice only" is a claim about how many people spoke. With roles at their defaults
+    // it is a claim about how many of two constants appear — wrong in the direction that
+    // sounds most specific, so it is suppressed rather than reworded.
+    assert.match(render(partial, 3), /one voice only/);
+    assert.doesNotMatch(render(partial, 3, { declared: 1, total: 8 }), /one voice only/);
+  });
+
+  it("claims nothing when it has not been told about roles", () => {
+    // Absent must not read as "all declared" — a caller that knows nothing about roles must
+    // not make the map assert that the room described itself.
+    const html = render(partial, 3);
+    assert.doesNotMatch(html, /declared a role/);
+  });
+
+  it("stays quiet once the whole roster has declared", () => {
+    const html = render(partial, 3, { declared: 8, total: 8 });
+    assert.doesNotMatch(html, /declared a role/);
+    assert.match(html, /one voice only/, "the qualifier is trustworthy again");
   });
 });

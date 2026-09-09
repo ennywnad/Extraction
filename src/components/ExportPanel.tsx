@@ -19,6 +19,7 @@ import { AreaCoverage, Session } from "../types";
 import { encodeSnapshot } from "../utils/shareLink";
 import CompareSettingsModal from "./CompareSettingsModal";
 import CoverageMap from "./CoverageMap";
+import { rosterState } from "../utils/roster";
 
 interface ExportPanelProps {
   session: Session;
@@ -54,6 +55,10 @@ export default function ExportPanel({
   // synthesize response goes only to the caller, while the mirrored copy arrives with the
   // next poll. Same value either way — a map of the pile the whole room is watching.
   const coverage: AreaCoverage[] = levelSet?.coverage ?? session.coverage ?? [];
+  // Null in solo mode, where there is no roster and so nothing to qualify.
+  const rolesDeclared = session.roster
+    ? (({ declared, total }) => ({ declared, total }))(rosterState(session))
+    : null;
 
   // Advanced Styling Config States
   const [promptingStyle, setPromptingStyle] = useState<"standard" | "socratic" | "empathetic">(
@@ -272,17 +277,21 @@ export default function ExportPanel({
       {/* The map of what the room has not discussed. Above the deliverable rather than in the
           sidebar: the areas nobody entered are the finding, not a footnote to the outline. */}
       {isEngagement && !loading && coverage.length > 0 && (
-        <CoverageMap coverage={coverage} pileSize={session.thoughts.length} />
+        <CoverageMap
+          coverage={coverage}
+          pileSize={session.thoughts.length}
+          rolesDeclared={rolesDeclared}
+        />
       )}
 
       {loading ? (
-        <div className="py-24 text-center text-zinc-650 flex flex-col items-center justify-center gap-4">
+        <div className="py-24 text-center text-zinc-600 flex flex-col items-center justify-center gap-4">
           <RefreshCw className="w-8 h-8 animate-spin text-black" />
           <div className="space-y-1">
             <h3 className="font-display font-black text-xs uppercase text-zinc-900 tracking-wider">
               Synthesizing Outline Layout...
             </h3>
-            <p className="text-xs text-zinc-650 font-serif italic max-w-sm mt-1">
+            <p className="text-xs text-zinc-600 font-serif italic max-w-sm mt-1">
               "Wait up; Gemini is processing all mapped nodes, sorting by clusters, and building a
               structured executive blueprint."
             </p>
@@ -381,7 +390,7 @@ export default function ExportPanel({
                         setCompareModalTab("tone");
                         setShowCompareModal(true);
                       }}
-                      className="text-[8px] font-mono font-bold uppercase tracking-wider text-zinc-550 hover:text-black transition-all hover:underline cursor-pointer"
+                      className="text-[8px] font-mono font-bold uppercase tracking-wider text-zinc-500 hover:text-black transition-all hover:underline cursor-pointer"
                     >
                       [ℹ Compare]
                     </button>
@@ -419,7 +428,7 @@ export default function ExportPanel({
                         setCompareModalTab("filter");
                         setShowCompareModal(true);
                       }}
-                      className="text-[8px] font-mono font-bold uppercase tracking-wider text-zinc-550 hover:text-black transition-all hover:underline cursor-pointer"
+                      className="text-[8px] font-mono font-bold uppercase tracking-wider text-zinc-500 hover:text-black transition-all hover:underline cursor-pointer"
                     >
                       [ℹ Compare]
                     </button>
@@ -452,7 +461,7 @@ export default function ExportPanel({
                 {/* Cognitive Bias */}
                 <div className="flex items-center justify-between pt-1.5 border-t border-black/10">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-[9px] font-mono uppercase tracking-wider font-bold text-zinc-650">
+                    <span className="text-[9px] font-mono uppercase tracking-wider font-bold text-zinc-600">
                       Audit Cognitive Bias
                     </span>
                     <button
@@ -461,7 +470,7 @@ export default function ExportPanel({
                         setCompareModalTab("bias");
                         setShowCompareModal(true);
                       }}
-                      className="text-[8px] font-mono font-bold uppercase tracking-wider text-zinc-550 hover:text-black transition-all hover:underline cursor-pointer"
+                      className="text-[8px] font-mono font-bold uppercase tracking-wider text-zinc-500 hover:text-black transition-all hover:underline cursor-pointer"
                     >
                       [ℹ Compare]
                     </button>

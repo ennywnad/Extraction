@@ -447,6 +447,28 @@ export default function App() {
     }
   };
 
+  /**
+   * Saves this viewer's own roster entry, and folds the result straight back in.
+   *
+   * The poll would bring it within fifteen seconds, but a person who just typed their role and
+   * saw nothing change assumes it failed — and this is the one write in the app whose entire
+   * value is that people actually complete it. The server's answer is the authoritative stamp,
+   * so this merges what it returned rather than what was typed.
+   *
+   * Errors are rethrown rather than toasted: the panel keeps the text and shows the message
+   * beside the field, which is where somebody who just lost a sentence is looking.
+   */
+  const handleSaveRosterEntry = async (entry: { name: string; role: string }) => {
+    const engagementId = currentSession?.engagementId;
+    if (!engagementId) return;
+    const stamp = await engagementAPI.updateMyRosterEntry(engagementId, entry);
+    setCurrentSession((prev) =>
+      prev?.engagementId === engagementId
+        ? { ...prev, roster: { ...(prev.roster ?? {}), [stamp.email]: stamp } }
+        : prev,
+    );
+  };
+
   const handleLoadSession = (id: string) => {
     const match = sessions.find((s) => s.id === id);
     if (match) {
@@ -777,6 +799,7 @@ export default function App() {
               onSynthesize={handleLaunchReview}
               onEditingChange={handleEditingChange}
               viewerEmail={viewer?.email}
+              onSaveRosterEntry={currentSession.engagementId ? handleSaveRosterEntry : undefined}
               aiEnabled={aiEnabled}
               chorusEnabled={chorusPrefs.enabled}
               onChorusToggle={handleChorusToggle}

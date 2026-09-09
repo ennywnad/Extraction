@@ -127,4 +127,28 @@ describe("engagement stats", () => {
   it("reports age in whole minutes since the engagement was created", () => {
     assert.equal(engagementStats(sessionWith({}), null, NOW).ageMinutes, 41);
   });
+
+  it("counts who declared a role against the whole roster, and stays null in solo mode", () => {
+    // The stat exists so the board and the coverage map can qualify `roles` and `voices`.
+    // Null rather than a zeroed pair when there is no roster: absent is a different claim
+    // from "nobody declared", and only one of them warrants a caveat.
+    const roster = {
+      "a@x.com": { email: "a@x.com", name: "Ana", role: "Owns billing" },
+      "b@x.com": { email: "b@x.com", name: "Bo", role: "Contributor" },
+    };
+    assert.deepEqual(engagementStats(sessionWith({ roster }), null, NOW).rolesDeclared, {
+      declared: 1,
+      total: 2,
+    });
+    assert.equal(engagementStats(sessionWith({}), null, NOW).rolesDeclared, null);
+  });
+
+  it("reads the level-set count off the session and treats never-run as zero, not unknown", () => {
+    // The distinction matters in the other direction from `dark`, which is deliberately null
+    // until a level set exists because zero dark areas is a claim about coverage. Zero *runs*
+    // is not a claim about anything — it is the true count for an engagement nobody has
+    // synthesised, and showing "—" there would hide the one case that is unambiguously free.
+    assert.equal(engagementStats(sessionWith({}), null, NOW).levelSets, 0);
+    assert.equal(engagementStats(sessionWith({ levelSetRuns: 7 }), null, NOW).levelSets, 7);
+  });
 });

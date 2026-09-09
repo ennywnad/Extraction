@@ -25,8 +25,13 @@ export type SessionMetaPatch = Partial<
  * it would put the one number nobody should be able to argue with back under a caller's
  * control — so it is outside `SessionMetaPatch` and outside the route layer's `META_FIELDS`,
  * and the two exclusions are the same decision expressed twice.
+ *
+ * `levelSetRuns` is here for a sharper version of the same reason. It is the record of what
+ * this engagement has cost, and a client that could set it could hide a runaway — which is
+ * the single thing the number exists to make visible.
  */
-export type ServerMetaPatch = SessionMetaPatch & Partial<Pick<Session, "coverage">>;
+export type ServerMetaPatch = SessionMetaPatch &
+  Partial<Pick<Session, "coverage" | "levelSetRuns">>;
 
 /**
  * Just enough to build an ETag: the pair the poll compares, with none of the pile behind it.

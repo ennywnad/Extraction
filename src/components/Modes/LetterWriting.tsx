@@ -79,8 +79,8 @@ export default function LetterWriting({ onAddThought }: LetterWritingProps) {
                 }}
                 className={`p-3 border rounded-xl text-left cursor-pointer transition flex flex-col justify-between ${
                   activeKey === item.key
-                    ? "border-orange-450 bg-orange-50/20 text-slate-900"
-                    : "border-slate-100 hover:bg-slate-50 text-slate-505"
+                    ? "border-orange-400 bg-orange-50/20 text-slate-900"
+                    : "border-slate-100 hover:bg-slate-50 text-slate-500"
                 }`}
               >
                 <span className="block text-[11px] font-bold">{item.label}</span>
@@ -116,7 +116,7 @@ export default function LetterWriting({ onAddThought }: LetterWritingProps) {
                 placeholder="Write with absolute, unshielded truth..."
                 value={bodyText}
                 onChange={(e) => setBodyText(e.target.value)}
-                className="w-full text-sm border border-slate-200 focus:ring-2 focus:ring-orange-505/10 focus:border-orange-400 rounded-xl p-3 resize-none bg-white"
+                className="w-full text-sm border border-slate-200 focus:ring-2 focus:ring-orange-500/10 focus:border-orange-400 rounded-xl p-3 resize-none bg-white"
               />
             </div>
 

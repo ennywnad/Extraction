@@ -118,6 +118,10 @@ interface StatTile {
   caveat?: boolean;
 }
 
+/** True when the roster has people still carrying the role the server gave them. */
+const undeclared = (stats: EngagementStats) =>
+  Boolean(stats.rolesDeclared && stats.rolesDeclared.declared < stats.rolesDeclared.total);
+
 function tilesOf(stats: EngagementStats): StatTile[] {
   const tiles: StatTile[] = [
     {
@@ -159,9 +163,15 @@ function tilesOf(stats: EngagementStats): StatTile[] {
     },
     {
       key: "roles",
+      // Undeclared roles are the server's two constants, so this group-by caps at two in a
+      // room of any size. Printing it plainly would be the board stating a number it knows is
+      // measuring defaults — the exact failure the coral line at the bottom warns about.
       label: "Roles",
       value: String(stats.roles),
-      note: "distinct roles — what the level set reasons over",
+      note: undeclared(stats)
+        ? `${stats.rolesDeclared!.declared} of ${stats.rolesDeclared!.total} have declared one — the rest are server defaults`
+        : "distinct roles — what the level set reasons over",
+      caveat: undeclared(stats),
     },
     {
       key: "dark",
@@ -170,6 +180,15 @@ function tilesOf(stats: EngagementStats): StatTile[] {
       note: stats.dark
         ? "from the last level set; the coverage map says more"
         : "no level set generated yet",
+    },
+    {
+      key: "levelSets",
+      label: "Level sets run",
+      value: String(stats.levelSets),
+      // Caveated because the label reads like a bill and is not one: a run that failed
+      // part-way may have spent tokens without finishing, so this is a floor.
+      note: "completed generations over the whole pile — the app's one variable cost",
+      caveat: true,
     },
     {
       key: "age",

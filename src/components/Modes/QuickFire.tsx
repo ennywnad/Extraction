@@ -115,14 +115,14 @@ export default function QuickFire({ topic, intention, onAddThought, thoughts }: 
       </div>
 
       {loading ? (
-        <div className="py-12 text-center text-slate-405 flex flex-col items-center justify-center gap-2">
+        <div className="py-12 text-center text-slate-400 flex flex-col items-center justify-center gap-2">
           <RefreshCw className="w-6 h-6 animate-spin text-indigo-500" />
           <span className="text-xs font-medium">Customizing provocative speed questions...</span>
         </div>
       ) : (
         <div className="space-y-6">
           {/* Progress gauge */}
-          <div className="flex items-center justify-between text-[11px] text-slate-450 border-b border-slate-100 pb-2">
+          <div className="flex items-center justify-between text-[11px] text-slate-400 border-b border-slate-100 pb-2">
             <span>
               Question {currentIndex + 1} of {prompts.length}
             </span>
@@ -151,7 +151,7 @@ export default function QuickFire({ topic, intention, onAddThought, thoughts }: 
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && !isTooLong && handleNext()}
-                className={`w-full text-sm border focus:ring-2 focus:ring-indigo-550/10 focus:border-indigo-500 rounded-xl px-4 py-3 bg-white ${
+                className={`w-full text-sm border focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 rounded-xl px-4 py-3 bg-white ${
                   isTooLong
                     ? "border-amber-400 focus:ring-amber-500/10 focus:border-amber-500"
                     : "border-slate-200"

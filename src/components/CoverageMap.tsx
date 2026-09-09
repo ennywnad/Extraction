@@ -28,24 +28,39 @@ const STATUS: Record<AreaStatus, { cell: string; text: string; label: string }> 
 };
 
 /** Why an area with plenty of fragments can still fall short of "defined". */
-function qualifier(area: AreaCoverage): string | null {
+function qualifier(area: AreaCoverage, stubbedRoles: boolean): string | null {
   if (area.status === "dark") return "nobody has spoken here";
-  if (area.status === "partial" && area.voices === 1) return "one voice only";
+  // Suppressed rather than reworded on an undeclared roster: "one voice only" is a claim about
+  // how many people spoke, and with roles at their defaults it is a claim about how many of
+  // two constants appear. Wrong in the direction that sounds most specific.
+  if (area.status === "partial" && area.voices === 1 && !stubbedRoles) return "one voice only";
   return null;
 }
 
 export default function CoverageMap({
   coverage,
   pileSize,
+  rolesDeclared,
 }: {
   coverage: AreaCoverage[];
   pileSize: number;
+  /**
+   * How many of the roster chose their own role. Optional, and absent means "do not claim
+   * either way" rather than "all declared" — a caller that has not been taught about roles
+   * must not make the map assert something about them.
+   */
+  rolesDeclared?: { declared: number; total: number } | null;
 }) {
   if (!coverage.length) return null;
 
   const dark = coverage.filter((c) => c.status === "dark");
   const placed = coverage.reduce((sum, c) => sum + c.fragments, 0);
   const unplaced = Math.max(0, pileSize - placed);
+  // `voices` is a group-by over author roles, and a role nobody declared is one of two server
+  // constants — so on an undeclared roster every voice count on this map is capped at two
+  // however many people are in the room. Stated for the same reason as the unplaced line
+  // below: the map's claims are only worth anything if its limits are on it.
+  const stubbedRoles = Boolean(rolesDeclared && rolesDeclared.declared < rolesDeclared.total);
 
   return (
     <div className="bg-white border-3 border-black p-6 shadow-hard-6 space-y-5" id="coverage-map">
@@ -68,7 +83,7 @@ export default function CoverageMap({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         {coverage.map((area) => {
           const style = STATUS[area.status];
-          const note = qualifier(area);
+          const note = qualifier(area, stubbedRoles);
           return (
             <div
               key={area.area}
@@ -105,6 +120,14 @@ export default function CoverageMap({
             {" "}
             {unplaced} {unplaced === 1 ? "was" : "were"} not placed by the classifier, so a dark
             area above may be unplaced rather than unspoken.
+          </span>
+        )}
+        {stubbedRoles && (
+          <span className="text-black font-bold">
+            {" "}
+            Only {rolesDeclared!.declared} of {rolesDeclared!.total} have declared a role, so the
+            voice counts above are grouping the roles the server assigned rather than the people in
+            the room.
           </span>
         )}
       </p>

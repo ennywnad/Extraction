@@ -395,7 +395,7 @@ export default function IntakeForm({
             />
 
             <div className="mt-3.5 bg-mist border-2 border-black p-3.5 space-y-2.5 shadow-hard-2">
-              <span className="font-bold text-[9px] uppercase font-mono tracking-wider text-zinc-550 block">
+              <span className="font-bold text-[9px] uppercase font-mono tracking-wider text-zinc-500 block">
                 ⚡ Quick context keywords (click to append to topic)
               </span>
               <div className="flex flex-wrap gap-1.5">
@@ -774,7 +774,7 @@ export default function IntakeForm({
                           setCompareModalTab("quiz");
                           setShowCompareModal(true);
                         }}
-                        className="text-[9px] font-mono font-bold uppercase text-zinc-550 hover:text-black hover:underline cursor-pointer"
+                        className="text-[9px] font-mono font-bold uppercase text-zinc-500 hover:text-black hover:underline cursor-pointer"
                       >
                         [ℹ Compare Quiz]
                       </button>

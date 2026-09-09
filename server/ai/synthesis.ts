@@ -140,12 +140,23 @@ export async function synthesizeEngagement(
     // whoever asked for it, so without this the map of what the room has *not* discussed
     // would exist for one participant until they reloaded. Sending it with the pile makes it
     // something the whole room can watch, which is the only form it is useful in.
+    //
+    // `levelSetRuns` rides the same write because it is counting exactly what this write
+    // records: one completed level set, which is one pair of Gemini calls over the whole
+    // pile. Incrementing here rather than per caller is the point — ten people opening the
+    // review panel join one run (see `inFlight`), and counting callers would report ten runs
+    // for one bill. It is a `+ 1` on the snapshot rather than an atomic store increment
+    // because single-flight already means no two runs for one engagement overlap in a
+    // process; two instances synthesising the same engagement at once could lose a count,
+    // but that is the same window in which single-flight itself does not hold, and it fails
+    // low — this number never overstates what was spent.
     const store = await getEngagementStore();
     await store.patchEngagement(session.id, {
       synthesizedSummary: levelSet.summary,
       synthesizedOutline: levelSet.outline,
       synthesizedActionItems: levelSet.openQuestions,
       coverage: levelSet.coverage,
+      levelSetRuns: (session.levelSetRuns ?? 0) + 1,
       status: "review",
     });
     return levelSet;

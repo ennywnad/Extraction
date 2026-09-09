@@ -259,7 +259,7 @@ export default function GuidedDrill({
               Double-Agent Conversations
             </span>
           </h3>
-          <p className="text-[11px] text-zinc-650 leading-normal mt-0.5 font-sans">
+          <p className="text-[11px] text-zinc-600 leading-normal mt-0.5 font-sans">
             An adaptive expert interview. Type answers, consult the coach directly, or speak your
             ideas.
           </p>
@@ -390,7 +390,7 @@ export default function GuidedDrill({
             className={`flex items-center gap-1.5 px-3 py-1.5 border-2 text-[10px] font-mono uppercase tracking-wider transition-all cursor-pointer ${
               isDialogueMode
                 ? "bg-yellow-300 border-black text-black font-bold"
-                : "bg-zinc-100 border-black text-zinc-650 hover:bg-zinc-200"
+                : "bg-zinc-100 border-black text-zinc-600 hover:bg-zinc-200"
             }`}
           >
             <MessageSquareCode className="w-3.5 h-3.5" />

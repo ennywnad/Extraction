@@ -103,7 +103,7 @@ export default function FreeStream({ topic, onAddThought }: FreeStreamProps) {
               animate={{ scale: [1, 1.1, 1], rotate: [0, 2, -2, 0] }}
               transition={{ repeat: Infinity, duration: 2 }}
               onClick={() => setIsRecording(false)}
-              className="flex items-center gap-2 px-3 py-1.5 bg-red-500 hover:bg-red-650 text-white rounded-lg text-xs font-semibold cursor-pointer shadow-xs whitespace-nowrap"
+              className="flex items-center gap-2 px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white rounded-lg text-xs font-semibold cursor-pointer shadow-xs whitespace-nowrap"
             >
               <MicOff className="w-3.5 h-3.5 shrink-0" />
               <span>Listening (Talking out loud)...</span>
@@ -126,7 +126,7 @@ export default function FreeStream({ topic, onAddThought }: FreeStreamProps) {
           ) : (
             <button
               onClick={startRecording}
-              className="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 text-indigo-700 border border-indigo-150 rounded-lg text-xs font-semibold hover:bg-indigo-100/50 transition cursor-pointer whitespace-nowrap"
+              className="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 text-indigo-700 border border-indigo-100 rounded-lg text-xs font-semibold hover:bg-indigo-100/50 transition cursor-pointer whitespace-nowrap"
               title="Voice Dictation Simulator"
             >
               <Mic className="w-3.5 h-3.5 shrink-0" />

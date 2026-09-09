@@ -138,6 +138,31 @@ describe("the coverage map is the server's to write", () => {
   });
 });
 
+describe("the level-set counter is the server's to write", () => {
+  it("ignores a run count sent by a client", async () => {
+    // Sharper than the coverage gate above. This number exists so that a pile regenerated
+    // fifty times cannot happen unnoticed, and synthesis is the only thing in the app whose
+    // cost scales with use. A caller that could set it could set it back to zero, which
+    // would defeat the entire point of counting.
+    const eng = await newEngagement("run count gate");
+    await contribute(A, eng.id, "one fragment");
+
+    const res = await as(A, `/api/engagement/${eng.id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ topic: "run count gate", levelSetRuns: 0 }),
+    });
+    assert.equal(res.status, 200, "the rest of the patch is still a valid one");
+
+    const after = await asJson(A, `/api/engagement/${eng.id}`);
+    assert.equal(after.levelSetRuns, undefined, "a client wrote the run count");
+    assert.equal(
+      after.topic,
+      "run count gate",
+      "the allowed fields in the same patch were dropped",
+    );
+  });
+});
+
 describe("concurrent contribution", () => {
   it("does not lose a fragment added while another contributor held a stale pile", async () => {
     const eng = await newEngagement("stale snapshot");

@@ -17,9 +17,12 @@ import {
   Mic,
   MicOff,
   Waves,
+  Users,
 } from "lucide-react";
 import { Session, Thought, ExtractionMode } from "../types";
 import ChorusCard from "./ChorusCard";
+import RosterPanel from "./RosterPanel";
+import { roleOf, rosterState } from "../utils/roster";
 import type { Echo } from "../utils/chorus";
 
 interface WorkspaceProps {
@@ -46,6 +49,11 @@ interface WorkspaceProps {
   /** Per viewer; see src/utils/chorusPrefs.ts for why it is not a fact about the room. */
   chorusEnabled?: boolean;
   onChorusToggle?: () => void;
+  /**
+   * Saves this viewer's own roster entry. Absent in solo mode, where there is no roster and
+   * no other position to describe yourself relative to.
+   */
+  onSaveRosterEntry?: (entry: { name: string; role: string }) => Promise<void>;
   /**
    * What the pile answered to the fragment this viewer just contributed, and which fragment
    * it answered about. The key is carried because the echo is recomputed on every poll —
@@ -147,6 +155,7 @@ export default function Workspace({
   aiEnabled = true,
   chorusEnabled = false,
   onChorusToggle,
+  onSaveRosterEntry,
   chorus,
   onChorusDismiss,
   loneIds,
@@ -157,6 +166,11 @@ export default function Workspace({
   const [filterTags, setFilterTags] = useState<ExtractionMode | "all">("all");
   const [newThoughtText, setNewThoughtText] = useState("");
   const [showDirectInput, setShowDirectInput] = useState(false);
+  const [showRoster, setShowRoster] = useState(false);
+
+  // Group mode only: `roster` is absent on a solo session by design, and a panel describing
+  // your position relative to other people is meaningless when there are none.
+  const roster = onSaveRosterEntry ? rosterState(session, viewerEmail) : null;
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<
     "all" | "action" | "insight" | "fear" | "goal" | "lone"
@@ -386,6 +400,28 @@ export default function Workspace({
 
         {/* Action button header */}
         <div className="flex items-center gap-2.5 w-full md:w-auto justify-end">
+          {roster && (
+            <button
+              onClick={() => setShowRoster(true)}
+              title={
+                roster.mineUndeclared
+                  ? "You are listed under the role the server assigned you. The coverage map counts voices by role."
+                  : "Who is in this engagement, and what each person owns"
+              }
+              className={`px-3.5 py-1.5 border-2 border-black text-xs font-bold font-display uppercase tracking-wider flex items-center gap-1.5 cursor-pointer shadow-hard-2 transition-all ${
+                roster.mineUndeclared
+                  ? "bg-butter text-black hover:bg-cream"
+                  : "bg-white text-black hover:bg-zinc-50"
+              }`}
+            >
+              <Users className="w-3.5 h-3.5" />
+              Roster
+              <span className="font-mono text-[10px] tabular-nums">
+                {roster.declared}/{roster.total}
+              </span>
+            </button>
+          )}
+
           <button
             onClick={onChorusToggle}
             aria-pressed={chorusEnabled}
@@ -421,6 +457,15 @@ export default function Workspace({
           </button>
         </div>
       </header>
+
+      {roster && showRoster && onSaveRosterEntry && (
+        <RosterPanel
+          session={session}
+          viewerEmail={viewerEmail}
+          onSave={onSaveRosterEntry}
+          onClose={() => setShowRoster(false)}
+        />
+      )}
 
       {/* Direct Thought Intake Modal-bar */}
       <AnimatePresence>
@@ -686,7 +731,7 @@ export default function Workspace({
                               {thought.author.name}
                             </span>
                             <span className="block text-[8px] uppercase tracking-wider font-mono text-zinc-500 truncate">
-                              {thought.author.role}
+                              {roleOf(session, thought.author)}
                             </span>
                           </span>
                         </span>

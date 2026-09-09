@@ -71,7 +71,7 @@ export default function CardSort({ thoughts, onUpdateThoughtCluster }: CardSortP
                   className="flex items-center justify-between p-2.5 bg-slate-50 rounded-xl text-xs text-slate-700"
                 >
                   <span className="truncate pr-2 font-medium flex items-center gap-1.5">
-                    <Folder className="w-3.5 h-3.5 text-indigo-505" />
+                    <Folder className="w-3.5 h-3.5 text-indigo-500" />
                     {cat}
                   </span>
                   <span className="bg-slate-200 text-slate-700 text-[9px] font-extrabold px-1.5 py-0.5 rounded-full shrink-0">
@@ -125,7 +125,7 @@ export default function CardSort({ thoughts, onUpdateThoughtCluster }: CardSortP
                     className={`px-2.5 py-1 rounded-full text-[10px] font-bold capitalize transition cursor-pointer ${
                       isTabActive
                         ? "bg-slate-800 text-white"
-                        : "bg-slate-100 hover:bg-slate-200 text-slate-655"
+                        : "bg-slate-100 hover:bg-slate-200 text-slate-600"
                     }`}
                   >
                     {filterTab} ({count})

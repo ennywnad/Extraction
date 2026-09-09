@@ -17,19 +17,219 @@ this file only records which pieces of one have become code.
 
 ## Where each intent stands
 
-| #                                              | Intent                        | State                                                     |
-| :--------------------------------------------- | :---------------------------- | :-------------------------------------------------------- |
-| [001](001-mcp-server-over-the-pile.md)         | MCP server over the pile      | unchanged                                                 |
-| [002](002-model-provider-seam.md)              | Provider-neutral model seam   | unchanged                                                 |
-| [003](003-local-models-in-solo-mode.md)        | Local models in solo mode     | unchanged                                                 |
-| [004](004-claude-and-the-gcp-model-gateway.md) | Claude as a deployment choice | unchanged                                                 |
-| [005](005-listening-mode.md)                   | Listening mode                | unchanged — but its wall now exists                       |
-| [006](006-local-assists-before-submit.md)      | Local assists before submit   | unchanged                                                 |
-| [007](007-status-board.md)                     | Status board                  | **in part** — reported, and now drawn (below)             |
-| [008](008-deploying-group-mode.md)             | Deploying group mode          | **in part** — two preparatory items; still never deployed |
-| [009](009-the-deferred-group-surface.md)       | The deferred group surface    | **in part** — the coverage map is built                   |
-| [010](010-model-armor.md)                      | Model Armor at the prompt     | unchanged                                                 |
-| [011](011-the-role-brief.md)                   | The role brief                | unchanged                                                 |
+| #                                              | Intent                        | State                                                       |
+| :--------------------------------------------- | :---------------------------- | :---------------------------------------------------------- |
+| [001](001-mcp-server-over-the-pile.md)         | MCP server over the pile      | unchanged                                                   |
+| [002](002-model-provider-seam.md)              | Provider-neutral model seam   | unchanged                                                   |
+| [003](003-local-models-in-solo-mode.md)        | Local models in solo mode     | unchanged                                                   |
+| [004](004-claude-and-the-gcp-model-gateway.md) | Claude as a deployment choice | unchanged                                                   |
+| [005](005-listening-mode.md)                   | Listening mode                | unchanged — but its wall now exists                         |
+| [006](006-local-assists-before-submit.md)      | Local assists before submit   | unchanged                                                   |
+| [007](007-status-board.md)                     | Status board                  | **in part** — reported, and now drawn (below)               |
+| [008](008-deploying-group-mode.md)             | Deploying group mode          | **in part** — three preparatory items; still never deployed |
+| [009](009-the-deferred-group-surface.md)       | The deferred group surface    | **in part** — the coverage map is built                     |
+| [010](010-model-armor.md)                      | Model Armor at the prompt     | unchanged                                                   |
+| [011](011-the-role-brief.md)                   | The role brief                | **in part** — roles can be declared                         |
+
+---
+
+## 2026-09-09 — 011, in part: the roles the coverage map counts were never set by anybody
+
+**Against [011](011-the-role-brief.md), and it is a defect rather than a feature.** 011 records
+it in one line as the sharpest of its reasons, and it had been true in `main` the whole time:
+`newEngagement` stamps the creator `Facilitator` and `ensureMember` stamps everyone else
+`Contributor`, `updateMyRosterEntry` was written and **had no callers anywhere in the client**,
+and no component in the app could reach a roster. So every role in every live engagement was one
+of two constants — and `voices` in [coverage.ts](../../server/ai/coverage.ts) is a group-by over
+role. **It could reach two in a room of twenty**, and that number is printed per area on the
+coverage map a facilitator puts in front of a client. The arithmetic was right and its input was
+a stub.
+
+**Two halves, and the second is the one that was nearly missed.**
+
+_Somewhere to declare a role._ [RosterPanel](../../src/components/RosterPanel.tsx) — who is in
+the engagement, and an editable card for yourself. The server side needed nothing:
+`PUT /roster/me` already took the identity from the verified stamp and ignored the body, so
+self-service was decided before there was anything to serve. The panel says **what the role is
+for** rather than just asking for one, because a role field with no stated purpose collects a job
+title, and what the level set needs is what somebody _owns here_.
+
+_And a fix for what was already written._ The first version stopped at the panel, and driving it
+in a browser showed why that was not enough: Mei declared a role, the roster updated, and her
+fragment in the pile still read `CONTRIBUTOR`. `AuthorStamp` is copied onto a fragment when it is
+written, so declaring a role only ever corrected the count for fragments contributed **after**
+the declaration — and in a real session people contribute first and fill the roster in when
+somebody asks them to. Half the pile would have stayed miscounted, and wrong in the way that is
+hardest to notice, because it moves.
+
+So `roleOf(session, author)` in [roster.ts](../../src/utils/roster.ts) resolves through the
+roster and falls back to the stamp, and the places that read a role now go through it: coverage's
+`voices`, the board's `roles`, the pile's attribution label, and the corpus the model reads. The
+stamp is left exactly as written — it is the audit record of who somebody was at 09:02 — while
+every question the app actually asks is about the room as it is now. Declaring a role halfway
+through a session repairs the first half.
+
+**The honest half, for the rooms where nobody declares anything.** A surface people ignore fixes
+nothing, so the numbers say when they are counting defaults rather than printing a plausible
+figure: the coverage map's footer gains a second caveat beside the unplaced-fragments one, the
+board's `roles` tile carries the `caveat` flag and reads "1 of 7 have declared one", and the
+qualifier `one voice only` is **suppressed** rather than reworded on a stubbed roster — it is a
+claim about how many people spoke, and with roles at their defaults it is a claim about how many
+of two constants appear. Wrong in the direction that sounds most specific.
+
+**Which way it errs, decided once.** `isDeclaredRole` treats somebody who types "Contributor"
+back in as undeclared. It is indistinguishable from the server having set it and there is no
+marker to tell them apart; understating by one is harmless, where the reverse is the app
+asserting that a person described themselves when nobody touched the field. The same instinct put
+`rolesDeclared` at `null` rather than a zeroed pair in solo mode: absent is a different claim from
+"nobody declared", and only one of them warrants a caveat.
+
+**One definition of the two constants.** They moved to [types.ts](../../src/types.ts) with
+`shape.ts` re-exporting them, because the client now compares against those exact strings — two
+copies would mean a rename silently reclassifying every roster entry as declared, with the caveat
+quietly disappearing. A test imports them rather than writing them out, for the same reason.
+
+**Driven, not just rendered.** Four people, a mixed roster, both themes: opened the panel, typed a
+role, clicked save, watched the header go 1/4 to 2/4 and the pile's label change retroactively,
+and confirmed the write server-side. The stamp-versus-roster defect above was found that way and
+by nothing else — the tests were green across it.
+
+**What it deliberately did not do.** Not 011. There is no `brief` field, no history of what a role
+used to be, and no change to `levelSetPrompt.ts` beyond the corpus now carrying current roles: the
+brief is a paragraph and a prompt decision, and this is the field that already existed finally
+having somewhere to be set. 011's row is narrower, not closed.
+
+---
+
+## 2026-09-08 — 008, in part: the one cost that scales with use is now counted
+
+**Against [008](008-deploying-group-mode.md), and it closes an open question in it.** 008 asks:
+_"Should synthesis carry a per-engagement run counter, so a pile cannot be re-synthesised fifty
+times without anyone noticing?"_ Yes. `levelSetRuns` on the engagement, incremented where a level
+set is persisted, drawn on [007](007-status-board.md)'s board.
+
+**Why this one, out of everything 008 lists.** Almost all of the cost work was already done, and
+done in the right order — Cloud Run scales to zero, `--max-instances=3` bounds a runaway,
+`cost-guardrails.sh` sets a budget with alerts, `audit-costs.sh` takes a baseline. What none of
+those can do is say _why_ a bill moved, because all four live outside the app. And 008's own
+arithmetic shows exactly one line that is not bounded by design: an idle poll is two Firestore
+reads, an idle instance is nothing, but synthesis is two Gemini calls over the **whole pile**,
+every time, and "nothing prevents one person re-running it repeatedly against a pile that keeps
+growing". The existing brake is ten POSTs per fifteen minutes per identity — held in memory, per
+instance, so it resets on every cold start and the real ceiling is three times it. Over a working
+day that is not a bound; it is a speed limit. Nothing anywhere counted the total.
+
+**It counts and deliberately does not cap.** Three brakes, and they are different tools: the
+budget alerts, the Vertex quota is the hard stop, and this is the inside view that makes what
+they are guarding legible without any setup at all. A cap would mean refusing a facilitator
+mid-workshop to save a few cents of tokens, which is the wrong trade in the room this app is for
+— and it is not answerable before a real workshop has run, which is the number 008 says cannot be
+estimated from the code. So the counter is the honest half that can be built now, and 008 records
+the cap as still open rather than pretending it was decided.
+
+**Two decisions, both about not overstating.**
+
+_It counts runs, not callers, and that is structural rather than asserted._ The increment lives
+inside the single `run` promise in `synthesizeEngagement`, so ten people opening the review panel
+join one run and see one increment. Counting callers would have reported ten runs for one pair of
+Gemini calls — an overstatement, on the one number added specifically to be trusted.
+[test/synthesis.test.mjs](../../test/synthesis.test.mjs) says why that property has no test of its
+own: it cannot be reached without a key, and it follows from where the line sits rather than from
+a check.
+
+_It is a floor on spend, not a bill, and the board says so._ A run that failed part-way may still
+have spent tokens and is not counted, so the tile carries the `caveat` flag 007 already had for
+"the number means something narrower than its label suggests". The suite asserts the wording never
+grows into a currency figure. What **is** tested is the case that matters here: with no key
+configured, synthesis fails before reaching the model, spends nothing, and the counter stays at
+zero — a number that ticked there would be measuring clicks.
+
+**Server-written, and gated twice.** `levelSetRuns` is in `ServerMetaPatch` and not in
+`SessionMetaPatch`, so it is outside the route layer's `META_FIELDS` by construction — the same
+two-exclusions-are-one-decision shape `coverage` already has, for a sharper reason: a client that
+could set this could set it back to zero, which defeats the entire point of counting.
+[test/sharedPile.test.mjs](../../test/sharedPile.test.mjs) pins it against a real PATCH.
+
+**On by default, unlike every other optional stat.** `modes`, `recent`, `roles`, `dark` and `age`
+all default off. This one defaults on, because the blind spot _is_ the feature: a cost tile nobody
+turns on rebuilds the thing it was added to close.
+
+**Looked at, in both themes.** The tile was rendered against the built stylesheet and screenshotted
+light and dark before commit, rather than trusted to a string assertion — see the correction in the
+increment below for why that is now the habit.
+
+**What it did not do.** No cap, no per-run history, no "who ran it" — `generatedBy` exists on the
+`LevelSet` and is deliberately not mirrored, because a count answers "is this runaway" and a
+leaderboard answers a question nobody asked. Not deployed; 008's table row is narrower, not gone.
+
+---
+
+## 2026-09-08 — The twenty-one dead classes, which were never a guess
+
+**Against no intent, and it is the finding the increment below recorded rather than fixed.** The
+dark-mode entry ends with one: twenty-one classes across the components name Tailwind steps that
+have never existed — `zinc-650`, `slate-205`, `red-650`, `indigo-505` and the rest. A class naming
+a step Tailwind never shipped emits no CSS at all, so the element falls through to whatever is
+behind it. Fifty-five call sites, in fifteen components.
+
+**Why it was left, and why that reason turned out not to hold.** It was recorded rather than fixed
+because "fixing one means guessing which step was meant", and a guess is not worth putting in front
+of the twelve modes. But the twenty-one are not twenty-one independent guesses: every one of them is
+a real step with a trailing zero typed as a **5**. `650` is `600`, `205` is `200`, `755` is `700`.
+That account is exceptionless over all twenty-one, and it is the only rule that is — nearest-step
+rounding leaves `450`, `750` and `150` as ties it cannot break.
+
+**It is a derivation because the siblings testify, not because the rule is tidy.** Wherever the
+markup contains an element that could contradict it, the element agrees:
+
+- `bg-emerald-550/10` sits in the same class string as `border-t-emerald-500`, beside a third zone
+  that spells the same idea `bg-slate-200/50`. The tint and its border are one colour.
+- `bg-violet-650 hover:bg-violet-700` and `bg-red-500 hover:bg-red-650` are base/hover pairs, and a
+  hover has to be the darker one. Only `600` puts them in order; `700` collapses the first pair and
+  `800` overshoots the second.
+- `focus:ring-indigo-550/10 focus:border-indigo-500` — a focus ring and its border are one colour.
+- `border-slate-150` is on a card whose own container says `border-slate-100`, and `text-slate-705`
+  on a paragraph whose sibling in the same list says `text-slate-700`.
+- Three tip cards in [CompareSettingsModal](../../src/components/CompareSettingsModal.tsx) are
+  copies of each other; one note block was written `text-zinc-600` and the other two `text-zinc-650`.
+
+So the rule was checked against the markup rather than applied to it, and nothing in fifteen files
+dissents.
+
+**What landed.** The fifty-five corrections, and the test that pinned the list is now the assertion
+that the list is empty. [test/theme.test.ts](../../test/theme.test.ts) asserted only that the set of
+dead classes _did not grow_ — which is what let twenty-one of them sit in the tree — and now fails on
+any dead class at all. The stale count in [CLAUDE.md](../../CLAUDE.md)'s health block was corrected in
+passing: it said 154 tests, and `npm run check` has been ending at 182 since the two increments below.
+
+**Dark mode is why this was safe to do at all.** Every hue involved already has a full mirrored ramp
+in [src/index.css](../../src/index.css), so a corrected class is themed by construction — and the
+theme suite's "every hue the components use has a dark ramp" assertion is what proves it, since it
+skips dead steps and therefore saw all fifty-five of these for the first time. Doing this before the
+theme would have meant twenty-one new daylight patches.
+
+**What it is not.** Not a redesign. The rule reproduces what was typed, including where what was
+typed was mildly inconsistent — the same tip-card paragraph is `zinc-600` in one card set and
+`zinc-700` in another, and both stay. Widening this into "pick better tones" is a different change
+with a different justification, and it would have buried the one being made here.
+
+**A near-miss, recorded because the habit it changed is the useful part.** Proving the new
+assertion fails meant reintroducing a dead class into QuickFire and reverting it with
+`git checkout` — which, run before the commit existed, reverted the file to `main` and silently
+undid all six of that file's real corrections. `npm run check` had been run _before_ that
+experiment and not after, so the first version of this commit shipped three dead classes and a
+green report of a state nobody had tested. Caught by the next increment's own `check` run, and
+amended. The rule it cost: the verification loop runs against the tree that is actually being
+committed, and a `git checkout` on an uncommitted file discards work rather than an experiment.
+This is also why the level-set tile in the increment above was screenshotted rather than trusted
+to its passing string assertion.
+
+**Verified by build, not by eye.** The emitted stylesheet now carries `.text-zinc-600`,
+`.bg-emerald-500\/10`, `.focus\:ring-indigo-500\/10:focus` and the rest, and contains no dead step
+anywhere — which is the defect restated as an observation. Nobody has looked at the fifteen
+components in a browser, and the caveat [009](009-the-deferred-group-surface.md) shipped with applies
+unchanged: the claim is that fifty-five elements now take a colour, not that fifty-five elements look
+right.
 
 ---
 
@@ -96,7 +296,8 @@ on bright yellow.
 that have never existed — `zinc-650`, `slate-205`, `red-650`, `indigo-505` and others — so they
 emit no CSS and the element falls through to whatever is behind it. Pre-existing, unrelated to
 the theme, and not fixed here because fixing one means guessing which step was meant.
-[test/theme.test.ts](../../test/theme.test.ts) pins the list so it cannot grow.
+[test/theme.test.ts](../../test/theme.test.ts) pins the list so it cannot grow. (Fixed on
+2026-09-08, above: the guess was avoidable — all twenty-one are one corruption.)
 
 **One deliberate pixel change.** `#FFFDE0` and `#FFFEE0` were both in the tree, one green value
 apart, and are now the single `cream` token.

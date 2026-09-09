@@ -1,3 +1,4 @@
+import { roleOf } from "../../src/utils/roster.ts";
 import type { AreaCoverage, AreaStatus, Session, Thought } from "../../src/types.ts";
 
 // The shape is declared in src/types.ts, with the rest of what crosses the wire. Re-exported
@@ -29,8 +30,10 @@ export function computeCoverage(
       .map(([id]) => id)
       .filter((id) => byId.has(id));
 
+    // Resolved through the roster rather than read off the stamp: the stamp is who somebody
+    // was when they wrote, and this counts who is in the room. See src/utils/roster.ts.
     const voices = new Set(
-      fragmentIds.map((id) => byId.get(id)?.author?.role).filter(Boolean) as string[],
+      fragmentIds.map((id) => roleOf(session, byId.get(id)?.author)).filter(Boolean) as string[],
     ).size;
 
     let status: AreaStatus = "dark";

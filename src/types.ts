@@ -20,6 +20,17 @@ export interface AuthorStamp {
   role: string;
 }
 
+/**
+ * The two roles the server assigns when nobody has said otherwise.
+ *
+ * Here rather than beside the code that stamps them because both sides need them and they
+ * must not drift: the server writes them, and the client's only way to tell a declared role
+ * from a placeholder is to compare against these exact strings. `server/store/shape.ts`
+ * re-exports them so the stamping code still reads them from beside itself.
+ */
+export const FACILITATOR_ROLE = "Facilitator";
+export const CONTRIBUTOR_ROLE = "Contributor";
+
 export interface Thought {
   id: string;
   text: string;
@@ -90,6 +101,19 @@ export interface Session {
    * could contradict the count. Absent until a level set has been generated.
    */
   coverage?: AreaCoverage[];
+  /**
+   * How many level sets this engagement has produced. Engagements only, and server-written
+   * for the same reason as `coverage`.
+   *
+   * It exists because synthesis is the one thing in this app whose cost scales with use: two
+   * Gemini calls over the entire pile, every time. Everything else is bounded by design —
+   * Cloud Run scales to zero, an idle poll is two Firestore reads — so a pile regenerated
+   * fifty times is the only way this deployment gets an unexpected bill, and until now
+   * nothing anywhere counted it. See docs/intents/008-deploying-group-mode.md.
+   *
+   * Absent on an engagement that has never been synthesised, which reads as zero.
+   */
+  levelSetRuns?: number;
 
   createdAt: string;
   updatedAt: string;
