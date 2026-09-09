@@ -41,6 +41,7 @@ const stats: EngagementStats = {
   modesTotal: 12,
   ageMinutes: 41,
   dark: { dark: 3, total: 10 },
+  rolesDeclared: { declared: 7, total: 7 },
   levelSets: 4,
   polling: 9,
 };
@@ -195,6 +196,29 @@ describe("status board", () => {
     const html = render(deployed);
     assert.match(html, /one variable cost/);
     assert.doesNotMatch(html, /\$|cost you|spent so far/);
+  });
+
+  it("refuses to present a roles count built on server defaults as a plain number", () => {
+    // The group-by behind this caps at two in a room of any size while roles are undeclared,
+    // so a bare "2" is the board asserting something it knows is measuring the defaults.
+    const stubbed = { ...stats, rolesDeclared: { declared: 1, total: 7 } };
+    const html = render(deployed, stubbed, { stats: { ...DEFAULT_PREFS.stats, roles: true } });
+    assert.match(html, /1 of 7 have declared one/);
+    assert.match(html, /server defaults/);
+    assert.doesNotMatch(html, /what the level set reasons over/);
+  });
+
+  it("states the roles count plainly once the room has described itself", () => {
+    const html = render(deployed, stats, { stats: { ...DEFAULT_PREFS.stats, roles: true } });
+    assert.match(html, /what the level set reasons over/);
+    assert.doesNotMatch(html, /server defaults/);
+  });
+
+  it("says nothing either way about roles in a solo session", () => {
+    // `rolesDeclared` is null with no roster, and absent must not read as "all declared".
+    const solo = { ...stats, rolesDeclared: null };
+    const html = render(deployed, solo, { stats: { ...DEFAULT_PREFS.stats, roles: true } });
+    assert.doesNotMatch(html, /server defaults/);
   });
 
   it("leaves out a box the viewer turned off", () => {

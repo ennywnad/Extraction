@@ -29,9 +29,14 @@ export function emptyModeProgress(): Record<ExtractionMode, number> {
   return { ...EMPTY_MODE_PROGRESS };
 }
 
-/** The role a creator gets, versus everyone who joins later. */
-export const FACILITATOR_ROLE = "Facilitator";
-export const CONTRIBUTOR_ROLE = "Contributor";
+/**
+ * The role a creator gets, versus everyone who joins later.
+ *
+ * Defined in src/types.ts and re-exported here: the client compares against these exact
+ * strings to tell a role somebody chose from one the server filled in, so two copies would
+ * mean a rename silently reclassifying every roster entry as declared.
+ */
+export { FACILITATOR_ROLE, CONTRIBUTOR_ROLE } from "../../src/types.ts";
 
 export function newEngagement(input: {
   topic: string;

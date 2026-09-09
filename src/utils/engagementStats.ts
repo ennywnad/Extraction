@@ -1,4 +1,5 @@
 import type { Session } from "../types";
+import { roleOf, rosterState } from "./roster";
 
 /**
  * What a room can be told about itself, counted from the pile it is already holding.
@@ -18,6 +19,16 @@ export interface EngagementStats {
   voices: number;
   /** Distinct contributor roles in the pile — what the level set reasons over. */
   roles: number;
+  /**
+   * Of the people on the roster, how many chose their own role rather than keeping the one
+   * the server assigned. Null in solo mode, where there is no roster.
+   *
+   * `roles` above and `voices` in the coverage map are both group-bys over role, so when this
+   * is short of the roster they are counting the server's two defaults instead of the room —
+   * which caps them at two however many people are present. The number is here so the board
+   * can say that rather than print a plausible figure.
+   */
+  rolesDeclared: { declared: number; total: number } | null;
   fragments: number;
   /** Fragments added in the last five minutes, by timestamp. */
   recent: number;
@@ -58,11 +69,12 @@ export function engagementStats(
     new Set(values.filter((v): v is T => Boolean(v))).size;
 
   const coverage = session.coverage;
+  const roster = rosterState(session);
 
   return {
     roster: Object.keys(session.roster ?? {}).length,
     voices: distinct(authored.map((t) => t.author?.email)),
-    roles: distinct(authored.map((t) => t.author?.role)),
+    roles: distinct(authored.map((t) => roleOf(session, t.author))),
     fragments: thoughts.length,
     recent: thoughts.filter((t) => {
       const at = Date.parse(t.timestamp);
@@ -76,6 +88,7 @@ export function engagementStats(
     dark: coverage?.length
       ? { dark: coverage.filter((c) => c.status === "dark").length, total: coverage.length }
       : null,
+    rolesDeclared: session.roster ? { declared: roster.declared, total: roster.total } : null,
     levelSets: session.levelSetRuns ?? 0,
     polling,
   };

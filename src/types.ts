@@ -20,6 +20,17 @@ export interface AuthorStamp {
   role: string;
 }
 
+/**
+ * The two roles the server assigns when nobody has said otherwise.
+ *
+ * Here rather than beside the code that stamps them because both sides need them and they
+ * must not drift: the server writes them, and the client's only way to tell a declared role
+ * from a placeholder is to compare against these exact strings. `server/store/shape.ts`
+ * re-exports them so the stamping code still reads them from beside itself.
+ */
+export const FACILITATOR_ROLE = "Facilitator";
+export const CONTRIBUTOR_ROLE = "Contributor";
+
 export interface Thought {
   id: string;
   text: string;

@@ -19,6 +19,7 @@ import { AreaCoverage, Session } from "../types";
 import { encodeSnapshot } from "../utils/shareLink";
 import CompareSettingsModal from "./CompareSettingsModal";
 import CoverageMap from "./CoverageMap";
+import { rosterState } from "../utils/roster";
 
 interface ExportPanelProps {
   session: Session;
@@ -54,6 +55,10 @@ export default function ExportPanel({
   // synthesize response goes only to the caller, while the mirrored copy arrives with the
   // next poll. Same value either way — a map of the pile the whole room is watching.
   const coverage: AreaCoverage[] = levelSet?.coverage ?? session.coverage ?? [];
+  // Null in solo mode, where there is no roster and so nothing to qualify.
+  const rolesDeclared = session.roster
+    ? (({ declared, total }) => ({ declared, total }))(rosterState(session))
+    : null;
 
   // Advanced Styling Config States
   const [promptingStyle, setPromptingStyle] = useState<"standard" | "socratic" | "empathetic">(
@@ -272,7 +277,11 @@ export default function ExportPanel({
       {/* The map of what the room has not discussed. Above the deliverable rather than in the
           sidebar: the areas nobody entered are the finding, not a footnote to the outline. */}
       {isEngagement && !loading && coverage.length > 0 && (
-        <CoverageMap coverage={coverage} pileSize={session.thoughts.length} />
+        <CoverageMap
+          coverage={coverage}
+          pileSize={session.thoughts.length}
+          rolesDeclared={rolesDeclared}
+        />
       )}
 
       {loading ? (

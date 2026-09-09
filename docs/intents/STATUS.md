@@ -29,7 +29,75 @@ this file only records which pieces of one have become code.
 | [008](008-deploying-group-mode.md)             | Deploying group mode          | **in part** — three preparatory items; still never deployed |
 | [009](009-the-deferred-group-surface.md)       | The deferred group surface    | **in part** — the coverage map is built                     |
 | [010](010-model-armor.md)                      | Model Armor at the prompt     | unchanged                                                   |
-| [011](011-the-role-brief.md)                   | The role brief                | unchanged                                                   |
+| [011](011-the-role-brief.md)                   | The role brief                | **in part** — roles can be declared                         |
+
+---
+
+## 2026-09-09 — 011, in part: the roles the coverage map counts were never set by anybody
+
+**Against [011](011-the-role-brief.md), and it is a defect rather than a feature.** 011 records
+it in one line as the sharpest of its reasons, and it had been true in `main` the whole time:
+`newEngagement` stamps the creator `Facilitator` and `ensureMember` stamps everyone else
+`Contributor`, `updateMyRosterEntry` was written and **had no callers anywhere in the client**,
+and no component in the app could reach a roster. So every role in every live engagement was one
+of two constants — and `voices` in [coverage.ts](../../server/ai/coverage.ts) is a group-by over
+role. **It could reach two in a room of twenty**, and that number is printed per area on the
+coverage map a facilitator puts in front of a client. The arithmetic was right and its input was
+a stub.
+
+**Two halves, and the second is the one that was nearly missed.**
+
+_Somewhere to declare a role._ [RosterPanel](../../src/components/RosterPanel.tsx) — who is in
+the engagement, and an editable card for yourself. The server side needed nothing:
+`PUT /roster/me` already took the identity from the verified stamp and ignored the body, so
+self-service was decided before there was anything to serve. The panel says **what the role is
+for** rather than just asking for one, because a role field with no stated purpose collects a job
+title, and what the level set needs is what somebody _owns here_.
+
+_And a fix for what was already written._ The first version stopped at the panel, and driving it
+in a browser showed why that was not enough: Mei declared a role, the roster updated, and her
+fragment in the pile still read `CONTRIBUTOR`. `AuthorStamp` is copied onto a fragment when it is
+written, so declaring a role only ever corrected the count for fragments contributed **after**
+the declaration — and in a real session people contribute first and fill the roster in when
+somebody asks them to. Half the pile would have stayed miscounted, and wrong in the way that is
+hardest to notice, because it moves.
+
+So `roleOf(session, author)` in [roster.ts](../../src/utils/roster.ts) resolves through the
+roster and falls back to the stamp, and the places that read a role now go through it: coverage's
+`voices`, the board's `roles`, the pile's attribution label, and the corpus the model reads. The
+stamp is left exactly as written — it is the audit record of who somebody was at 09:02 — while
+every question the app actually asks is about the room as it is now. Declaring a role halfway
+through a session repairs the first half.
+
+**The honest half, for the rooms where nobody declares anything.** A surface people ignore fixes
+nothing, so the numbers say when they are counting defaults rather than printing a plausible
+figure: the coverage map's footer gains a second caveat beside the unplaced-fragments one, the
+board's `roles` tile carries the `caveat` flag and reads "1 of 7 have declared one", and the
+qualifier `one voice only` is **suppressed** rather than reworded on a stubbed roster — it is a
+claim about how many people spoke, and with roles at their defaults it is a claim about how many
+of two constants appear. Wrong in the direction that sounds most specific.
+
+**Which way it errs, decided once.** `isDeclaredRole` treats somebody who types "Contributor"
+back in as undeclared. It is indistinguishable from the server having set it and there is no
+marker to tell them apart; understating by one is harmless, where the reverse is the app
+asserting that a person described themselves when nobody touched the field. The same instinct put
+`rolesDeclared` at `null` rather than a zeroed pair in solo mode: absent is a different claim from
+"nobody declared", and only one of them warrants a caveat.
+
+**One definition of the two constants.** They moved to [types.ts](../../src/types.ts) with
+`shape.ts` re-exporting them, because the client now compares against those exact strings — two
+copies would mean a rename silently reclassifying every roster entry as declared, with the caveat
+quietly disappearing. A test imports them rather than writing them out, for the same reason.
+
+**Driven, not just rendered.** Four people, a mixed roster, both themes: opened the panel, typed a
+role, clicked save, watched the header go 1/4 to 2/4 and the pile's label change retroactively,
+and confirmed the write server-side. The stamp-versus-roster defect above was found that way and
+by nothing else — the tests were green across it.
+
+**What it deliberately did not do.** Not 011. There is no `brief` field, no history of what a role
+used to be, and no change to `levelSetPrompt.ts` beyond the corpus now carrying current roles: the
+brief is a paragraph and a prompt decision, and this is the field that already existed finally
+having somewhere to be set. 011's row is narrower, not closed.
 
 ---
 
