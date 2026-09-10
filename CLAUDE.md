@@ -19,8 +19,8 @@ solo (fragments in `localStorage`) and group (a shared pile on the server, behin
 Healthy `npm run check` ends with:
 
 ```
-# tests 275
-# pass 274
+# tests 299
+# pass 298
 # fail 0
 # skipped 1
 ```

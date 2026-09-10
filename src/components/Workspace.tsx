@@ -24,6 +24,7 @@ import ChorusCard from "./ChorusCard";
 import RosterPanel from "./RosterPanel";
 import { roleOf, rosterState } from "../utils/roster";
 import type { Echo } from "../utils/chorus";
+import { matchesCategory, type PileCategory } from "../utils/pileCategories";
 
 interface WorkspaceProps {
   session: Session;
@@ -143,6 +144,23 @@ const modesList = (Object.keys(MODE_CARDS) as ExtractionMode[]).map((mode) => ({
   ...MODE_CARDS[mode],
 }));
 
+/** What the pile sidebar can be filtered down to. `all` and `lone` are not content categories. */
+type CategoryFilter = PileCategory | "all" | "lone";
+
+/**
+ * The chip for each content category, keyed on the category itself.
+ *
+ * A `Record` rather than a list of literals, for the same reason `MODE_CARDS` is one: the
+ * categories are decided in `utils/pileCategories.ts`, and a fifth one added there with no chip
+ * here should be a `npm run lint` failure rather than a filter nobody can reach.
+ */
+const CATEGORY_CHIPS: Record<PileCategory, { label: string; activeStyle: string }> = {
+  action: { label: "⚡ Actions", activeStyle: "bg-signal-red text-black border-black" },
+  insight: { label: "💡 Insights", activeStyle: "bg-signal-blue text-black border-black" },
+  fear: { label: "⚠️ Fears", activeStyle: "bg-signal-amber text-black border-black" },
+  goal: { label: "🎯 Goals", activeStyle: "bg-signal-green text-black border-black" },
+};
+
 export default function Workspace({
   session,
   onUpdateSession,
@@ -172,9 +190,9 @@ export default function Workspace({
   // your position relative to other people is meaningless when there are none.
   const roster = onSaveRosterEntry ? rosterState(session, viewerEmail) : null;
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<
-    "all" | "action" | "insight" | "fear" | "goal" | "lone"
-  >("all");
+  // The four content categories come from pileCategories, so the chips below and the predicate
+  // cannot drift apart: a category added there and not given a chip is a compile error here.
+  const [selectedCategory, setSelectedCategory] = useState<CategoryFilter>("all");
 
   const [isRecordingDirect, setIsRecordingDirect] = useState(false);
   const recognitionDirectRef = React.useRef<any>(null);
@@ -285,67 +303,6 @@ export default function Workspace({
     setShowDirectInput(false);
   };
 
-  const matchesCategory = (text: string, cat: string): boolean => {
-    if (cat === "all") return true;
-    const lower = text.toLowerCase();
-    if (cat === "action") {
-      return (
-        lower.includes("need to") ||
-        lower.includes("do ") ||
-        lower.includes("make") ||
-        lower.includes("implement") ||
-        lower.includes("set up") ||
-        lower.includes("build") ||
-        lower.includes("call") ||
-        lower.includes("send") ||
-        lower.includes("action") ||
-        lower.includes("checklist")
-      );
-    }
-    if (cat === "insight") {
-      return (
-        lower.includes("realize") ||
-        lower.includes("why") ||
-        lower.includes("because") ||
-        lower.includes("concept") ||
-        lower.includes("idea") ||
-        lower.includes("learn") ||
-        lower.includes("understand") ||
-        lower.includes("insight")
-      );
-    }
-    if (cat === "fear") {
-      return (
-        lower.includes("afraid") ||
-        lower.includes("fear") ||
-        lower.includes("scared") ||
-        lower.includes("worry") ||
-        lower.includes("risk") ||
-        lower.includes("doubt") ||
-        lower.includes("hesitat") ||
-        lower.includes("stuck") ||
-        lower.includes("friction") ||
-        lower.includes("challenge") ||
-        lower.includes("socratic") ||
-        lower.includes("provocative")
-      );
-    }
-    if (cat === "goal") {
-      return (
-        lower.includes("goal") ||
-        lower.includes("target") ||
-        lower.includes("objective") ||
-        lower.includes("achieve") ||
-        lower.includes("milestone") ||
-        lower.includes("outcome") ||
-        lower.includes("aim") ||
-        lower.includes("value") ||
-        lower.includes("future")
-      );
-    }
-    return true;
-  };
-
   // Ids rather than a predicate over the text: whether a fragment stands alone is a fact
   // about the whole pile, not about the fragment, so it cannot be decided one card at a time
   // the way the keyword categories above are.
@@ -366,7 +323,11 @@ export default function Workspace({
       t.text.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (t.mode && t.mode.toLowerCase().includes(searchQuery.toLowerCase()));
     const matchesCat =
-      activeCategory === "lone" ? loneSet.has(t.id) : matchesCategory(t.text, activeCategory);
+      activeCategory === "all"
+        ? true
+        : activeCategory === "lone"
+          ? loneSet.has(t.id)
+          : matchesCategory(t.text, activeCategory);
     return matchesTag && matchesSearch && matchesCat;
   });
 
@@ -638,26 +599,10 @@ export default function Workspace({
             <div className="flex flex-wrap gap-1">
               {[
                 { label: "All", id: "all", activeStyle: "bg-black text-white border-black" },
-                {
-                  label: "⚡ Actions",
-                  id: "action",
-                  activeStyle: "bg-signal-red text-black border-black",
-                },
-                {
-                  label: "💡 Insights",
-                  id: "insight",
-                  activeStyle: "bg-signal-blue text-black border-black",
-                },
-                {
-                  label: "⚠️ Fears",
-                  id: "fear",
-                  activeStyle: "bg-signal-amber text-black border-black",
-                },
-                {
-                  label: "🎯 Goals",
-                  id: "goal",
-                  activeStyle: "bg-signal-green text-black border-black",
-                },
+                ...(Object.keys(CATEGORY_CHIPS) as PileCategory[]).map((id) => ({
+                  id,
+                  ...CATEGORY_CHIPS[id],
+                })),
                 // Black rather than a pastel, for the reason a dark coverage cell is black:
                 // a fragment nobody echoed is a finding, not something that went wrong.
                 ...(showLoneFilter
@@ -669,12 +614,12 @@ export default function Workspace({
                       },
                     ]
                   : []),
-              ].map((cat) => {
+              ].map((cat: { label: string; id: CategoryFilter; activeStyle: string }) => {
                 const isSelected = activeCategory === cat.id;
                 return (
                   <button
                     key={cat.id}
-                    onClick={() => setSelectedCategory(cat.id as any)}
+                    onClick={() => setSelectedCategory(cat.id)}
                     className={`text-[9px] font-mono uppercase tracking-tight font-extrabold px-1.5 py-0.5 border-2 border-black transition cursor-pointer shadow-hard-1 ${
                       isSelected
                         ? `${cat.activeStyle} shadow-hard-2 font-black`
