@@ -231,12 +231,17 @@ the container's ephemeral disk, which will vanish with the instance — the sing
 line here, and it is invisible from the app itself. `storage.live: false` only means no request
 has opened the store yet; load the app and check again.
 
-`aiEnabled: false` means Gemini is not reachable and every AI route is silently returning
-canned static output. Do not run a workshop in that state. It is a deliberate first-deploy
-state, though — see the note about deploying without `GENAI_BACKEND` below.
+`model.backend` is one of `vertex`, `apikey`, `claude-vertex`, `claude-apikey` or `none` — the
+two `claude-*` values mean the provider behind the deployment is Claude rather than Gemini,
+which is a `MODEL_BACKEND` decision and not a code one.
+
+`aiEnabled: false` means no model is reachable and every AI route is silently returning canned
+static output. Do not run a workshop in that state. It is a deliberate first-deploy state,
+though — see the note about deploying without `MODEL_BACKEND` below.
 
 It names no project, audience, model id or path: the endpoint is reachable by anyone inside the
-IAP perimeter, and `test/status.test.ts` fails if deployment topology leaks into it.
+IAP perimeter, and `test/status.test.ts` fails if deployment topology leaks into it. The AI
+routes hold that same line — a response says which provider wrote it, never which model id.
 
 ## Audit logging
 
@@ -272,9 +277,19 @@ Keep enough versions to cover any revision you might roll back to.
 - **IAP is all-or-nothing per service.** It gates the static bundle and every API route alike;
   there is no path-level exemption. The deployed instance is private to the group. For a public
   solo instance, deploy the same image as a second service without `--iap`.
-- **Using the Gemini Developer API instead of Vertex:** `export GENAI_BACKEND=apikey GEMINI_KEY=...`
+- **Using the Gemini Developer API instead of Vertex:** `export MODEL_BACKEND=apikey GEMINI_KEY=...`
   before bootstrap. That path adds Secret Manager and a key to rotate; Vertex needs neither.
-- **Model ids** differ between the Developer API and Vertex and move faster than this repo
-  does. `GEMINI_MODELS` overrides the chain; the server logs which model actually served a
-  request, and fails loudly with the whole chain rather than swallowing each failure.
+- **Running Claude instead of Gemini** is `MODEL_BACKEND=claude-vertex` and nothing else.
+  Claude is served from the same Vertex endpoint under the same ADC, so the deployment still
+  holds no key material — changing the model is not a change of security posture, which is the
+  entire argument for doing it this way. It does need Claude enabled in the project's Model
+  Garden, and `VERTEX_LOCATION` set somewhere that serves it (`global`, `us-east5`,
+  `us-central1`, `europe-west1`, `asia-southeast1`). **Never exercised against a real project
+  yet** — see `docs/intents/008`.
+- **`MODEL_BACKEND`, `MODEL_IDS` and `MODEL_API_KEY` replaced `GENAI_BACKEND`, `GEMINI_MODELS`
+  and `GEMINI_API_KEY`.** The old names still work and log one deprecation line at boot, so an
+  existing deployment keeps running across this change. `deploy.sh` still sets the old ones.
+- **Model ids** differ between backends and move faster than this repo does. `MODEL_IDS`
+  overrides the chain; the server logs which model actually served a request, and fails loudly
+  with the whole chain rather than swallowing each failure.
 - **Local development** needs none of this. Copy `.env.example` to `.env` and `npm run dev`.

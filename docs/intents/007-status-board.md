@@ -27,12 +27,19 @@ to `curl /healthz` or read `.env`. A board turns the claim into something you ca
 serves it, so the board is a rendering job over one value. `source` /
 `X-Extraction-AI-Source` carry the per-response half.
 
-**The state space is about to get much larger.** With [003](003-local-models-in-solo-mode.md),
-[004](004-claude-and-the-gcp-model-gateway.md) and
-[006](006-local-assists-before-submit.md), "which model answered" stops being a boolean and
-becomes: local, Vertex-Gemini, Vertex-Claude, first-party Claude, or a labelled fallback —
-possibly varying per route, and with a local runtime that may be assisting in the browser
-without touching the pile at all. At that point a board stops being a nicety.
+**The state space got larger, as predicted, and half of it is now real.**
+[004](004-claude-and-the-gcp-model-gateway.md) landed, so "which model answered" is no longer a
+boolean: `model.backend` is one of `vertex`, `apikey`, `claude-vertex`, `claude-apikey` or
+`none`, and `X-Extraction-AI-Provider` names the family per response.
+[003](003-local-models-in-solo-mode.md) and [006](006-local-assists-before-submit.md) would add
+local, and per-route selection would let them vary within one session.
+
+That growth immediately found the thing this intent was worried about, in the board rather than
+in the plumbing: the model card rendered its branch through a ternary chain, so widening the
+union compiled cleanly and drew a working Claude deployment as **None**, in coral. It is keyed
+off an exhaustive record now. Worth stating as the general lesson, because it is the second
+time this repo has hit it: `server/status.ts`'s promise that a new branch is a compile error
+holds for the _type_ and has to be arranged separately for each thing that renders it.
 A facilitator about to run a paid workshop needs to see, at a glance, that the room is wired
 the way they think it is.
 

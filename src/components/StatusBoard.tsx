@@ -40,6 +40,31 @@ const GREEN = "var(--color-signal-green)";
 const GOLD = "var(--color-signal-amber)";
 const CORAL = "var(--color-signal-red)";
 
+/**
+ * Every model backend, and what to call it on screen.
+ *
+ * A `Record` keyed on the union rather than the ternary chain this used to be, because that
+ * chain was the one place the "a new branch is a compile error" rule did not actually hold:
+ * when the seam grew from two backends to four, `model.backend === "vertex" ? … : "None"`
+ * kept compiling and drew both Claude backends as **None**, in coral, on the one screen whose
+ * job is answering where the model comes from. Wrong, and wrong in the direction that reads
+ * as "nothing is configured" on a working deployment.
+ *
+ * Keyed off `InstanceStatus["model"]["backend"]`, so a fifth backend fails `npm run lint`
+ * here the way a twelfth extraction mode fails it in `EMPTY_MODE_PROGRESS`.
+ */
+type ModelBackend = InstanceStatus["model"]["backend"];
+
+const MODEL_BACKEND_LABELS: Record<ModelBackend, string> = {
+  vertex: "Vertex",
+  apikey: "API key",
+  "claude-vertex": "Claude on Vertex",
+  "claude-apikey": "Claude API key",
+  none: "None",
+};
+
+const MODEL_BACKENDS = Object.keys(MODEL_BACKEND_LABELS) as ModelBackend[];
+
 interface SeamCard {
   key: BoardBox;
   label: string;
@@ -84,11 +109,12 @@ function seamsOf(status: InstanceStatus): SeamCard[] {
     {
       key: "model",
       label: "Model",
-      value:
-        model.backend === "vertex" ? "Vertex" : model.backend === "apikey" ? "API key" : "None",
-      others: (["vertex", "apikey", "none"] as const)
-        .filter((b) => b !== model.backend)
-        .map((b) => (b === "apikey" ? "api key" : b)),
+      value: MODEL_BACKEND_LABELS[model.backend],
+      // Lowercased for the chips, matching how the other seams name the branch they did not
+      // take ("dev", "file"). The uppercasing is the stylesheet's job, as everywhere else.
+      others: MODEL_BACKENDS.filter((b) => b !== model.backend).map((b) =>
+        MODEL_BACKEND_LABELS[b].toLowerCase(),
+      ),
       state: model.backend === "none" ? "Nothing configured" : "A client was built",
       fill: model.backend === "none" ? CORAL : GREEN,
       detail:

@@ -4,10 +4,17 @@
  * Retrying a bad key against every model in the chain is what turns the most common
  * fresh-clone mistake into something that reads like an outage.
  */
-import { describe, it, beforeEach, afterEach } from "node:test";
+import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import type { GoogleGenAI } from "@google/genai";
 import { AiCallError, generateContentWithFallback } from "../server/ai/client.ts";
+
+/**
+ * The chain is handed its models rather than reading them from the environment — that
+ * resolution lives in `client.ts` and happens once. So these cases name the chain directly
+ * and test the mechanics, which is all this function decides.
+ */
+const CHAIN = ["model-a", "model-b"];
 
 /** Shaped like the SDK's ApiError: a plain HTTP status on an Error. */
 function apiError(status: number, message = `HTTP ${status}`) {
@@ -30,26 +37,20 @@ function scriptedClient(outcomes: unknown[]) {
   return { ai, calls };
 }
 
-const original = process.env.GEMINI_MODELS;
-beforeEach(() => {
-  process.env.GEMINI_MODELS = "model-a,model-b";
-});
-afterEach(() => {
-  if (original === undefined) delete process.env.GEMINI_MODELS;
-  else process.env.GEMINI_MODELS = original;
-});
-
 describe("model chain", () => {
   it("advances to the next model when an id is not served here", async () => {
     const { ai, calls } = scriptedClient([apiError(404, "model not found"), { text: "{}" }]);
-    const response = await generateContentWithFallback(ai, { contents: "hi" });
+    const { response, model } = await generateContentWithFallback(ai, { contents: "hi" }, CHAIN);
     assert.deepEqual(calls, ["model-a", "model-b"]);
     assert.equal((response as { text: string }).text, "{}");
+    // Which model answered is returned rather than only logged: `source` on every AI response
+    // names the provider that wrote the body, and it cannot do that from a console.warn.
+    assert.equal(model, "model-b");
   });
 
   it("advances on a network failure, which carries no status", async () => {
     const { ai, calls } = scriptedClient([new Error("ECONNRESET"), { text: "{}" }]);
-    await generateContentWithFallback(ai, { contents: "hi" });
+    await generateContentWithFallback(ai, { contents: "hi" }, CHAIN);
     assert.deepEqual(calls, ["model-a", "model-b"]);
   });
 
@@ -57,7 +58,7 @@ describe("model chain", () => {
     it(`stops on ${status} rather than asking a second model the same question`, async () => {
       const { ai, calls } = scriptedClient([apiError(status), { text: "{}" }]);
       await assert.rejects(
-        () => generateContentWithFallback(ai, { contents: "hi" }),
+        () => generateContentWithFallback(ai, { contents: "hi" }, CHAIN),
         (err: Error & { status?: number }) => {
           // The original error propagates, so the route sees the real status and the log
           // says "401", not "all models failed".
@@ -73,7 +74,7 @@ describe("model chain", () => {
   it("reports the whole chain when every model fails", async () => {
     const { ai } = scriptedClient([apiError(404, "gone"), apiError(503, "unavailable")]);
     await assert.rejects(
-      () => generateContentWithFallback(ai, { contents: "hi" }),
+      () => generateContentWithFallback(ai, { contents: "hi" }, CHAIN),
       (err: AiCallError) => {
         assert.ok(err instanceof AiCallError);
         assert.match(err.message, /model-a: .*gone/);
@@ -87,7 +88,7 @@ describe("model chain", () => {
   it("carries 429 out of an exhausted chain so the caller can back off", async () => {
     const { ai } = scriptedClient([apiError(404), apiError(429, "quota exceeded")]);
     await assert.rejects(
-      () => generateContentWithFallback(ai, { contents: "hi" }),
+      () => generateContentWithFallback(ai, { contents: "hi" }, CHAIN),
       (err: AiCallError) => {
         assert.equal(err.status, 429);
         return true;

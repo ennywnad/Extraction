@@ -1,12 +1,20 @@
 import express from "express";
 import path from "path";
-import { Type } from "@google/genai";
 import dotenv from "dotenv";
 import rateLimit from "express-rate-limit";
 import { resolveAuthConfig } from "./server/authMode.ts";
 import { createRequireIdentity } from "./server/iapAuth.ts";
 import { createEngagementRouter } from "./server/engagementRoutes.ts";
-import { generateContentWithFallback, getGemini } from "./server/ai/client.ts";
+import { getProvider } from "./server/ai/client.ts";
+import {
+  BINARY_BRACKET_SCHEMA,
+  DEVILS_ADVOCATE_SCHEMA,
+  DRILL_CLARIFY_SCHEMA,
+  DRILL_NEXT_SCHEMA,
+  QUICK_FIRE_SCHEMA,
+  RECOMMEND_SCHEMA,
+  SYNTHESIZE_SESSION_SCHEMA,
+} from "./server/ai/schema.ts";
 import { sendAiError, sendFallback, sendModel } from "./server/ai/respond.ts";
 import { instanceStatus } from "./server/status.ts";
 import {
@@ -138,9 +146,9 @@ app.get("/api/whoami", requireIdentity, (req, res) => {
 // 1. RECOMMEND A MODE BASED ON WARMUP ANSWERS
 app.post("/api/session/recommend", async (req, res) => {
   const { topic, intention, clarity, nature, timeAvailable, intentType } = req.body;
-  const ai = getGemini();
+  const provider = getProvider();
 
-  if (!ai) {
+  if (!provider) {
     const recommended = clarity === "foggy" ? "free_stream" : "guided_drill";
     return sendFallback(res, {
       recommendation: recommended,
@@ -152,8 +160,8 @@ app.post("/api/session/recommend", async (req, res) => {
   }
 
   try {
-    const response = await generateContentWithFallback(ai, {
-      contents: recommendModePrompt({
+    const result = await provider.generate({
+      prompt: recommendModePrompt({
         topic,
         intention,
         clarity,
@@ -161,35 +169,10 @@ app.post("/api/session/recommend", async (req, res) => {
         timeAvailable,
         intentType,
       }),
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            recommendation: {
-              type: Type.STRING,
-              description: "One of the modes in the provided list",
-            },
-            rationale: {
-              type: Type.STRING,
-              description: "A highly specific 1-sentence explanation matching the answers",
-            },
-            alternativeModes: {
-              type: Type.ARRAY,
-              items: { type: Type.STRING },
-              description: "3 other modes that fit well as secondary tracks",
-            },
-            confidence: {
-              type: Type.INTEGER,
-              description: "Matching confidence percentage from 70 to 100",
-            },
-          },
-          required: ["recommendation", "rationale", "alternativeModes", "confidence"],
-        },
-      },
+      schema: RECOMMEND_SCHEMA,
     });
 
-    sendModel(res, JSON.parse(response.text || "{}"));
+    sendModel(res, result);
   } catch (error) {
     sendAiError(res, "Recommend mode", error);
   }
@@ -198,9 +181,9 @@ app.post("/api/session/recommend", async (req, res) => {
 // 2. QUICK FIRE PROMPTS GENERATOR
 app.post("/api/session/quick-fire", async (req, res) => {
   const { topic, intention, pastThoughts } = req.body;
-  const ai = getGemini();
+  const provider = getProvider();
 
-  if (!ai) {
+  if (!provider) {
     return sendFallback(res, {
       prompts: [
         `What's the first word that comes to mind when considering: ${topic}?`,
@@ -217,25 +200,12 @@ app.post("/api/session/quick-fire", async (req, res) => {
   }
 
   try {
-    const response = await generateContentWithFallback(ai, {
-      contents: quickFirePrompt({ topic, intention, pastThoughts }),
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            prompts: {
-              type: Type.ARRAY,
-              items: { type: Type.STRING },
-              description: "Array of exactly 10 customized short questions",
-            },
-          },
-          required: ["prompts"],
-        },
-      },
+    const result = await provider.generate({
+      prompt: quickFirePrompt({ topic, intention, pastThoughts }),
+      schema: QUICK_FIRE_SCHEMA,
     });
 
-    sendModel(res, JSON.parse(response.text || "{}"));
+    sendModel(res, result);
   } catch (error) {
     sendAiError(res, "Quick fire", error);
   }
@@ -244,9 +214,9 @@ app.post("/api/session/quick-fire", async (req, res) => {
 // 3. GUIDED DRILL INTERVIEW: Adaptive next question
 app.post("/api/session/drill-next", async (req, res) => {
   const { topic, intention, history, recentThoughts, advancedSettings } = req.body;
-  const ai = getGemini();
+  const provider = getProvider();
 
-  if (!ai) {
+  if (!provider) {
     return sendFallback(res, {
       question: "Could you expand on the main blocker that feels most active right now?",
       contextNote: "Let's explore your core feeling.",
@@ -254,29 +224,12 @@ app.post("/api/session/drill-next", async (req, res) => {
   }
 
   try {
-    const response = await generateContentWithFallback(ai, {
-      contents: drillNextPrompt({ topic, intention, history, recentThoughts, advancedSettings }),
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            question: {
-              type: Type.STRING,
-              description: "The next single insightful question to ask",
-            },
-            contextNote: {
-              type: Type.STRING,
-              description:
-                "A brief 1-sentence note of what emotional/logical point is being examined",
-            },
-          },
-          required: ["question", "contextNote"],
-        },
-      },
+    const result = await provider.generate({
+      prompt: drillNextPrompt({ topic, intention, history, recentThoughts, advancedSettings }),
+      schema: DRILL_NEXT_SCHEMA,
     });
 
-    sendModel(res, JSON.parse(response.text || "{}"));
+    sendModel(res, result);
   } catch (error) {
     sendAiError(res, "Drill next", error);
   }
@@ -285,9 +238,9 @@ app.post("/api/session/drill-next", async (req, res) => {
 // 3b. GUIDED DRILL DIALOGUE: Bi-directional chat clarification
 app.post("/api/session/drill-clarify", async (req, res) => {
   const { topic, intention, history, userComment, recentThoughts, advancedSettings } = req.body;
-  const ai = getGemini();
+  const provider = getProvider();
 
-  if (!ai) {
+  if (!provider) {
     return sendFallback(res, {
       reply: `I understand you're asking about this with respect to "${topic}". Think of how this constraint forms the core bottleneck of what you are building or solving.`,
       nextQuestion: "How does this concern change your immediate strategic roadmap or next step?",
@@ -296,8 +249,8 @@ app.post("/api/session/drill-clarify", async (req, res) => {
   }
 
   try {
-    const response = await generateContentWithFallback(ai, {
-      contents: drillClarifyPrompt({
+    const result = await provider.generate({
+      prompt: drillClarifyPrompt({
         topic,
         intention,
         history,
@@ -305,30 +258,10 @@ app.post("/api/session/drill-clarify", async (req, res) => {
         recentThoughts,
         advancedSettings,
       }),
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            reply: {
-              type: Type.STRING,
-              description: "Direct brief response clarifying or discussing the user's comment",
-            },
-            nextQuestion: {
-              type: Type.STRING,
-              description: "The next single organic inquiry to guide them back into the drill",
-            },
-            contextNote: {
-              type: Type.STRING,
-              description: "A brief 1-sentence diagnostic label of the focus point",
-            },
-          },
-          required: ["reply", "nextQuestion", "contextNote"],
-        },
-      },
+      schema: DRILL_CLARIFY_SCHEMA,
     });
 
-    sendModel(res, JSON.parse(response.text || "{}"));
+    sendModel(res, result);
   } catch (error) {
     sendAiError(res, "Drill clarify", error);
   }
@@ -337,9 +270,9 @@ app.post("/api/session/drill-clarify", async (req, res) => {
 // 4. BINARY INTUITION / BRACKET PAIR GENERATOR
 app.post("/api/session/binary-bracket", async (req, res) => {
   const { topic, recentThoughts } = req.body;
-  const ai = getGemini();
+  const provider = getProvider();
 
-  if (!ai) {
+  if (!provider) {
     return sendFallback(res, {
       optionA: "I'm holding onto this because I'm genuinely excited about its potential.",
       optionB: "I'm holding onto this because I'm terrified of what happens if I let it go.",
@@ -347,25 +280,12 @@ app.post("/api/session/binary-bracket", async (req, res) => {
   }
 
   try {
-    const response = await generateContentWithFallback(ai, {
-      contents: binaryBracketPrompt({ topic, recentThoughts }),
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            optionA: { type: Type.STRING, description: "The first first-person framing phrase" },
-            optionB: {
-              type: Type.STRING,
-              description: "The opposing light-shifting first-person framing phrase",
-            },
-          },
-          required: ["optionA", "optionB"],
-        },
-      },
+    const result = await provider.generate({
+      prompt: binaryBracketPrompt({ topic, recentThoughts }),
+      schema: BINARY_BRACKET_SCHEMA,
     });
 
-    sendModel(res, JSON.parse(response.text || "{}"));
+    sendModel(res, result);
   } catch (error) {
     sendAiError(res, "Binary bracket", error);
   }
@@ -374,9 +294,9 @@ app.post("/api/session/binary-bracket", async (req, res) => {
 // 5. DEVIL'S ADVOCATE GENERATOR
 app.post("/api/session/devils-advocate", async (req, res) => {
   const { topic, recentThoughts } = req.body;
-  const ai = getGemini();
+  const provider = getProvider();
 
-  if (!ai) {
+  if (!provider) {
     return sendFallback(res, {
       challenges: [
         "Is there a chance your standard of 'success' here is actually unrealistic?",
@@ -387,25 +307,12 @@ app.post("/api/session/devils-advocate", async (req, res) => {
   }
 
   try {
-    const response = await generateContentWithFallback(ai, {
-      contents: devilsAdvocatePrompt({ topic, recentThoughts }),
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            challenges: {
-              type: Type.ARRAY,
-              items: { type: Type.STRING },
-              description: "3 highly critical pressure-testing challenges",
-            },
-          },
-          required: ["challenges"],
-        },
-      },
+    const result = await provider.generate({
+      prompt: devilsAdvocatePrompt({ topic, recentThoughts }),
+      schema: DEVILS_ADVOCATE_SCHEMA,
     });
 
-    sendModel(res, JSON.parse(response.text || "{}"));
+    sendModel(res, result);
   } catch (error) {
     sendAiError(res, "Devils advocate", error);
   }
@@ -414,9 +321,9 @@ app.post("/api/session/devils-advocate", async (req, res) => {
 // 6. SYNTHESIZE SESSION: Produce outline, summary, and action items
 app.post("/api/session/synthesize", async (req, res) => {
   const { topic, intention, thoughts, advancedSettings } = req.body;
-  const ai = getGemini();
+  const provider = getProvider();
 
-  if (!ai) {
+  if (!provider) {
     // Structural only. Unlike the group level set, which refuses to generate at all rather
     // than write filler into a shared client deliverable, a solo outline is read by the one
     // person who just watched the banner tell them AI is off.
@@ -430,33 +337,12 @@ app.post("/api/session/synthesize", async (req, res) => {
   }
 
   try {
-    const response = await generateContentWithFallback(ai, {
-      contents: synthesizeSessionPrompt({ topic, intention, thoughts, advancedSettings }),
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            summary: {
-              type: Type.STRING,
-              description: "Compassionate, insightful 2-paragraph analysis",
-            },
-            outline: {
-              type: Type.STRING,
-              description: "Detailed Markdown outline representing hierarchical logic",
-            },
-            actionItems: {
-              type: Type.ARRAY,
-              items: { type: Type.STRING },
-              description: "List of 3-7 human-focused clear next steps or experiment triggers",
-            },
-          },
-          required: ["summary", "outline", "actionItems"],
-        },
-      },
+    const result = await provider.generate({
+      prompt: synthesizeSessionPrompt({ topic, intention, thoughts, advancedSettings }),
+      schema: SYNTHESIZE_SESSION_SCHEMA,
     });
 
-    sendModel(res, JSON.parse(response.text || "{}"));
+    sendModel(res, result);
   } catch (error) {
     sendAiError(res, "Synthesize session", error);
   }

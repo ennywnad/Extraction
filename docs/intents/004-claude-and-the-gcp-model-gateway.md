@@ -77,56 +77,70 @@ service to operate.
 
 ## What the code already supports
 
-Closer than 003 is, because the auth story already exists:
+**Both halves are built.** `MODEL_BACKEND=claude-vertex` runs the app on Claude over Vertex
+under ADC; `claude-apikey` runs it on a first-party key for local development. The adapter is
+[providers/claude.ts](../../server/ai/providers/claude.ts), behind
+[002](002-model-provider-seam.md)'s seam, and no route knows which provider it is talking to.
 
-- **`GENAI_BACKEND=vertex` already resolves project + region + ADC.** Claude on Vertex needs
-  the same three facts. The branch in [client.ts](../../server/ai/client.ts) that builds a
-  Vertex client is structurally the branch that would build a Claude-on-Vertex client.
-- **`GEMINI_MODELS` is already an ordered, environment-configured chain**, with a comment in
-  the code conceding that valid ids differ between backends and move faster than the file does.
-  Generalising that to provider-qualified entries is a small change to something that already
-  admits it is provider-dependent.
-- **The retry gate is already status-based, not provider-specific.** `FATAL_STATUSES` and the
-  rate-limit passthrough reason about HTTP status codes, which both providers speak.
-- **Prompts are pure functions of their input** and name no provider.
+- **The security posture is unchanged, which was the entire argument.** `claude-vertex` reuses
+  the same project + region + ADC triple the Gemini Vertex branch already resolved, so the
+  deployment still holds no key material.
+- **The chain is shared.** `MODEL_IDS` orders it for whichever provider is live, defaulting to
+  `claude-opus-5` — one id rather than two, because the chain advances on "this id is not
+  served here" and padding it with a cheaper model would be a silent downgrade of every
+  response rather than a fallback.
+- **The status gate needed no work at all.** `FATAL_STATUSES` and the rate-limit passthrough
+  reason about HTTP status codes, and both SDKs put a numeric `status` on their errors — this
+  file predicted that and it held exactly.
+- **Prompts are pure functions of their input** and name no provider. None of them moved.
+- **One failure mode is Claude-only and is handled:** safety classifiers can decline with HTTP
+  200 and `stop_reason: "refusal"`, carrying no JSON. Server-side `fallbacks` would re-run it
+  on another model but are not available on Vertex, so the adapter raises rather than letting
+  an empty parse surface as a schema problem.
+
+**Never exercised against a real project.** Everything above is verified against a stubbed
+transport by [providerContract.test.ts](../../test/providerContract.test.ts). Vertex has not
+served a Claude request for this app once — the same gap [008](008-deploying-group-mode.md)
+records for the deployment as a whole, and it applies here in full.
 
 ## What would have to change
 
-- **[002](002-model-provider-seam.md).** Chiefly the schema translation: Gemini's
-  `config.responseSchema` and Claude's `output_config.format` are the same intent in different
-  shapes, and there are 9 of them.
-- **Environment variable names.** `GEMINI_API_KEY`, `GEMINI_MODELS`, `GENAI_BACKEND` all name a
-  provider in a place that would no longer be provider-specific. Renaming breaks a documented
-  deployment; not renaming leaves a lie in `.env.example`. Aliases with a deprecation note is
-  the usual answer.
-- **Two SDKs, not one client with a wider branch.** Claude on Vertex is
-  `@anthropic-ai/vertex-sdk` (`new AnthropicVertex({ projectId, region })`), not
-  `@google/genai`. So `getGemini()` cannot simply grow a third branch and keep returning one
-  client type — the client type is part of what each adapter hides. Ordinary for an adapter, but
-  it is not the shape this file originally implied.
-- **Feature parity is not total on Vertex, and the gap is now known rather than assumed.**
+- **Run it once against a real project.** Enable Claude in the project's Model Garden, set
+  `MODEL_BACKEND=claude-vertex` and a `VERTEX_LOCATION` that serves it, and make one request.
+  Until that happens the adapter is verified only to the wire.
+- **Per-route provider selection**, which is where this intent said the capability actually
+  pays off — a cheap model on `binary-bracket`, a frontier one on the level set. Deferred in
+  [002](002-model-provider-seam.md) with the reasoning; the seam does not need to change to
+  gain it.
+- **Feature parity is not total on Vertex, and the gap is known rather than assumed.**
   Unavailable there: web fetch, code execution, the Files API, the Models API, Message Batches,
   the MCP connector, Managed Agents, `inference_geo`, server-side fallbacks, fast mode and task
   budgets. **Structured outputs and strict tool use are GA on Vertex** for both providers —
-  which is the one that matters, because it is the entire premise of
-  [002](002-model-provider-seam.md). Nothing this app uses falls in the gap.
+  the one that matters, because it is the entire premise of
+  [002](002-model-provider-seam.md). Nothing this app uses falls in the gap, with one
+  consequence worth naming: no server-side `fallbacks` is why a refusal is handled in the
+  adapter rather than delegated.
 
-## Facts to verify at implementation time
+## Facts verified at implementation time
 
-Do not trust a roadmap document for any of these — they move. Checked on 2026-09-03:
+Re-checked on 2026-09-10 against live documentation rather than from this file, which is the
+rule [docs/half-life-test.md](../half-life-test.md) exists to state:
 
-- **Checked.** The model-id convention holds: current-generation models take the bare
-  first-party id (`claude-opus-5`), dated snapshots take an `@` separator
-  (`claude-opus-4-5@20251101`) — a different convention from both the first-party API and
-  Bedrock.
-- **Checked.** `region` accepts `"global"` (recommended), a multi-region (`"us"` / `"eu"`), or a
-  specific region. `AnthropicVertex` needs exactly project + region + ADC, which is the triple
-  [client.ts](../../server/ai/client.ts) already resolves for the Gemini Vertex branch — so that
-  branch really is structurally the one that would build this client.
-- **Checked.** Which Claude features are and are not available through Vertex — listed above.
-- **Still open.** Which Claude models are served in which specific regions.
+- **Held.** The model-id convention: current-generation models take the bare first-party id
+  (`claude-opus-5`), dated snapshots an `@` separator (`claude-opus-4-5@20251101`) — a
+  different convention from both the first-party API and Bedrock.
+- **Held.** `AnthropicVertex` needs exactly project + region + ADC, and `region` accepts
+  `"global"` (recommended), a multi-region, or a specific one.
+- **Held.** Structured outputs are GA on Vertex for Claude, and take
+  `output_config: { format: { type: "json_schema", schema } }`.
+- **Answered** (was open): Claude is served from `us-east5`, `us-central1`, `europe-west1`,
+  `asia-southeast1`, and the global endpoint.
+- **New, and not in any roadmap file.** Structured outputs there require `additionalProperties:
+false` and a complete `required`, and reject `minimum`/`maximum`/`minLength`. That shaped
+  [002](002-model-provider-seam.md)'s schema type — see the note there about which of those two
+  providers fails loudly and which one does not.
 - **Still open.** Current pricing on Vertex, which Google bills separately from first-party
-  rates.
+  rates. Unchanged by this work; it is a question for whoever runs the first real workshop.
 
 ## Open questions
 
@@ -136,10 +150,16 @@ Do not trust a roadmap document for any of these — they move. Checked on 2026-
   app. (a) wins, for the reasons in the gateway section above, and it keeps
   [002](002-model-provider-seam.md) in-process. Reopen only if API Gateway model routing leaves
   Public Preview with structured-output support.
-- Does solo-with-Claude use the first-party API, or Vertex as well? First-party is the easier
-  local-development story; Vertex keeps one code path.
+- ~~Does solo-with-Claude use the first-party API, or Vertex as well?~~ **Resolved: both**, and
+  it cost less than the question implied. `AnthropicVertex` and `Anthropic` expose the same
+  `messages` surface, so the choice is made once where the client is built and the adapter
+  below it is one code path either way — the same vertex/apikey shape the Gemini branch already
+  had, rather than a second idiom. First-party keeps the local-development story for a
+  contributor with no gcloud setup; Vertex keeps the no-key-material property for the
+  deployment.
 - If per-route provider selection happens, where does that configuration live — environment,
-  or a checked-in config file? Environment gets unwieldy at nine routes.
+  or a checked-in config file? Environment gets unwieldy at nine routes. Still open, and now
+  the only thing standing between this intent and the reason it was written.
 
 ## Non-goals
 

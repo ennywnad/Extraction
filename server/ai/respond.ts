@@ -12,15 +12,37 @@
  */
 import type { Response } from "express";
 import { isRateLimited } from "./client.ts";
+import type { GenerateResult } from "./providers/types.ts";
 
 export type AiSource = "model" | "fallback";
 
 const HEADER = "X-Extraction-AI-Source";
+const PROVIDER_HEADER = "X-Extraction-AI-Provider";
 
-/** A response the model actually generated. */
-export function sendModel<T extends object>(res: Response, body: T) {
+/**
+ * A response the model actually generated.
+ *
+ * **Two headers rather than one widened one.** `X-Extraction-AI-Source` keeps its exact
+ * `model` / `fallback` contract — it answers the question this module exists for, and folding
+ * a provider name into it would mean anything reading it has to parse rather than compare.
+ * The provider rides beside it.
+ *
+ * **The provider is named; the model id is not.** That is the same line `/healthz` draws when
+ * it reports `vertex` and a chain length but never the ids, and it is drawn here for the same
+ * reason: `/api/session/*` carries no identity requirement in a solo deployment, so anything
+ * on these responses is readable by anyone who can reach the port. Which family answered is
+ * deployment shape, of a piece with what the status board already shows. Exactly which model
+ * id and version served a given request is a narrower fact, and it stays in the server log
+ * where `runChain` already puts it.
+ */
+export function sendModel<T extends object>(res: Response, result: GenerateResult<T>) {
   res.setHeader(HEADER, "model");
-  return res.json({ ...body, source: "model" satisfies AiSource });
+  res.setHeader(PROVIDER_HEADER, result.provider);
+  return res.json({
+    ...result.data,
+    source: "model" satisfies AiSource,
+    provider: result.provider,
+  });
 }
 
 /**

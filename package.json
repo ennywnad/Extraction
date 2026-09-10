@@ -16,6 +16,8 @@
     "check": "npm run format:check && npm run lint && npm test"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.125.0",
+    "@anthropic-ai/vertex-sdk": "^0.19.8",
     "@google-cloud/firestore": "^9.0.1",
     "@google/genai": "^2.4.0",
     "dotenv": "^17.2.3",

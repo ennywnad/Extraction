@@ -22,7 +22,7 @@
  * `source` and X-Extraction-AI-Source.
  */
 import type { AuthConfig } from "./authMode.ts";
-import { geminiBackend, modelChain } from "./ai/client.ts";
+import { modelBackend, modelChain } from "./ai/client.ts";
 import { storeBackend, storeIsLive } from "./store/index.ts";
 import type { InstanceStatus } from "../src/types.ts";
 
@@ -32,13 +32,18 @@ import type { InstanceStatus } from "../src/types.ts";
  * and a type it and this file both depend on cannot live only on the server side.
  *
  * The unions there are spelled out literally; this file assigns `AuthConfig["mode"]`,
- * `StoreBackend` and `GeminiBackend` into them, so a new branch on any seam that nobody
+ * `StoreBackend` and `ModelBackend` into them, so a new branch on any seam that nobody
  * declared is a compile error rather than a field the board silently cannot render.
+ *
+ * That guarantee only reaches as far as the type. When the model seam grew from two backends
+ * to four, the board rendered the two new ones through a ternary chain that compiled fine and
+ * drew them as "None" — so `StatusBoard.tsx` now keys them off an exhaustive record, and a
+ * fifth backend is a `npm run lint` failure there too.
  */
 export type { InstanceStatus };
 
 export function instanceStatus(auth: AuthConfig): InstanceStatus {
-  const model = geminiBackend();
+  const model = modelBackend();
   return {
     ok: true,
     identity: { mode: auth.mode, verified: auth.mode === "iap" },

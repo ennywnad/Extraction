@@ -20,9 +20,9 @@ this file only records which pieces of one have become code.
 | #                                              | Intent                        | State                                                       |
 | :--------------------------------------------- | :---------------------------- | :---------------------------------------------------------- |
 | [001](001-mcp-server-over-the-pile.md)         | MCP server over the pile      | unchanged                                                   |
-| [002](002-model-provider-seam.md)              | Provider-neutral model seam   | unchanged                                                   |
+| [002](002-model-provider-seam.md)              | Provider-neutral model seam   | **landed** — per-route selection deliberately deferred      |
 | [003](003-local-models-in-solo-mode.md)        | Local models in solo mode     | unchanged                                                   |
-| [004](004-claude-and-the-gcp-model-gateway.md) | Claude as a deployment choice | unchanged                                                   |
+| [004](004-claude-and-the-gcp-model-gateway.md) | Claude as a deployment choice | **in part** — built and stubbed; never run against Vertex   |
 | [005](005-listening-mode.md)                   | Listening mode                | unchanged — but its wall now exists                         |
 | [006](006-local-assists-before-submit.md)      | Local assists before submit   | unchanged                                                   |
 | [007](007-status-board.md)                     | Status board                  | **in part** — reported, and now drawn (below)               |
@@ -81,6 +81,102 @@ and not drawn, which is the exact way this pair drifted apart once before.
 it is to make its case narrower: the gap a local model would close is now "keywords are lexical"
 rather than "keywords are wrong". 006 says so in its own words now, because an intent resting on
 a defect that has been repaired is the kind of stale that argues for work nobody needs.
+
+---
+
+## 2026-09-10 — 002 landed and 004 in part: the model call has a seam, with Claude behind it
+
+**Against [002](002-model-provider-seam.md) and [004](004-claude-and-the-gcp-model-gateway.md),
+together, because the README says 002 must never land alone.** By itself it is a pure refactor
+that ships nothing anyone can see, and a seam with one implementation behind it is an
+indirection rather than a seam. So the branch is two commits: the seam with Gemini moved behind
+it, then Claude behind the same interface.
+
+**What was actually coupled, and what only looked it.** The intent's own table said nine call
+sites, 41 `Type` enum uses, nine `response.text` reads — re-counted against `main` before
+starting, and accurate to the number, which is worth recording because the README warns that
+those sections are the part to trust least. But the ratio of real work to apparent work was not
+what the table implied. The prompts were already pure functions naming no provider; the
+fatal-status gate already reasoned about HTTP codes both SDKs speak; the chain already conceded
+in a comment that ids are backend-specific. Roughly half of this was moving code that was
+provider-neutral already and had simply never been asked to prove it. The genuinely new
+material is one file: the nine schemas, expressed once.
+
+**The finding that shaped the design, and it is a disagreement between providers rather than a
+bug in either.** Claude's structured outputs require `additionalProperties: false` and a
+complete `required` on every object; Gemini's `Schema` has **no `additionalProperties` field at
+all** and rejects unknown ones. So the same neutral schema cannot be handed to both — one
+adapter adds it, the other strips it. Worse, the asymmetry is silent in the direction that
+matters: a schema written and tested against Gemini, which is the one a contributor has a key
+for, passes everything locally and 400s only on the provider nobody runs on a laptop. That is
+the failure this seam could most easily have shipped.
+
+It is closed twice. `ObjectSchema` declares both fields non-optional, so the crude version does
+not compile — the same instinct as `EMPTY_MODE_PROGRESS`, applied to a constraint rather than a
+mode. And [schemaShape.test.ts](../../test/schemaShape.test.ts) asserts the part a type cannot:
+that `required` is _complete_, since listing four of five properties type-checks perfectly and
+merely means the model may omit the fifth. That test was mutated to confirm it fails on exactly
+that.
+
+**Two defects found by doing the work, neither of them in scope.**
+
+_The chain had two places it was decided._ `generateContentWithFallback` took its models as a
+defaulted parameter, and the default was the hardcoded list rather than the configured one — so
+any caller that omitted it silently ignored `MODEL_IDS`. Only the test did, which is how it
+stayed invisible. The parameter is required now, and configuration resolves in `client.ts`
+alone. The test stopped stubbing the environment as a result, which also makes it a better test
+of what that function actually decides.
+
+_The status board degraded silently, on the one screen whose job is not to._
+[status.ts](../../server/status.ts) states that a new branch on any seam is a compile error
+rather than a field the board cannot render. True of the type; **not** true of the board, which
+rendered the backend through a ternary chain and a hand-written `["vertex", "apikey", "none"]`
+literal. Widening the union to four backends compiled cleanly and drew a working Claude
+deployment as "None", in coral, reading as _nothing is configured_. Keyed off an exhaustive
+`Record` now, so a fifth backend fails `npm run lint` there too. The general form is recorded in
+[007](007-status-board.md): that promise holds for the type and has to be arranged separately
+for each thing that renders it.
+
+**Where the disclosure line was drawn, deliberately.** `source` grew a companion rather than a
+wider vocabulary: `X-Extraction-AI-Source` keeps its exact `model`/`fallback` contract and
+`X-Extraction-AI-Provider` names the family beside it, so nothing that reads the first has to
+start parsing. The model _id_ stays off the wire entirely. `/healthz` reports `vertex` and a
+chain length but never the ids, for the reason `sendAiError` exists — `/api/session/*` carries
+no identity requirement in a solo deployment — and an AI response is reachable by exactly the
+same callers. Which family answered is deployment shape, of a piece with what the board already
+shows; which model id and version served one request is narrower, and stays in the log.
+
+**Two questions answered rather than left to be re-opened.** Solo-with-Claude uses **both**
+paths — `AnthropicVertex` and `Anthropic` expose the same `messages` surface, so supporting a
+first-party key for local development costs one branch where the client is built and nothing
+below it, which is the same vertex/apikey shape the Gemini side already had. And provider
+selection is **per-process**, with per-route deferred explicitly and with reasons, because
+inventing a configuration surface for nine routes inside the change that introduced the seam
+would have been designing two things at once. 002 records both; neither is still a question.
+
+**The aliases, and the deadline that was actually real.** `MODEL_BACKEND` / `MODEL_IDS` /
+`MODEL_API_KEY` are read first, with `GENAI_BACKEND` / `GEMINI_MODELS` / `GEMINI_API_KEY` still
+honoured behind one boot warning. The README attached the roadmap's only genuine deadline to
+this: `deploy.sh` pushes straight to production and sets the old names, so the aliases had to
+exist _before_ that push rather than after it. They are in the same commit as the rename for
+that reason and no other.
+
+**Verified, and the limit stated plainly.** 275 tests, 0 failing, 1 skipped (the Firestore
+contract, as designed). The seam commit deliberately changed no behaviour and the pre-existing
+220 passed unchanged across it, which is the evidence that it didn't. Driven end to end both
+ways: with nothing configured, all seven solo routes answer with a labelled fallback and
+`/healthz` reports `none`; with a Gemini key, a real request came back through the new seam
+carrying `X-Extraction-AI-Source: model` and `X-Extraction-AI-Provider: gemini`.
+
+**Claude has never answered.** [providerContract.test.ts](../../test/providerContract.test.ts)
+drives both adapters against a stubbed transport, so what is proven is everything up to the
+wire — the request each builds, the parse, the reported model, the status gate. Whether Vertex
+accepts it needs a project with Claude enabled in Model Garden, which is
+[008](008-deploying-group-mode.md)'s gap and not narrowed by any of this. 004's row is
+**in part** for exactly that reason: the code is done and the claim is untested.
+
+**What it deliberately did not do.** No per-route selection, no [003](003-local-models-in-solo-mode.md),
+no removal of Gemini — this makes the provider a choice rather than making one — and no deploy.
 
 ---
 

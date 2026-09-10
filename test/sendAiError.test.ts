@@ -77,10 +77,12 @@ describe("sendAiError", () => {
     sendAiError(
       res,
       "Synthesis",
-      new UserFacingError("Gemini is not configured; cannot produce a level set."),
+      new UserFacingError("No model is configured; cannot produce a level set."),
     );
     assert.equal(sent.status, 500);
-    assert.match(sent.body.error, /not configured/);
+    // The whole message, not a fragment of it: the point of the marker is that what someone
+    // wrote for the caller reaches the caller unedited.
+    assert.match(sent.body.error, /No model is configured/);
   });
 
   it("withholds an unmarked message even when it looks harmless", () => {
