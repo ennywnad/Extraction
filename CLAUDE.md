@@ -19,8 +19,8 @@ solo (fragments in `localStorage`) and group (a shared pile on the server, behin
 Healthy `npm run check` ends with:
 
 ```
-# tests 182
-# pass 181
+# tests 275
+# pass 274
 # fail 0
 # skipped 1
 ```
@@ -46,8 +46,11 @@ Every backend picks itself by **presence of configuration**, not by a flag. Read
   `.data/`. So a fresh clone runs with no cloud setup. Both implementations answer one set of
   assertions in [test/storeContract.test.ts](test/storeContract.test.ts) — add to that file
   rather than to one store's tests, or the production store goes back to being assumed.
-- **Gemini** — `GENAI_BACKEND=vertex` (ADC, no key material) or `apikey` (local dev).
-  `getGemini()` returns `null` when unconfigured and **every AI route has a static fallback**
+- **Model** — `MODEL_BACKEND` picks both the provider and how it authenticates: `vertex` and
+  `apikey` are Gemini, `claude-vertex` and `claude-apikey` are Claude. The old
+  `GENAI_BACKEND`/`GEMINI_MODELS`/`GEMINI_API_KEY` names still work with a boot warning,
+  because [scripts/deploy.sh](scripts/deploy.sh) sets them and pushes straight to production.
+  `getProvider()` returns `null` when unconfigured and **every AI route has a static fallback**
   — the app must stay usable with no AI. Preserve that when adding a route, and send the
   fallback through `sendFallback()` from [server/ai/respond.ts](server/ai/respond.ts)
   so it is labelled (`source`, plus a header) rather than passed off as generated. The group
@@ -62,9 +65,22 @@ Every backend picks itself by **presence of configuration**, not by a flag. Read
   call. Don't "simplify" this into an array diff.
 - Coverage arithmetic ([server/ai/coverage.ts](server/ai/coverage.ts)) is deliberately **not**
   delegated to the model — a count of zero has to be right every time.
-- The model chain in [server/ai/client.ts](server/ai/client.ts) advances **only** for
-  "this model id is not served here". 400/401/403 are fatal and rethrown with their status;
-  transient 408/429/5xx are the SDK's `retryOptions` backoff to handle, not the chain's.
+- **The model call goes through a provider seam, and a route never names a provider.**
+  [server/ai/providers/](server/ai/providers/) holds one adapter per provider behind
+  `ModelProvider`; [client.ts](server/ai/client.ts) only chooses between them. A route says
+  `provider.generate({ prompt, schema })` and gets back parsed `data` plus who answered.
+  Response schemas are plain JSON Schema in [server/ai/schema.ts](server/ai/schema.ts), one per
+  call site — **not** inline in the handler, and never in a provider's own dialect. Adding an
+  AI route means adding a schema there; the adapters translate.
+  - `ObjectSchema` makes `required` and `additionalProperties: false` non-optional because
+    Claude rejects a schema without them and Gemini silently accepts one, so the bug would
+    pass every test run against the default backend. `test/schemaShape.test.ts` adds the part
+    the type cannot say: that `required` is _complete_.
+- The model chain in [server/ai/providers/chain.ts](server/ai/providers/chain.ts) advances
+  **only** for "this model id is not served here". 400/401/403 are fatal and rethrown with
+  their status; transient 408/429/5xx are the SDKs' backoff to handle, not the chain's. It is
+  generic over both providers on purpose — two copies would drift, and the way they drift is
+  one of them retrying a bad credential against every model in the chain.
 - **An AI route reports a failure with `sendAiError()`**, never by formatting its own. A
   message reaches the caller only if it is a `UserFacingError`; everything else is summarised,
   because Gemini and Firestore errors both name the project, and `/api/session/*` has no

@@ -34,63 +34,90 @@ reach, and nothing abstracts that it is Gemini.
 
 ## What the code already supports
 
-Honestly: not much. Measured against `main` at the time of writing:
+**The seam is built.** `ModelProvider` in
+[providers/types.ts](../../server/ai/providers/types.ts) is the one internal shape, with two
+adapters behind it; [client.ts](../../server/ai/client.ts) does nothing but choose between
+them. A route calls `provider.generate({ prompt, schema })` and gets back parsed `data`
+alongside the provider and model that produced it. No handler imports `@google/genai`, and no
+handler names a provider.
 
-| Coupling                                            | Count                                              |
-| :-------------------------------------------------- | :------------------------------------------------- |
-| Call sites passing a Gemini-shaped request          | 9                                                  |
-| Uses of the `Type` enum to declare response schemas | 41                                                 |
-| Reads of `response.text`                            | 9                                                  |
-| Files importing `@google/genai`                     | 3 (`server.ts`, `ai/client.ts`, `ai/synthesis.ts`) |
+The coupling this file was written to measure is gone: the nine call sites that each assembled
+a Gemini-shaped request now pass a schema, and the 41 `Type` enum uses are one translation
+function in [providers/gemini.ts](../../server/ai/providers/gemini.ts). `@google/genai` is
+imported by that adapter alone.
 
-What _is_ in good shape, and worth building on:
+What holds it up:
 
-- **Selection by presence of configuration** is established, documented, and works. A third
-  and fourth branch fit the existing pattern without argument.
-- **Prompts are already provider-neutral.** After the extraction into
+- **Selection by presence of configuration** extends to four branches — `vertex`, `apikey`,
+  `claude-vertex`, `claude-apikey` — under `MODEL_BACKEND`, with the `GEMINI_*` names still
+  honoured.
+- **Prompts were already provider-neutral**, as pure functions in
   [sessionPrompts.ts](../../server/ai/sessionPrompts.ts) and
-  [levelSetPrompt.ts](../../server/ai/levelSetPrompt.ts), every prompt is a pure function
-  returning a string. None of them know which model reads them. That is roughly half the
-  problem already solved, by accident.
-- **"Who answered" is already a first-class response field.**
-  [respond.ts](../../server/ai/respond.ts) already distinguishes a model answer from a
-  substituted one via `source` and a header. Extending that to name the _provider_ is a small
-  step from something that already exists.
-- **The model chain is already env-configured and ordered**, with a comment conceding that
-  valid ids differ per backend. That generalises to a provider-qualified list.
+  [levelSetPrompt.ts](../../server/ai/levelSetPrompt.ts). That turned out to be roughly half
+  the problem already solved, by accident, and none of them moved.
+- **The schemas are plain JSON Schema** in [schema.ts](../../server/ai/schema.ts) — see the
+  answered question below for why that, and not a local type.
+- **"Who answered" now names the provider.** [respond.ts](../../server/ai/respond.ts)
+  distinguished a model answer from a substituted one via `source` and a header; it now carries
+  `X-Extraction-AI-Provider` beside it. The model _id_ deliberately stays off the wire, on the
+  same disclosure line `/healthz` already draws.
+- **The chain is generic** over both providers in
+  [providers/chain.ts](../../server/ai/providers/chain.ts), because "advance only on this-id-is-
+  not-served-here" is a fact about model ids rather than about Gemini.
 
 ## What would have to change
 
-**The schemas are the whole job.** Every route declares its response shape with Gemini's
-`Type` enum inside a `config.responseSchema`. The shapes themselves are ordinary JSON Schema
-in a Gemini costume. So:
+Nothing, for the seam itself. What remains is what it was built to make cheap:
 
-1. Express the 9 schemas in plain JSON Schema (or a small local type), once.
-2. Each adapter translates to its provider's mechanism:
-   - **Gemini** — `config.responseSchema` + `responseMimeType: "application/json"`
-   - **Claude** — `output_config: { format: … }` (structured outputs)
-   - **Local runtimes** — grammar-constrained decoding, and it varies by runtime
-3. Each adapter normalises the response back to parsed `data`.
+- **[003](003-local-models-in-solo-mode.md)** adds a third adapter whose constrained decoding
+  is the weak case. The seam was deliberately designed against two providers that constrain
+  well so that 003 arrives as the degraded case rather than shaping the interface around the
+  weakest mechanism it will ever serve.
+- **Per-route provider selection**, which is the capability
+  [004](004-claude-and-the-gcp-model-gateway.md) says makes this worth having. Deferred rather
+  than open — see below.
 
-Everything else — the model chain, the fatal-status gate, the retry policy, the labelled
-fallbacks — is already provider-agnostic in shape and mostly needs renaming.
+**The schemas were the whole job, and they are done.** The nine live in
+[schema.ts](../../server/ai/schema.ts) as plain JSON Schema; the Gemini adapter translates to
+`config.responseSchema` and drops `additionalProperties`, which Gemini's `Schema` has no field
+for; the Claude adapter passes the schema through `output_config.format` verbatim.
 
-**Both mechanisms are GA on Vertex**, which is what makes this viable at all: structured outputs
-and strict tool use are generally available there for Gemini and Claude alike. Had constrained
-decoding turned out to be first-party-only for either, this file would be describing something
-much weaker than it is, and step 1 above would be a gamble rather than a translation.
+The sharpest thing learned building it: **the two providers disagree about
+`additionalProperties` and `required` in a way that is invisible on one of them.** Claude
+rejects a schema missing either; Gemini silently accepts one. A schema written against the
+default backend would therefore pass every local test and 400 only on the provider nobody runs
+locally. `ObjectSchema` declares both non-optional so that cannot compile, and
+[schemaShape.test.ts](../../test/schemaShape.test.ts) adds what the type cannot say — that
+`required` is _complete_.
+
+**Both mechanisms are GA on Vertex**, re-verified against the platform availability table
+before implementation rather than trusted from this file. That is what made the schema work a
+translation rather than a gamble.
 
 **An adapter owns its client, because the SDKs are different.** Claude on Vertex is
 `@anthropic-ai/vertex-sdk` (`new AnthropicVertex({ projectId, region })`); Gemini is
-`@google/genai`. `getGemini()` therefore cannot generalise into a `getModel()` returning one
-client type with a wider branch — the client type is part of what each adapter hides. Both
-authenticate through ADC against the same project and region, so the _configuration_ converges
-even though the objects do not.
+`@google/genai`. So there is no `getModel()` returning one client type — the client is part of
+what each adapter hides. Both authenticate through ADC against the same project and region, so
+the _configuration_ converges even though the objects do not. One correction to what this file
+originally assumed: `BaseAnthropic` is the shared superclass of both Anthropic clients but
+declares no `messages`, so even within one provider the honest common type is the union.
 
 ## Open questions
 
-- Is `schema` plain JSON Schema, or a narrow local type that each adapter expands? Plain JSON
-  Schema is more honest and slightly more work to constrain.
+- ~~Is `schema` plain JSON Schema, or a narrow local type that each adapter expands?~~
+  **Resolved: plain JSON Schema.** It is what Claude's `output_config.format` takes verbatim,
+  so the translation cost sits with the provider that needs translating rather than with every
+  route. The "slightly more work to constrain" worry inverted: the constraints that mattered
+  (`required`, `additionalProperties`) are expressible in the TypeScript type, so they are
+  enforced at compile time rather than by a validator.
+- ~~Is the provider chosen per-process or per-route?~~ **Deferred, deliberately, to keep it
+  from being drifted into.** Per-process today: one `MODEL_BACKEND` for the whole instance,
+  matching how identity and storage already select themselves. Per-route is still the version
+  worth having — a cheap model on `drill-next`, a frontier one on the level set — but it needs
+  a configuration surface for nine routes, and inventing one in the same change that
+  introduced the seam would have been designing two things at once. The seam does not have to
+  change to gain it: `getProvider()` is the only thing a per-route selector would replace, and
+  `GenerateRequest` already carries everything a router would key on.
 - ~~Does the seam stay in-process, or does it become a small HTTP contract?~~ **Resolved:
   in-process.** [004](004-claude-and-the-gcp-model-gateway.md) settled on the Vertex endpoint
   itself as the "gateway", so there is no proxy service for a provider to sit behind. One thing
@@ -98,12 +125,10 @@ even though the objects do not.
   support. It is an OpenAI-compatible front for Gemini, Claude and GPT, and because local
   runtimes speak that shape too, it would collapse this intent and
   [003](003-local-models-in-solo-mode.md) into a single adapter.
-- Is the provider chosen per-process (an env var, matching today) or per-route? Per-route is
-  where this gets genuinely useful — a cheap local model on `drill-next`, a frontier model on
-  the level set — and it is also where the configuration story gets complicated. Worth
-  deciding deliberately rather than drifting into it.
-- What happens to `GEMINI_MODELS` and `GENAI_BACKEND`? Renaming them is a breaking change to
-  a documented deployment; keeping them is a lie in the variable name. Aliases, probably.
+- ~~What happens to `GEMINI_MODELS` and `GENAI_BACKEND`?~~ **Resolved: aliases, as guessed.**
+  `MODEL_BACKEND`, `MODEL_IDS` and `MODEL_API_KEY` are read first; the old names still work and
+  log one deprecation line at boot. The deadline the README attached to this was real and is
+  now discharged — the aliases exist _before_ the next `deploy.sh` push rather than after it.
 
 ## Non-goals
 

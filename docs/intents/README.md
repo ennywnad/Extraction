@@ -11,19 +11,19 @@ built. These are the opposite end: ideas that have not earned a plan yet.
 it before the table below: an intent whose file still reads as untouched may have had a slice
 built, and the log says which slice and what it deliberately left alone.
 
-| #                                              | Intent                                             | Depends on | Cost if attempted today                                                      |
-| :--------------------------------------------- | :------------------------------------------------- | :--------- | :--------------------------------------------------------------------------- |
-| [001](001-mcp-server-over-the-pile.md)         | An MCP server over the pile                        | —          | Assessed and parked. Not cost — the value went elsewhere. See its file.      |
-| [002](002-model-provider-seam.md)              | A provider-neutral model seam                      | —          | Medium, and the prerequisite for 003 and 004. Shape settled: in-process.     |
-| [003](003-local-models-in-solo-mode.md)        | Local models in solo mode                          | 002        | Small once 002 exists.                                                       |
-| [004](004-claude-and-the-gcp-model-gateway.md) | Claude, and the model as a deployment choice       | 002        | Small once 002 exists. The gateway question is resolved: Vertex is it.       |
-| [005](005-listening-mode.md)                   | Listening mode — a kickoff with no model           | —          | Smallest on this list. Mostly already true.                                  |
-| [006](006-local-assists-before-submit.md)      | Local assists before a fragment enters the pile    | —          | Cheap to build, independent of everything else. The cost is setup, not code. |
-| [007](007-status-board.md)                     | A status board that looks like the rest of the app | —          | Small, and now smaller: the reporting half landed, the drawing has not.      |
-| [008](008-deploying-group-mode.md)             | Deploying group mode for the first time            | —          | Not code, and still not done. Its two code-shaped preparations have landed.  |
-| [009](009-the-deferred-group-surface.md)       | The deferred group surface                         | —          | A catalogue; the coverage map is built, the other seven stay deferred.       |
-| [010](010-model-armor.md)                      | Model Armor over the prompt boundary               | —          | Unknown until someone prices it. One seam to change; the policy is the work. |
-| [011](011-the-role-brief.md)                   | The role brief, per participant                    | —          | Small on the server, and it fixes a coverage count that is a stub today.     |
+| #                                              | Intent                                             | Depends on | Cost if attempted today                                                        |
+| :--------------------------------------------- | :------------------------------------------------- | :--------- | :----------------------------------------------------------------------------- |
+| [001](001-mcp-server-over-the-pile.md)         | An MCP server over the pile                        | —          | Assessed and parked. Not cost — the value went elsewhere. See its file.        |
+| [002](002-model-provider-seam.md)              | A provider-neutral model seam                      | —          | **Built.** Two adapters behind `ModelProvider`; per-route selection deferred.  |
+| [003](003-local-models-in-solo-mode.md)        | Local models in solo mode                          | 002        | Small — 002 exists now, and was shaped to take this as the degraded case.      |
+| [004](004-claude-and-the-gcp-model-gateway.md) | Claude, and the model as a deployment choice       | 002        | **Built, never run.** Needs one request against a project with Claude enabled. |
+| [005](005-listening-mode.md)                   | Listening mode — a kickoff with no model           | —          | Smallest on this list. Mostly already true.                                    |
+| [006](006-local-assists-before-submit.md)      | Local assists before a fragment enters the pile    | —          | Cheap to build, independent of everything else. The cost is setup, not code.   |
+| [007](007-status-board.md)                     | A status board that looks like the rest of the app | —          | Small, and now smaller: the reporting half landed, the drawing has not.        |
+| [008](008-deploying-group-mode.md)             | Deploying group mode for the first time            | —          | Not code, and still not done. Its two code-shaped preparations have landed.    |
+| [009](009-the-deferred-group-surface.md)       | The deferred group surface                         | —          | A catalogue; the coverage map is built, the other seven stay deferred.         |
+| [010](010-model-armor.md)                      | Model Armor over the prompt boundary               | —          | Unknown until someone prices it. One seam to change; the policy is the work.   |
+| [011](011-the-role-brief.md)                   | The role brief, per participant                    | —          | Small on the server, and it fixes a coverage count that is a stub today.       |
 
 ## How to read these
 
@@ -85,12 +85,14 @@ that it stays in-process — which is why the cluster is ready to start. The gen
 keeping in mind: an open question in a dependent file can gate the design of the file it depends
 on, and the arrows in the table do not show it.
 
-**002 should never land alone.** By itself it is a pure refactor that ships nothing anyone can
-see, and a seam with one implementation behind it is an indirection rather than a seam. Landing
-it with 004 puts a second provider behind it immediately, and 004 is the right one to prove it
-with: Gemini's `config.responseSchema` and Claude's `output_config.format` are genuinely
-different shapes, and both are GA on Vertex under the ADC the deployment already uses. That tests
-the seam rather than the auth.
+**002 should never land alone** — and it did not. By itself it is a pure refactor that ships
+nothing anyone can see, and a seam with one implementation behind it is an indirection rather
+than a seam. It landed with 004, which was the right one to prove it with: Gemini's
+`config.responseSchema` and Claude's `output_config.format` are genuinely different shapes, and
+both are GA on Vertex under the ADC the deployment already uses. That tested the seam rather
+than the auth, and it worked — the two providers turned out to disagree about
+`additionalProperties` and `required` in a way a single-provider seam would never have
+surfaced. See [STATUS.md](STATUS.md).
 
 **003 after 004, not before** — which reverses what the numbering suggests. 003's own file calls
 structured output "the real risk": grammar-constrained decoding is the weak case and may force
@@ -100,12 +102,12 @@ other way and the seam gets shaped around the weakest mechanism it will ever ser
 where per-route provider selection stops being optional, and that is 002's hardest open question
 — better answered with the seam already proven.
 
-**007 splits, and half of it goes early.** The board wants the full state space and belongs at
-the end. But "each seam reports its choice rather than logging it" only gets more expensive the
-longer it waits: `getEngagementStore()` merely `console.log`s its branch, and `getGemini()`
-returns a client or `null` without ever saying which backend it built — which is why `/healthz`
-can expose nothing but a boolean. Fold that into 002's work, while someone is already inside
-`client.ts`. Add three providers first and there are three more scattered facts to go back for.
+**007 split, and half of it went early — twice.** The board wants the full state space and
+belongs at the end, but "each seam reports its choice rather than logging it" only got more
+expensive the longer it waited. The reporting half landed first; the per-response half was
+folded into 002's work, while someone was already inside `client.ts`, so a response now names
+the provider that wrote it. Doing it the other way round would have meant going back for one
+scattered fact per provider added.
 
 **006 before 005 buys 005 its most interesting feature.** They look unrelated and share no code.
 But 005's live-coverage question is blocked on `classify()` being a model call that returns `{}`
@@ -136,7 +138,8 @@ coverage map, which was computed, shipped across the wire and never rendered. Th
 which settles where coverage lives — with the engagement, not on 007's board — and leaves 005
 needing a classifier rather than a wall.
 
-One item is not an ordering question but has a deadline attached: 002 and 004 both rename
-`GEMINI_API_KEY`, `GEMINI_MODELS` and `GENAI_BACKEND`, and both note that renaming breaks a
-documented deployment. Since [deploy.sh](../../scripts/deploy.sh) pushes straight to production,
-the aliases have to exist before that push rather than after it.
+One item was not an ordering question but had a deadline attached, and it is **discharged**:
+002 and 004 both renamed `GEMINI_API_KEY`, `GEMINI_MODELS` and `GENAI_BACKEND`, and since
+[deploy.sh](../../scripts/deploy.sh) pushes straight to production, the aliases had to exist
+before that push rather than after it. They shipped in the same commit as the rename. The old
+names still work behind one boot warning, so the next deploy is safe either way.
