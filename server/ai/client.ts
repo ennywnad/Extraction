@@ -1,169 +1,181 @@
-import { GoogleGenAI } from "@google/genai";
+/**
+ * Which model provider this instance talks to, decided by configuration.
+ *
+ * Identity resolves its branch at boot, storage picks Firestore or a JSON file by whether a
+ * project id is set, and this is the same decision for the model. What changed is that it is
+ * now a decision between *providers* rather than between two ways of reaching one of them:
+ * `getGemini()` abstracted which Gemini you reached, and nothing abstracted that it was
+ * Gemini. The adapters in ./providers hold that; this file only chooses.
+ *
+ * **`getProvider()` returns `null` when nothing is configured, and every AI route has a static
+ * fallback.** That is the property that lets a fresh clone run end to end with no cloud setup
+ * at all, and it survives having two providers — "no model" is one answer here, not one per
+ * provider.
+ *
+ * **The environment variables lost their provider name, and the old ones still work.**
+ * `GEMINI_API_KEY`, `GEMINI_MODELS` and `GENAI_BACKEND` each name a provider in a place that
+ * is no longer provider-specific. Renaming them outright would break a documented deployment —
+ * `scripts/deploy.sh` pushes straight to production and sets `GENAI_BACKEND=vertex` — so the
+ * new names are read first and the old ones are honoured with a warning. The aliases had to
+ * land in the same change as the seam rather than after it, for exactly that reason.
+ */
+import type { ModelProvider } from "./providers/types.ts";
+import {
+  GEMINI_DEFAULT_MODELS,
+  buildApiKeyClient as buildGeminiApiKey,
+  buildVertexClient as buildGeminiVertex,
+  geminiProvider,
+} from "./providers/gemini.ts";
+import {
+  CLAUDE_DEFAULT_MODELS,
+  buildApiKeyClient as buildClaudeApiKey,
+  buildVertexClient as buildClaudeVertex,
+  claudeProvider,
+} from "./providers/claude.ts";
+
+export { AiCallError, isRateLimited } from "./errors.ts";
+export { generateContentWithFallback } from "./providers/gemini.ts";
+export type { ModelProvider, GenerateRequest, GenerateResult } from "./providers/types.ts";
 
 /**
- * Transient failures are the SDK's job, not the model chain's.
+ * Which branch this instance took — reported rather than only logged, so something other than
+ * the boot log can answer "where is the model coming from".
  *
- * The SDK retries 408/429/5xx with backoff against the *same* model — but only when
- * `retryOptions` is present, and it is absent by default. Without it a single 503 demotes the
- * request to a weaker model over a blip that a backoff would have cleared.
+ * `none` covers both "nothing configured" and "a backend was asked for and is misconfigured".
+ * The two Claude entries are separate values rather than a provider field beside a backend
+ * field, because every consumer of this asks one question: which of the ways this app can
+ * reach a model is live. Splitting it into two axes would mean four combinations to render on
+ * a board where only these five exist.
  */
-const RETRY_OPTIONS = { attempts: 3 };
+export type ModelBackend = "vertex" | "apikey" | "claude-vertex" | "claude-apikey" | "none";
 
-/**
- * Selects a Gemini backend.
- *
- * Vertex authenticates as the runtime service account through Application Default
- * Credentials, so a deployment holds no key material at all and the client's material stays
- * inside the project's own perimeter. The Developer API key path stays for local development,
- * where contributors have no gcloud setup.
- */
-let client: GoogleGenAI | null = null;
+let provider: ModelProvider | null = null;
 let resolved = false;
+let backend: ModelBackend = "none";
+
+/** Placeholders in .env.example. A key still set to one of these is not a key. */
+const PLACEHOLDERS = new Set(["MY_GEMINI_API_KEY", "MY_ANTHROPIC_API_KEY"]);
+
+let warnedLegacy = false;
 
 /**
- * Which backend `getGemini()` actually built — reported rather than only logged, so that
- * something other than the boot log can answer "where is the model coming from".
- * `none` covers both "nothing configured" and "vertex asked for, misconfigured, disabled".
+ * Reads the current name, falling back to the one that named a provider.
+ *
+ * The warning fires once per process rather than per read: it is a note for whoever deploys
+ * next, and a line per AI request would be noise in exactly the logs someone is reading for
+ * something else.
  */
-export type GeminiBackend = "vertex" | "apikey" | "none";
-let backend: GeminiBackend = "none";
+function setting(current: string, legacy: string): string | undefined {
+  const value = process.env[current]?.trim();
+  if (value) return value;
+  const fallback = process.env[legacy]?.trim();
+  if (fallback && !warnedLegacy) {
+    warnedLegacy = true;
+    console.warn(
+      `${legacy} is deprecated and still honoured; the provider-neutral name is ${current}. See .env.example.`,
+    );
+  }
+  return fallback;
+}
 
-export function getGemini(): GoogleGenAI | null {
-  if (resolved) return client;
+function apiKey(current: string, legacy: string): string | undefined {
+  const value = setting(current, legacy);
+  return value && !PLACEHOLDERS.has(value) ? value : undefined;
+}
+
+/** Vertex needs exactly this pair, whichever provider is served over it. */
+function vertexTarget(): { project: string; location: string } | null {
+  const project = process.env.FIRESTORE_PROJECT_ID?.trim();
+  const location = process.env.VERTEX_LOCATION?.trim();
+  return project && location ? { project, location } : null;
+}
+
+export function getProvider(): ModelProvider | null {
+  if (resolved) return provider;
   resolved = true;
 
-  if (process.env.GENAI_BACKEND === "vertex") {
-    const project = process.env.FIRESTORE_PROJECT_ID?.trim();
-    const location = process.env.VERTEX_LOCATION?.trim();
-    if (!project || !location) {
-      console.error(
-        "GENAI_BACKEND=vertex requires FIRESTORE_PROJECT_ID and VERTEX_LOCATION; AI is disabled.",
-      );
+  const choice = setting("MODEL_BACKEND", "GENAI_BACKEND");
+  const models = modelChain();
+
+  if (choice === "vertex" || choice === "claude-vertex") {
+    const target = vertexTarget();
+    if (!target) {
+      console.error(`${choice} requires FIRESTORE_PROJECT_ID and VERTEX_LOCATION; AI is disabled.`);
       backend = "none";
-      return (client = null);
+      return (provider = null);
     }
-    client = new GoogleGenAI({
-      enterprise: true, // `vertexai: true` is the legacy alias for the same backend
-      project,
-      location,
-      httpOptions: { headers: { "User-Agent": "extraction" }, retryOptions: RETRY_OPTIONS },
-    });
+    if (choice === "claude-vertex") {
+      backend = "claude-vertex";
+      return (provider = claudeProvider(
+        buildClaudeVertex(target.project, target.location),
+        models,
+      ));
+    }
     backend = "vertex";
-    return client;
+    return (provider = geminiProvider(buildGeminiVertex(target.project, target.location), models));
   }
 
-  const key = process.env.GEMINI_API_KEY;
-  if (key && key !== "MY_GEMINI_API_KEY") {
-    client = new GoogleGenAI({
-      apiKey: key,
-      httpOptions: {
-        headers: { "User-Agent": "aistudio-build" },
-        retryOptions: RETRY_OPTIONS,
-      },
-    });
-    backend = "apikey";
+  if (choice === "claude-apikey") {
+    const key = apiKey("MODEL_API_KEY", "ANTHROPIC_API_KEY");
+    if (!key) {
+      console.error("claude-apikey requires ANTHROPIC_API_KEY; AI is disabled.");
+      backend = "none";
+      return (provider = null);
+    }
+    backend = "claude-apikey";
+    return (provider = claudeProvider(buildClaudeApiKey(key), models));
   }
-  return client;
+
+  // Unset or `apikey`: the Gemini Developer API, which is what a fresh clone with a key gets.
+  const key = apiKey("MODEL_API_KEY", "GEMINI_API_KEY");
+  if (key) {
+    backend = "apikey";
+    provider = geminiProvider(buildGeminiApiKey(key), models);
+  }
+  return provider;
 }
 
 /**
- * The backend behind the live client. Resolves it if nothing has asked yet, so this answers
+ * The backend behind the live provider. Resolves it if nothing has asked yet, so this answers
  * the same before and after the first AI request.
  */
-export function geminiBackend(): GeminiBackend {
-  getGemini();
+export function modelBackend(): ModelBackend {
+  getProvider();
   return backend;
 }
 
+/** Whether the selected provider is Claude — the two backends that reach it. */
+export function isClaudeBackend(b: ModelBackend): boolean {
+  return b === "claude-vertex" || b === "claude-apikey";
+}
+
 /**
- * Models to try, in order. Overridable because the valid ids differ between the Developer
- * API and Vertex and move faster than this file does — verify them against the backend you
- * deploy with rather than trusting this default.
+ * Models to try, in order.
  *
- * **Verify the retirement dates before trusting this list.** Last checked against the Vertex
- * release notes on 2026-09-03, and the previous default had already gone dead in place: it
- * was `["gemini-2.5-flash", "gemini-2.0-flash"]`, and 2.0-flash shut down on 2026-06-01 (and
- * stopped being available to projects with no prior usage on 2026-02-06). A retired id
- * answers 404, which is not in FATAL_STATUSES, so the chain advanced to a second dead model
- * and every request paid two round trips to reach "All models failed". `deploy.sh` sets no
- * GEMINI_MODELS, so whatever is written here is what production runs.
+ * The default depends on which provider was selected, because a model id is only meaningful
+ * against one of them. An override applies to whichever provider is live — it is a list of
+ * ids for *this* deployment, not a Gemini list that Claude has to ignore.
  *
- * Current chain, with the dates that will make it wrong:
- *   gemini-3.5-flash       stable 2026-05-19, no retirement announced
- *   gemini-3.5-flash-lite  stable 2026-07-21, no retirement announced
- *
- * The second entry is a cheaper model rather than an older one, which is the only fallback
- * that means anything: the chain advances on "this id is not served here", and a *previous
- * generation* id is strictly more likely to have been retired than the one that just failed.
+ * Verify the ids and their retirement dates against the backend you deploy with; they move
+ * faster than this repo does, and each adapter carries the dates it was last checked against.
  */
 export function modelChain(): string[] {
-  const configured = process.env.GEMINI_MODELS?.split(",")
+  const configured = setting("MODEL_IDS", "GEMINI_MODELS")
+    ?.split(",")
     .map((m) => m.trim())
     .filter(Boolean);
-  return configured?.length ? configured : ["gemini-3.5-flash", "gemini-3.5-flash-lite"];
+  if (configured?.length) return configured;
+
+  const choice = setting("MODEL_BACKEND", "GENAI_BACKEND");
+  return choice === "claude-vertex" || choice === "claude-apikey"
+    ? CLAUDE_DEFAULT_MODELS
+    : GEMINI_DEFAULT_MODELS;
 }
 
-/**
- * Statuses where the next model in the chain cannot possibly do better.
- *
- * Advancing the chain answers exactly one question: is this model id usable on this backend?
- * A bad key, missing ADC, a disabled API, or a malformed request answers the same way for
- * every model in it. Retrying those turns a one-line diagnosis into a two-model "outage" —
- * and a wrong `GEMINI_API_KEY` is the most common way a fresh clone fails, so it is the one
- * error that most needs to say what it is.
- */
-const FATAL_STATUSES = new Set([400, 401, 403]);
-
-/** Carries the upstream status through the chain so a route can answer better than 500. */
-export class AiCallError extends Error {
-  constructor(
-    message: string,
-    readonly status?: number,
-  ) {
-    super(message);
-    this.name = "AiCallError";
-  }
-}
-
-export async function generateContentWithFallback(ai: GoogleGenAI, requestParams: any) {
-  const models = modelChain();
-  const failures: string[] = [];
-  let rateLimited = false;
-
-  for (const model of models) {
-    try {
-      const response = await ai.models.generateContent({ ...requestParams, model });
-      if (failures.length) console.warn(`Served by ${model} after ${failures.length} failure(s)`);
-      return response;
-    } catch (err: any) {
-      const message = err?.message || String(err);
-      // `status` is set by the SDK's ApiError for any 4xx/5xx. Absent for a network-level
-      // failure, which is worth trying the next model for.
-      const status: number | undefined = err?.status;
-      if (status !== undefined && FATAL_STATUSES.has(status)) {
-        console.error(`Model ${model} failed with ${status}; not trying the rest of the chain.`);
-        throw err;
-      }
-      rateLimited ||= status === 429;
-      failures.push(`${model}: ${message}`);
-      console.warn(`Model ${model} failed: ${message}`);
-    }
-  }
-  // Fail loudly with the whole chain: a wrong model id is otherwise invisible, costing a
-  // round trip per model per request while looking like a generic outage.
-  throw new AiCallError(
-    `All models failed.\n  ${failures.join("\n  ")}`,
-    rateLimited ? 429 : undefined,
-  );
-}
-
-/**
- * Whether a failed call was rate limited, upstream or after exhausting the chain.
- *
- * The one upstream status worth passing to a caller, because it is the only one they can act
- * on. Everything else is the server's problem — including 401/403, where the user did nothing
- * wrong by asking and the deployment is misconfigured.
- */
-export function isRateLimited(err: unknown): boolean {
-  return (err as { status?: number })?.status === 429;
+/** Test seam: forget the resolved provider so a case can set different configuration. */
+export function resetProviderForTest(): void {
+  provider = null;
+  resolved = false;
+  backend = "none";
+  warnedLegacy = false;
 }

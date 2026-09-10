@@ -1,7 +1,7 @@
-import { Type } from "@google/genai";
 import type { Session } from "../../src/types.ts";
 import { getEngagementStore } from "../store/index.ts";
-import { generateContentWithFallback, getGemini } from "./client.ts";
+import { getProvider } from "./client.ts";
+import { CLASSIFICATION_SCHEMA, LEVEL_SET_SCHEMA } from "./schema.ts";
 import { UserFacingError } from "./respond.ts";
 import { computeCoverage, type AreaCoverage } from "./coverage.ts";
 import { LEVEL_SET_AREAS, classificationPrompt, levelSetPrompt } from "./levelSetPrompt.ts";
@@ -34,34 +34,16 @@ export function isSynthesisRunning(engagementId: string): boolean {
 }
 
 async function classify(session: Session): Promise<Record<string, string>> {
-  const ai = getGemini();
-  if (!ai) return {};
+  const provider = getProvider();
+  if (!provider) return {};
 
-  const response = await generateContentWithFallback(ai, {
-    contents: classificationPrompt(session),
-    config: {
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: Type.OBJECT,
-        properties: {
-          assignments: {
-            type: Type.ARRAY,
-            items: {
-              type: Type.OBJECT,
-              properties: {
-                id: { type: Type.STRING },
-                area: { type: Type.STRING },
-              },
-              required: ["id", "area"],
-            },
-          },
-        },
-        required: ["assignments"],
-      },
-    },
+  const { data: parsed } = await provider.generate<{
+    assignments?: { id?: unknown; area?: unknown }[];
+  }>({
+    prompt: classificationPrompt(session),
+    schema: CLASSIFICATION_SCHEMA,
   });
 
-  const parsed = JSON.parse(response.text || "{}");
   const assignments: Record<string, string> = {};
   for (const entry of parsed.assignments ?? []) {
     if (typeof entry?.id === "string" && typeof entry?.area === "string") {
@@ -76,11 +58,11 @@ async function runSynthesis(
   generatedBy: string,
   settings?: { outputFilter?: string; cognitiveBiasAudit?: string },
 ): Promise<LevelSet> {
-  const ai = getGemini();
-  if (!ai) {
+  const provider = getProvider();
+  if (!provider) {
     // No canned filler here. A placeholder summary written into a shared client deliverable
     // reads exactly like a real one, and nobody would know to regenerate it.
-    throw new UserFacingError("Gemini is not configured; cannot produce a level set.");
+    throw new UserFacingError("No model is configured; cannot produce a level set.");
   }
 
   const classification = await classify(session);
@@ -91,25 +73,11 @@ async function runSynthesis(
     )
     .join("\n");
 
-  const response = await generateContentWithFallback(ai, {
-    contents: levelSetPrompt(session, coverageSummary, settings),
-    config: {
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: Type.OBJECT,
-        properties: {
-          summary: { type: Type.STRING },
-          outline: { type: Type.STRING },
-          conflicts: { type: Type.ARRAY, items: { type: Type.STRING } },
-          assumptions: { type: Type.ARRAY, items: { type: Type.STRING } },
-          openQuestions: { type: Type.ARRAY, items: { type: Type.STRING } },
-        },
-        required: ["summary", "outline", "conflicts", "assumptions", "openQuestions"],
-      },
-    },
+  const { data } = await provider.generate<Partial<LevelSet>>({
+    prompt: levelSetPrompt(session, coverageSummary, settings),
+    schema: LEVEL_SET_SCHEMA,
   });
 
-  const data = JSON.parse(response.text || "{}");
   return {
     version: 0, // assigned on persist
     generatedBy,

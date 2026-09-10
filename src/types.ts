@@ -184,7 +184,12 @@ export interface InstanceStatus {
     live: boolean;
   };
   model: {
-    backend: "vertex" | "apikey" | "none";
+    /**
+     * Which of the ways this app can reach a model is live. `vertex`/`apikey` are Gemini,
+     * the two `claude-*` values are Claude — a provider is not a separate field, because
+     * every reader asks one question and two axes would mean four combinations to render.
+     */
+    backend: "vertex" | "apikey" | "claude-vertex" | "claude-apikey" | "none";
     /** How many model ids the chain will try, not which ones. */
     chainLength: number;
   };

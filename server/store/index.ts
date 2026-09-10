@@ -27,7 +27,7 @@ export function storeIsLive(): boolean {
 }
 
 /**
- * Selects the store the same way getGemini() selects a client: presence of configuration.
+ * Selects the store the same way getProvider() selects a model: presence of configuration.
  * FIRESTORE_PROJECT_ID set means the real thing; unset means the local JSON file, so
  * `npm run dev` works with no cloud setup at all.
  */
