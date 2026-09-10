@@ -33,6 +33,57 @@ this file only records which pieces of one have become code.
 
 ---
 
+## 2026-09-10 — The pile filter was reading this app's own vocabulary as the user's
+
+**Against no intent, and found while re-reading [006](006-local-assists-before-submit.md)
+rather than by anyone using the app** — which is most of what is worth recording about it. 006
+argues for a local model suggesting a tag on your own draft, and its sharpest supporting line
+was that the thing it would upgrade is bad: the pile sidebar's category filter classified a
+fragment containing _"socratic"_ or _"provocative"_ as a **fear**. That line was written on
+2026-09-03 and was still true.
+
+**Two defects, and the second was not in 006 at all.**
+
+_The app's vocabulary had leaked into the user's._ `socratic` is a value of `promptingStyle` —
+one of `standard | socratic | empathetic`, a Guided Drill tone knob — so a fragment about how
+the interview should be run was filed as something the writer was frightened of. `provocative`
+appears nowhere else in the codebase: vocabulary from a settings list that no longer exists.
+And `challenge` was the same mistake one step removed, which nothing had noticed: Devil's
+Advocate produces a field called `challenges` and `SwipeReact` flattens those into fragments,
+so a mode's own output classified itself as fear. The rule that falls out is worth keeping —
+**a cue has to be a word somebody would write about their subject, never a word this app uses
+about itself.**
+
+_And a substring is not a word._ `includes("aim")` matched _claim_. `includes("action")`
+matched _satisfaction_ and, best of all, _inaction_ — so "my inaction is the real problem" was
+an **action**. `includes("risk")` matched _brisk_ and _asterisk_; `includes("value")` matched
+_devalue_; `includes("idea")` matched _ideal_. `includes("do ")` is the one that shows what the
+technique costs in both directions at once: it matched _todo_ and _undo_ by accident while
+missing "what to do", because a sentence-final "do" has no trailing space.
+
+**Eleven cases were run against the old predicate to confirm each was really wrong**, rather
+than trusted to reading — all eleven misclassified. They are the test file now.
+
+**Precision improved and recall did not move.** The worry with a boundary fix is over-correcting
+into a filter that matches nothing. Sixteen hand-labelled fragments of ordinary workshop English
+were classified before and after: 16/16 both times, with the eleven false positives gone. Strictly
+better rather than differently wrong, which is the only version of this worth shipping.
+
+**It moved out of the component, and the chips moved with it.**
+[pileCategories.ts](../../src/utils/pileCategories.ts) owns `PileCategory` and the cues;
+`Workspace.tsx` keys `CATEGORY_CHIPS` off that type as a `Record`, the same shape `MODE_CARDS`
+already uses, so a fifth category with no chip is a `npm run lint` failure — verified by adding
+one. The `as any` on the chip click is gone with it. Both properties were mutation-checked: the
+category tests fail on an incomplete cue list, and the render test fails if the chips are built
+and not drawn, which is the exact way this pair drifted apart once before.
+
+**What it did not do.** Not [006](006-local-assists-before-submit.md), and the honest effect on
+it is to make its case narrower: the gap a local model would close is now "keywords are lexical"
+rather than "keywords are wrong". 006 says so in its own words now, because an intent resting on
+a defect that has been repaired is the kind of stale that argues for work nobody needs.
+
+---
+
 ## 2026-09-09 — 011, in part: the roles the coverage map counts were never set by anybody
 
 **Against [011](011-the-role-brief.md), and it is a defect rather than a feature.** 011 records

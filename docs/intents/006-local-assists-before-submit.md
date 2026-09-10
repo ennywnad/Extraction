@@ -51,13 +51,19 @@ a real deployment without arguing about it first.
 ## The assists, honestly
 
 **Tag suggestion is the one worth building.** It is bounded output — a label from a known set —
-which is the category a small model is reliable at and which is checkable for free. And it
-replaces something that currently exists and is bad: the pile sidebar's semantic filters are a
-substring matcher in `Workspace.tsx`, crude enough that a fragment containing the word
-_"socratic"_ or _"provocative"_ is classified as a **fear**, because the keyword list has
-leaked mode vocabulary into content vocabulary. A local model suggesting _action / insight /
-fear / goal_ on the text you just wrote is a strict upgrade to a shipped feature, not a new
-feature looking for a home.
+which is the category a small model is reliable at and which is checkable for free. And it would
+upgrade something that already exists: the pile sidebar's semantic filters, now a word-boundary
+keyword matcher in [pileCategories.ts](../../src/utils/pileCategories.ts).
+
+**That matcher was the sharpest argument in this file and is no longer.** It used to be a
+substring test whose keyword list had leaked mode vocabulary into content vocabulary — a
+fragment containing _"socratic"_ or _"provocative"_ was classified as a **fear**, and
+_"claim"_ matched _aim_, _"inaction"_ matched _action_. All of that is fixed, with tests. The
+honest consequence for this intent is that the gap it would close is narrower than it was: a
+keyword matcher that is merely _lexical_ rather than _wrong_. What a local model would still add
+is the thing keywords structurally cannot do — reading a fragment that expresses a fear without
+containing any of the words for one. That is a real gap and a smaller one, and it should be
+argued on its own rather than on a defect that has since been repaired.
 
 **Spell check is the one not worth building.** The browser's is better, already there, and
 free. Worth saying out loud so it does not get built out of list-completionism.
@@ -87,6 +93,10 @@ something hovering while you type. Reformatting is a filing decision, not a writ
   already built.
 - **Fragments already flow through one submission path** with server-side attribution, and this
   changes none of it — an assisted fragment is submitted identically to a typed one.
+- **The four-tag vocabulary is now a module rather than a chain of `includes` calls.**
+  [pileCategories.ts](../../src/utils/pileCategories.ts) owns `PileCategory` and the cues, and
+  `Workspace.tsx` keys its chips off that type, so an assist adding or renaming a tag has one
+  place to do it and a compile error if it forgets the sidebar.
 - **A model-free lexical layer over the pile now exists in the browser.**
   [chorus.ts](../../src/utils/chorus.ts) tokenises, stems, indexes and links fragments client
   side, in both solo and group mode, with no route behind it. It answers a different question —
@@ -226,7 +236,9 @@ transport was never the hard part. The trust boundary was.
   and the human accepted" is the same kind of distinction the `source` field already makes for
   responses.
 - Does tag suggestion replace the keyword matcher, or sit alongside it as an upgrade when a
-  runtime is present? Alongside is more honest, since most users will not have one.
+  runtime is present? Alongside is more honest, since most users will not have one — and more
+  clearly right now that the matcher works properly. `categoriesOf()` already returns every
+  category a fragment matches, which is the shape a side-by-side comparison would read.
 
 ## References
 
