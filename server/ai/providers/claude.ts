@@ -34,7 +34,7 @@ import type { GenerateRequest, GenerateResult, ModelProvider } from "./types.ts"
  * The chain advances on "this id is not served here", so a second entry is only worth having
  * when it is a *different* model that might be. Padding this with a cheaper Claude would not
  * be a fallback; it would be a silent downgrade of every response in the app, decided here
- * rather than by whoever configured the deployment. `MODEL_IDS` sets a longer chain for anyone
+ * rather than by whoever configured the deployment. `MODEL_CHAIN` sets a longer chain for anyone
  * who wants one.
  */
 export const CLAUDE_DEFAULT_MODELS = ["claude-opus-5"];

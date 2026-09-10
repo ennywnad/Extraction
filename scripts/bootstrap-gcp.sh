@@ -14,7 +14,7 @@
 
 source "$(dirname "$0")/config.sh"
 
-echo "==> Project ${PROJECT}, region ${REGION}, service ${SERVICE}, backend ${GENAI_BACKEND}"
+echo "==> Project ${PROJECT}, region ${REGION}, service ${SERVICE}, backend ${MODEL_BACKEND}"
 gcloud config set project "${PROJECT}" >/dev/null
 
 PROJECT_NUMBER="$(gcloud projects describe "${PROJECT}" --format='value(projectNumber)')"
@@ -31,11 +31,10 @@ APIS=(
   artifactregistry.googleapis.com
   cloudbuild.googleapis.com
 )
-if [[ "${GENAI_BACKEND}" == "vertex" ]]; then
-  APIS+=(aiplatform.googleapis.com)
-else
-  APIS+=(secretmanager.googleapis.com)
-fi
+case "${MODEL_BACKEND}" in
+  vertex | claude-vertex) APIS+=(aiplatform.googleapis.com) ;;
+  *) APIS+=(secretmanager.googleapis.com) ;;
+esac
 gcloud services enable "${APIS[@]}"
 
 echo "==> Firestore database"
@@ -63,22 +62,35 @@ grant() {
 }
 echo "==> IAM"
 grant roles/datastore.user
-if [[ "${GENAI_BACKEND}" == "vertex" ]]; then
+if [[ "${MODEL_BACKEND}" == "vertex" || "${MODEL_BACKEND}" == "claude-vertex" ]]; then
+  # Claude on Vertex authenticates the same way Gemini does — same role, same runtime service
+  # account, no key material. That equivalence is the argument for it; see docs/intents/004.
   grant roles/aiplatform.user
 else
-  echo "==> Gemini API key secret"
-  if gcloud secrets describe gemini-api-key >/dev/null 2>&1; then
-    echo "    gemini-api-key already exists; add a version with:"
-    echo "    printf '%s' \"\$GEMINI_KEY\" | gcloud secrets versions add gemini-api-key --data-file=-"
+  # Which key, and therefore which secret, follows from the provider. They are deliberately
+  # not one neutral variable: with two providers there are two keys.
+  if [[ "${MODEL_BACKEND}" == "claude-apikey" ]]; then
+    SECRET=anthropic-api-key
+    KEY_VAR=ANTHROPIC_KEY
+    KEY_VALUE="${ANTHROPIC_KEY:-}"
   else
-    : "${GEMINI_KEY:?set GEMINI_KEY when GENAI_BACKEND=apikey}"
-    printf '%s' "${GEMINI_KEY}" | gcloud secrets create gemini-api-key --data-file=-
+    SECRET=gemini-api-key
+    KEY_VAR=GEMINI_KEY
+    KEY_VALUE="${GEMINI_KEY:-}"
+  fi
+  echo "==> API key secret (${SECRET})"
+  if gcloud secrets describe "${SECRET}" >/dev/null 2>&1; then
+    echo "    ${SECRET} already exists; add a version with:"
+    echo "    printf '%s' \"\$${KEY_VAR}\" | gcloud secrets versions add ${SECRET} --data-file=-"
+  else
+    : "${KEY_VALUE:?set ${KEY_VAR} when MODEL_BACKEND=${MODEL_BACKEND}}"
+    printf '%s' "${KEY_VALUE}" | gcloud secrets create "${SECRET}" --data-file=-
   fi
   # Bound to the one secret, not the project. secretAccessor at project scope would let the
   # runtime read every secret anyone ever adds here, which is the same mistake as using the
   # default compute service account — just smaller today.
-  echo "    granting roles/secretmanager.secretAccessor on gemini-api-key only"
-  gcloud secrets add-iam-policy-binding gemini-api-key \
+  echo "    granting roles/secretmanager.secretAccessor on ${SECRET} only"
+  gcloud secrets add-iam-policy-binding "${SECRET}" \
     --member="serviceAccount:${RUNTIME_SA}" \
     --role=roles/secretmanager.secretAccessor --condition=None --quiet >/dev/null
 fi

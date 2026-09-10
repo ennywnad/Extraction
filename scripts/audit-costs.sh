@@ -56,7 +56,7 @@ for b in $(gcloud storage buckets list --format='value(name)' 2>/dev/null); do
   gcloud storage du "gs://${b}" --summarize --readable-sizes 2>/dev/null | awk '{print $1}' || echo "?"
 done
 
-hdr "Secret Manager (only needed when GENAI_BACKEND=apikey; ~\$0.06/active version/month)"
+hdr "Secret Manager (only needed on a key-served backend; ~\$0.06/active version/month)"
 gcloud secrets list --format='value(name, createTime.date())' 2>/dev/null | sed 's/^/  /' \
   || echo "  none / API disabled"
 

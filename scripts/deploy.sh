@@ -25,14 +25,24 @@ IAP_AUDIENCE="/projects/${PROJECT_NUMBER}/locations/${REGION}/services/${SERVICE
 ENV_VARS="AUTH_MODE=iap"
 ENV_VARS+=",IAP_AUDIENCE=${IAP_AUDIENCE}"
 ENV_VARS+=",FIRESTORE_PROJECT_ID=${PROJECT}"
-ENV_VARS+=",GENAI_BACKEND=${GENAI_BACKEND}"
-if [[ "${GENAI_BACKEND}" == "vertex" ]]; then
+# Only the current names are pushed. A service redeployed by this script therefore stops
+# carrying GENAI_BACKEND/GEMINI_MODELS entirely, rather than carrying both and leaving which
+# one wins to be worked out from two files. The app still reads the old names, which is what
+# makes the revision *before* this one keep working.
+ENV_VARS+=",MODEL_BACKEND=${MODEL_BACKEND}"
+if [[ -n "${MODEL_CHAIN}" ]]; then
+  ENV_VARS+=",MODEL_CHAIN=${MODEL_CHAIN}"
+fi
+# Both Vertex-served providers need the region; neither key-served one does.
+if [[ "${MODEL_BACKEND}" == "vertex" || "${MODEL_BACKEND}" == "claude-vertex" ]]; then
   ENV_VARS+=",VERTEX_LOCATION=${VERTEX_LOCATION}"
 fi
 
 echo "==> Deploying ${SERVICE} to ${REGION}"
 echo "    IAP audience:    ${IAP_AUDIENCE}"
-if [[ "${GENAI_BACKEND}" == "vertex" ]]; then
+echo "    Model backend:   ${MODEL_BACKEND}"
+echo "    Model chain:     ${MODEL_CHAIN:-<app default>}"
+if [[ "${MODEL_BACKEND}" == "vertex" || "${MODEL_BACKEND}" == "claude-vertex" ]]; then
   echo "    Vertex location: ${VERTEX_LOCATION}"
 fi
 
@@ -56,9 +66,13 @@ DEPLOY_ARGS=(
   # min-instances=0 means every workshop opens with a cold start pulling in both SDKs.
   --cpu-boost
 )
-# Vertex uses ADC as the runtime service account, so there is no secret to mount.
-if [[ "${GENAI_BACKEND}" == "apikey" ]]; then
+# Vertex uses ADC as the runtime service account, so there is no secret to mount. A key-served
+# provider mounts its own: the keys are deliberately not one neutral variable, because with two
+# providers there are two of them.
+if [[ "${MODEL_BACKEND}" == "apikey" ]]; then
   DEPLOY_ARGS+=(--set-secrets "GEMINI_API_KEY=gemini-api-key:latest")
+elif [[ "${MODEL_BACKEND}" == "claude-apikey" ]]; then
+  DEPLOY_ARGS+=(--set-secrets "ANTHROPIC_API_KEY=anthropic-api-key:latest")
 fi
 
 gcloud "${DEPLOY_ARGS[@]}"

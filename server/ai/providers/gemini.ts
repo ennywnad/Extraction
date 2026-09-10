@@ -78,7 +78,7 @@ export function buildApiKeyClient(apiKey: string): GoogleGenAI {
  * `models` is required rather than defaulted.
  *
  * A default here would be a second place the chain is decided, and it would be the one that
- * silently ignores `MODEL_IDS` — configuration resolves in `client.ts` and is handed down, so
+ * silently ignores `MODEL_CHAIN` — configuration resolves in `client.ts` and is handed down, so
  * there is exactly one answer to "what will this try".
  */
 export async function generateContentWithFallback(
