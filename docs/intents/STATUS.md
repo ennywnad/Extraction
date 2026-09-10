@@ -33,6 +33,61 @@ this file only records which pieces of one have become code.
 
 ---
 
+## 2026-09-10 — The same seam had been built twice, and the other one was righter in places
+
+**Against no intent. It is a merge of two independent answers to
+[002](002-model-provider-seam.md)/[004](004-claude-and-the-gcp-model-gateway.md), and the
+process failure is the part worth recording.** An unmerged branch, `model-seam`, already
+carried a full implementation — 27 files, committed the day before. It was not found until
+after the second one had been built, reviewed and merged, because the check that would have
+found it was never run: local branches and recent commits were read, and remote branches were
+not. **"Is somebody already doing this" is one command and it was skipped.**
+
+**What the other branch had that this one lacked**, all of it now ported:
+
+_The API keys should never have been renamed._ This branch folded `GEMINI_API_KEY` into a
+provider-neutral `MODEL_API_KEY`, on the rule that a variable naming a provider in a
+provider-neutral place is a lie. The rule is right and was applied one variable too far: with
+two providers there are **two keys**, and a single name cannot say which one it holds.
+`GEMINI_API_KEY` and `ANTHROPIC_API_KEY` sit beside each other now. A key is the one setting
+here whose provider name was never a lie.
+
+_The deploy scripts were never updated._ The rename shipped with the aliases doing all the
+work, so `deploy.sh` went on pushing `GENAI_BACKEND` and nothing ever stopped carrying the old
+names. It now pushes only the current ones — the app still reads both, which is what makes the
+_previous_ revision keep working, and that is the whole point of the alias rather than an
+excuse to leave the scripts alone. `bootstrap-gcp.sh` provisions whichever secret the selected
+backend needs, which it could not do before because only one existed.
+
+_The README's variable table was simply stale_, still documenting `GENAI_BACKEND` and
+`GEMINI_MODELS` as the names.
+
+_And the configuration reading belonged in its own module._
+[modelEnv.ts](../../server/ai/modelEnv.ts) is theirs almost verbatim, along with a test that
+covers three cases the version here did not: precedence when both names are set, an empty
+string counting as unset — `deploy.sh` composes `--set-env-vars` from shell variables that can
+be empty, so `MODEL_CHAIN=` arrives rather than nothing — and the warning firing once per
+process rather than once per read, which matters because these are read on every model call.
+
+`MODEL_IDS` became `MODEL_CHAIN`, their name, because the code calls it a chain everywhere and
+nothing had deployed the other spelling yet.
+
+**What was deliberately not taken, and it is the interesting one.** Their chain entries are
+`provider:model` — `MODEL_BACKEND` says only how to authenticate, and the chain itself names
+which provider serves each id. That is a better factoring than the one merged here, which
+spends a five-value enum on a 2×2 and would need six values for a third provider. It also lets
+a chain fall from one provider to another, which this cannot do. It is not ported because it
+is a redesign of a shape that landed hours earlier — `ModelBackend`, the status payload, the
+board — rather than a gap, and reversing that is a decision to take deliberately rather than
+inside a port. Recorded in [002](002-model-provider-seam.md) as the live alternative.
+
+**Verified.** 306 tests, 0 failing. Driven end to end across five configurations: old names
+alone (warns once per name, still works — the case the alias exists for), new names, both set
+with the new one winning, `GEMINI_API_KEY` still read under `apikey`, and `ANTHROPIC_API_KEY`
+under `claude-apikey`.
+
+---
+
 ## 2026-09-10 — The pile filter was reading this app's own vocabulary as the user's
 
 **Against no intent, and found while re-reading [006](006-local-assists-before-submit.md)

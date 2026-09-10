@@ -286,10 +286,16 @@ Keep enough versions to cover any revision you might roll back to.
   Garden, and `VERTEX_LOCATION` set somewhere that serves it (`global`, `us-east5`,
   `us-central1`, `europe-west1`, `asia-southeast1`). **Never exercised against a real project
   yet** — see `docs/intents/008`.
-- **`MODEL_BACKEND`, `MODEL_IDS` and `MODEL_API_KEY` replaced `GENAI_BACKEND`, `GEMINI_MODELS`
-  and `GEMINI_API_KEY`.** The old names still work and log one deprecation line at boot, so an
-  existing deployment keeps running across this change. `deploy.sh` still sets the old ones.
-- **Model ids** differ between backends and move faster than this repo does. `MODEL_IDS`
+- **`MODEL_BACKEND` and `MODEL_CHAIN` replaced `GENAI_BACKEND` and `GEMINI_MODELS`.** The old
+  names still work and log one deprecation line at boot, which is what lets the revision
+  deployed _before_ the rename keep running. `deploy.sh` now pushes only the current names, so
+  a redeployed service stops carrying the old ones rather than carrying both and leaving which
+  one wins to be worked out from two files.
+- **The API keys keep their provider names.** `GEMINI_API_KEY` and `ANTHROPIC_API_KEY` sit
+  beside each other and were deliberately not folded into one neutral variable: with two
+  providers there are two keys, and one name could not say which it held. `bootstrap-gcp.sh`
+  provisions whichever secret the selected backend needs, and `deploy.sh` mounts that one.
+- **Model ids** differ between backends and move faster than this repo does. `MODEL_CHAIN`
   overrides the chain; the server logs which model actually served a request, and fails loudly
   with the whole chain rather than swallowing each failure.
 - **Local development** needs none of this. Copy `.env.example` to `.env` and `npm run dev`.

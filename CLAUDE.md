@@ -19,8 +19,8 @@ solo (fragments in `localStorage`) and group (a shared pile on the server, behin
 Healthy `npm run check` ends with:
 
 ```
-# tests 299
-# pass 298
+# tests 306
+# pass 305
 # fail 0
 # skipped 1
 ```
@@ -47,9 +47,13 @@ Every backend picks itself by **presence of configuration**, not by a flag. Read
   assertions in [test/storeContract.test.ts](test/storeContract.test.ts) — add to that file
   rather than to one store's tests, or the production store goes back to being assumed.
 - **Model** — `MODEL_BACKEND` picks both the provider and how it authenticates: `vertex` and
-  `apikey` are Gemini, `claude-vertex` and `claude-apikey` are Claude. The old
-  `GENAI_BACKEND`/`GEMINI_MODELS`/`GEMINI_API_KEY` names still work with a boot warning,
-  because [scripts/deploy.sh](scripts/deploy.sh) sets them and pushes straight to production.
+  `apikey` are Gemini, `claude-vertex` and `claude-apikey` are Claude. Configuration is read in
+  [server/ai/modelEnv.ts](server/ai/modelEnv.ts), which also honours the old
+  `GENAI_BACKEND`/`GEMINI_MODELS` names behind one boot warning — that alias is what lets the
+  revision deployed _before_ the rename keep running, since
+  [scripts/deploy.sh](scripts/deploy.sh) pushes straight to production. **The API keys keep
+  their provider names** (`GEMINI_API_KEY`, `ANTHROPIC_API_KEY`) and must not be folded into
+  one neutral variable: two providers means two keys, and one name cannot say which it holds.
   `getProvider()` returns `null` when unconfigured and **every AI route has a static fallback**
   — the app must stay usable with no AI. Preserve that when adding a route, and send the
   fallback through `sendFallback()` from [server/ai/respond.ts](server/ai/respond.ts)

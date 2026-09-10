@@ -14,10 +14,19 @@ fi
 
 RUNTIME_SA="${RUNTIME_SA_ID}@${PROJECT}.iam.gserviceaccount.com"
 
-# GENAI_BACKEND=vertex (default) authenticates as the runtime service account via ADC and
-# needs no key material. Set GENAI_BACKEND=apikey to use the Gemini Developer API instead,
-# in which case bootstrap also provisions a Secret Manager secret from $GEMINI_KEY.
-GENAI_BACKEND="${GENAI_BACKEND:-vertex}"
+# Which provider answers, and how it authenticates. `vertex` (default) and `claude-vertex`
+# authenticate as the runtime service account via ADC and need no key material; `apikey` and
+# `claude-apikey` use that provider's own key, in which case bootstrap also provisions a
+# Secret Manager secret from $GEMINI_KEY.
+#
+# GENAI_BACKEND is the old name and is still honoured, so an operator's existing shell or CI
+# does not silently start deploying the default. The app reads both too; see
+# server/ai/modelEnv.ts.
+MODEL_BACKEND="${MODEL_BACKEND:-${GENAI_BACKEND:-vertex}}"
+
+# Which models answer, in order, comma-separated. Empty leaves the app's built-in default,
+# which depends on the provider MODEL_BACKEND selected.
+MODEL_CHAIN="${MODEL_CHAIN:-${GEMINI_MODELS:-}}"
 
 # Where Gemini is served from. Deliberately NOT $REGION — it used to inherit it, which made a
 # real choice look like a formatting detail.

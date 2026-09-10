@@ -76,6 +76,20 @@ Nothing, for the seam itself. What remains is what it was built to make cheap:
 - **Per-route provider selection**, which is the capability
   [004](004-claude-and-the-gcp-model-gateway.md) says makes this worth having. Deferred rather
   than open — see below.
+- **A provider-qualified chain**, which is a live alternative to the shape built here rather
+  than a future feature. A parallel implementation of this intent (the `model-seam` branch, see
+  [STATUS.md](STATUS.md)) split the two axes differently: `MODEL_BACKEND` says only _how to
+  authenticate_ — `vertex` or `apikey` — and each chain entry names its own provider, as
+  `claude:claude-opus-5,gemini:gemini-3.5-flash`. A bare id parses as Gemini, so every existing
+  `GEMINI_MODELS` value keeps working.
+
+  It is better on two counts. It is 2 + N values where this is N × 2 — a five-value enum for a
+  2×2 today, and six for a third provider — and it lets the chain **fall from one provider to
+  another**, which the shape here cannot do at all: a chain is one provider's ids and a dead id
+  exhausts it. What it costs is a rewrite of `ModelBackend`, the status payload and the board,
+  which is why it was not folded into the port that took the rest of that branch. Worth doing
+  deliberately; the argument for it does not get weaker with time, and it gets more expensive
+  with each provider added.
 
 **The schemas were the whole job, and they are done.** The nine live in
 [schema.ts](../../server/ai/schema.ts) as plain JSON Schema; the Gemini adapter translates to
@@ -125,10 +139,18 @@ declares no `messages`, so even within one provider the honest common type is th
   support. It is an OpenAI-compatible front for Gemini, Claude and GPT, and because local
   runtimes speak that shape too, it would collapse this intent and
   [003](003-local-models-in-solo-mode.md) into a single adapter.
-- ~~What happens to `GEMINI_MODELS` and `GENAI_BACKEND`?~~ **Resolved: aliases, as guessed.**
-  `MODEL_BACKEND`, `MODEL_IDS` and `MODEL_API_KEY` are read first; the old names still work and
-  log one deprecation line at boot. The deadline the README attached to this was real and is
-  now discharged — the aliases exist _before_ the next `deploy.sh` push rather than after it.
+- ~~What happens to `GEMINI_MODELS` and `GENAI_BACKEND`?~~ **Resolved: aliases, as guessed —
+  but not for the keys.** `MODEL_BACKEND` and `MODEL_CHAIN` are read first, in
+  [modelEnv.ts](../../server/ai/modelEnv.ts); the old names still work and log one deprecation
+  line at boot, which is what lets the revision deployed _before_ the rename keep running.
+  `deploy.sh` now pushes only the current names.
+
+  The **API keys keep their provider names**, which is the part a first pass got wrong by
+  folding them into one neutral `MODEL_API_KEY`. That variable cannot exist: with two providers
+  there are two keys, and a single name cannot say which one it holds. `GEMINI_API_KEY` and
+  `ANTHROPIC_API_KEY` sit beside each other — a key is the one setting here whose provider name
+  was never a lie, so "rename everything that names a provider" was the wrong rule applied one
+  variable too far.
 
 ## Non-goals
 

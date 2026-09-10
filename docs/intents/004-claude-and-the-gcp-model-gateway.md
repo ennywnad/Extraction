@@ -85,7 +85,7 @@ under ADC; `claude-apikey` runs it on a first-party key for local development. T
 - **The security posture is unchanged, which was the entire argument.** `claude-vertex` reuses
   the same project + region + ADC triple the Gemini Vertex branch already resolved, so the
   deployment still holds no key material.
-- **The chain is shared.** `MODEL_IDS` orders it for whichever provider is live, defaulting to
+- **The chain is shared.** `MODEL_CHAIN` orders it for whichever provider is live, defaulting to
   `claude-opus-5` — one id rather than two, because the chain advances on "this id is not
   served here" and padding it with a cheaper model would be a silent downgrade of every
   response rather than a fallback.
