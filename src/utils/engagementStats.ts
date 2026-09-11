@@ -1,5 +1,6 @@
 import type { Session } from "../types";
-import { roleOf, rosterState } from "./roster";
+import { rosterState } from "./roster";
+import { voiceOf } from "./voices";
 
 /**
  * What a room can be told about itself, counted from the pile it is already holding.
@@ -17,7 +18,10 @@ export interface EngagementStats {
   roster: number;
   /** Of those, the ones who have actually put a fragment in the pile. */
   voices: number;
-  /** Distinct contributor roles in the pile — what the level set reasons over. */
+  /**
+   * Distinct voices in the pile — what the level set reasons over. Counted as the coverage map
+   * counts them: spelling folded and the room's role groups applied (see src/utils/voices.ts).
+   */
   roles: number;
   /**
    * Of the people on the roster, how many chose their own role rather than keeping the one
@@ -74,7 +78,9 @@ export function engagementStats(
   return {
     roster: Object.keys(session.roster ?? {}).length,
     voices: distinct(authored.map((t) => t.author?.email)),
-    roles: distinct(authored.map((t) => roleOf(session, t.author))),
+    // The same voice the coverage map counts — spelling folded, the room's groupings applied —
+    // or the board and the map would describe one room as two different sizes.
+    roles: distinct(authored.map((t) => voiceOf(session, t.author)?.key)),
     fragments: thoughts.length,
     recent: thoughts.filter((t) => {
       const at = Date.parse(t.timestamp);

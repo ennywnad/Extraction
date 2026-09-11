@@ -239,3 +239,65 @@ describe("transport", () => {
     assert.equal(res.status, 415);
   });
 });
+
+describe("role groups", () => {
+  const regroup = (who, id, body) =>
+    as(who, `/api/engagement/${id}/role-groups`, { method: "PUT", body: JSON.stringify(body) });
+
+  it("lets any member group a declared role, and names whoever did it", async () => {
+    // Open to everyone until the app has a facilitator to give it to (docs/intents/011). The
+    // stamp is the verified caller's and never the body's, for the same reason as a fragment's.
+    const eng = await newEngagement("grouping");
+    const res = await regroup(B, eng.id, { label: "FP&A", group: "Finance", by: A });
+    assert.equal(res.status, 200);
+    const { roleGroups } = await res.json();
+    assert.equal(roleGroups["fp&a"].group, "Finance");
+    assert.equal(roleGroups["fp&a"].by, B);
+  });
+
+  it("files every spelling of a label under one decision", async () => {
+    const eng = await newEngagement("spellings");
+    await regroup(A, eng.id, { label: "Treasury ", group: "Finance" });
+    const res = await regroup(A, eng.id, { label: "TREASURY", group: "Commercial" });
+    const { roleGroups } = await res.json();
+    assert.deepEqual(Object.keys(roleGroups), ["treasury"]);
+    assert.equal(roleGroups.treasury.group, "Commercial");
+  });
+
+  it("clears a decision with null", async () => {
+    const eng = await newEngagement("clearing");
+    await regroup(A, eng.id, { label: "FP&A", group: "Finance" });
+    const { roleGroups } = await (await regroup(A, eng.id, { label: "FP&A", group: null })).json();
+    assert.equal(roleGroups["fp&a"], undefined);
+  });
+
+  it("refuses to group a server default, in either direction", async () => {
+    const eng = await newEngagement("defaults");
+    const status = async (body) => (await regroup(A, eng.id, body)).status;
+    assert.equal(await status({ label: "Contributor", group: "Finance" }), 400);
+    assert.equal(await status({ label: "Finance", group: "Facilitator" }), 400);
+    assert.equal(await status({ label: "Finance" }), 400, "a missing group is not a clear");
+  });
+
+  it("ignores role groups sent through the metadata patch", async () => {
+    // A whole map from one tab's snapshot would silently undo a grouping made in another, and
+    // would carry a `by` nobody verified. The route above is the only door.
+    const eng = await newEngagement("role group patch gate");
+    await as(A, `/api/engagement/${eng.id}`, {
+      method: "PATCH",
+      body: JSON.stringify({
+        topic: "role group patch gate",
+        roleGroups: { finance: { label: "Finance", group: "Legal", by: B, at: "x" } },
+      }),
+    });
+    assert.equal((await asJson(A, `/api/engagement/${eng.id}`)).roleGroups, undefined);
+  });
+
+  it("re-sends the pile to a tab holding an ETag from before the regroup", async () => {
+    const eng = await newEngagement("regroup etag");
+    const stale = (await as(A, `/api/engagement/${eng.id}`)).headers.get("etag");
+    await regroup(B, eng.id, { label: "FP&A", group: "Finance" });
+    const res = await as(A, `/api/engagement/${eng.id}`, { headers: { "If-None-Match": stale } });
+    assert.equal(res.status, 200, "a regroup that nobody else's poll ever carries");
+  });
+});

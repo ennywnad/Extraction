@@ -1,4 +1,4 @@
-import type { AuthorStamp, Session, Thought } from "../../src/types.ts";
+import type { AuthorStamp, RoleGroup, Session, Thought } from "../../src/types.ts";
 
 /** Fields of a Session that a roster member may update. Never includes thoughts. */
 export type SessionMetaPatch = Partial<
@@ -97,4 +97,15 @@ export interface EngagementStore {
    * instance, and the roster is attribution rather than authorisation.
    */
   upsertRosterEntry(id: string, stamp: AuthorStamp): Promise<Session | null>;
+
+  /**
+   * Sets what one role label counts as, or clears the decision with null. `key` is
+   * `roleKey(label)` from src/utils/voices.ts.
+   *
+   * One entry per call rather than a whole-map patch, for the roster's reason: two people
+   * tidying different labels at once must not overwrite each other. And a key is free text a
+   * person typed, so it can hold the dots and slashes a string field path splits on. Moves
+   * `updatedAt`, or the poll never carries a regroup to anybody else.
+   */
+  setRoleGroup(id: string, key: string, group: RoleGroup | null): Promise<Session | null>;
 }

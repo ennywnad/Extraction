@@ -1,4 +1,5 @@
-import { roleOf } from "../../src/utils/roster.ts";
+import { isDeclaredRole, roleOf } from "../../src/utils/roster.ts";
+import { resolveVoice, roleKey, voiceGroups } from "../../src/utils/voices.ts";
 import type { Session } from "../../src/types.ts";
 
 /**
@@ -16,17 +17,37 @@ export function renderCorpus(session: Session): string {
       // The roster's role, not the stamp's — the level set reasons about who is in the room
       // now, and a role declared mid-session must apply to what that person already wrote.
       const role = roleOf(session, t.author);
-      const label = role ? ` [${role}]` : "";
+      const label = role ? ` [${voiceLabel(session, role)}]` : "";
       return `#${idx + 1}${label} (${t.mode}): ${t.text}`;
     })
     .join("\n");
 }
 
-/** Distinct contributor roles in a pile, for prompts that reason about who has spoken. */
+/**
+ * A role as the model reads it. When the room grouped it, the group comes first so two labels
+ * counted as one voice read as one — and the specific label stays after it, because which part
+ * of Finance said something is exactly what "which role is best placed to answer" needs.
+ */
+function voiceLabel(session: Session, role: string): string {
+  const voice = resolveVoice(session, role);
+  return voice.key === roleKey(role) ? role : `${voice.name} / ${role}`;
+}
+
+/**
+ * The voices present, for prompts that reason about who has spoken. A group lists the labels
+ * gathered under it, so "Finance" in the corpus is known to mean FP&A and Treasury here.
+ */
 export function rolesPresent(session: Session): string[] {
-  const roles = new Set<string>();
-  for (const stamp of Object.values(session.roster ?? {})) roles.add(stamp.role);
-  return [...roles].sort();
+  const members = Object.values(session.roster ?? {});
+  const onRoster = new Set(members.map((m) => roleKey(m.role)));
+  const voices = voiceGroups(session)
+    .filter((v) => v.labels.some((l) => onRoster.has(l.key)))
+    .map((v) => {
+      const under = v.labels.filter((l) => l.key !== v.key).map((l) => l.label);
+      return under.length ? `${v.name} (${under.join(", ")})` : v.name;
+    });
+  const defaults = members.map((m) => m.role.trim()).filter((r) => !isDeclaredRole(r));
+  return [...new Set([...voices, ...defaults])].sort();
 }
 
 export function isEngagement(session: Session): boolean {

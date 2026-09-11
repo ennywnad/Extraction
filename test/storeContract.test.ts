@@ -193,6 +193,60 @@ function contractSuite(label: string, makeStore: () => Promise<EngagementStore>)
       assert.equal(Object.keys(promoted?.roster ?? {}).length, 2, "an upsert must not add a key");
     });
 
+    it("sets and clears a role group under a key a person typed", async () => {
+      // A role label is free text, and "sr. finance / fp&a" is an ordinary thing to type. A dot
+      // is the roster's Firestore trap over again, in a key nobody chose with storage in mind.
+      const { id } = await seed();
+      const key = "sr. finance / fp&a";
+      const entry = {
+        label: "Sr. Finance / FP&A",
+        group: "Finance",
+        by: CONTRIBUTOR.email,
+        at: "2026-09-11T10:00:00.000Z",
+      };
+      const before = await store.getVersion(id);
+
+      const set = await store.setRoleGroup(id, key, entry);
+      assert.deepEqual(set?.roleGroups?.[key], entry);
+      assert.deepEqual(Object.keys(set?.roleGroups ?? {}), [key], "the dots split the key");
+      assert.ok(
+        (await store.getVersion(id))!.updatedAt >= before!.updatedAt,
+        "a regroup must move updatedAt, or no other tab ever sees it",
+      );
+
+      await store.setRoleGroup(id, "treasury", { ...entry, label: "Treasury", group: "Treasury" });
+      const cleared = await store.setRoleGroup(id, key, null);
+      assert.equal(cleared?.roleGroups?.[key], undefined, "null clears the decision");
+      assert.equal(
+        (await store.getEngagement(id))?.roleGroups?.treasury?.group,
+        "Treasury",
+        "clearing one label must not disturb another",
+      );
+    });
+
+    it("keeps both groupings when two are made at once", async () => {
+      // Two people tidying different labels in the same poll window. A whole-map write from
+      // either one's snapshot would silently undo the other.
+      const { id } = await seed();
+      const at = "2026-09-11T10:00:00.000Z";
+      await Promise.all([
+        store.setRoleGroup(id, "fp&a", {
+          label: "FP&A",
+          group: "Finance",
+          by: FACILITATOR.email,
+          at,
+        }),
+        store.setRoleGroup(id, "treasury", {
+          label: "Treasury",
+          group: "Finance",
+          by: CONTRIBUTOR.email,
+          at,
+        }),
+      ]);
+      const read = await store.getEngagement(id);
+      assert.deepEqual(Object.keys(read?.roleGroups ?? {}).sort(), ["fp&a", "treasury"]);
+    });
+
     it("lists engagements newest-first with counts that need no pile read", async () => {
       const store2 = await makeStore();
       const first = await store2.createEngagement({

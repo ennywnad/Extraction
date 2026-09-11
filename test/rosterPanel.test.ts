@@ -94,3 +94,63 @@ describe("roster panel", () => {
     assert.doesNotMatch(html, /Save my role/);
   });
 });
+
+describe("roster panel — role groups", () => {
+  const renderGrouping = (session: Session, viewerEmail?: string) =>
+    renderToStaticMarkup(
+      createElement(RosterPanel, {
+        session,
+        viewerEmail,
+        onSave: async () => {},
+        onSetRoleGroup: async () => {},
+        onClose: () => {},
+      }),
+    );
+
+  const finance = (roleGroups: Session["roleGroups"] = {}) =>
+    ({
+      ...sessionWith([
+        stamp("a@x.com", "Ana", "Finance"),
+        stamp("b@x.com", "Bo", "Finance lead"),
+        stamp("c@x.com", "Cara", "Treasury"),
+      ]),
+      roleGroups,
+    }) as Session;
+
+  it("offers grouping only where it can be saved", () => {
+    assert.doesNotMatch(render(finance(), "a@x.com"), /Role groups/);
+    assert.match(renderGrouping(finance(), "a@x.com"), /Role groups/);
+  });
+
+  it("marks it as a facilitator's job while leaving it open to everyone", () => {
+    assert.match(renderGrouping(finance(), "c@x.com"), /Facilitator task · open to all for now/);
+  });
+
+  it("asks about two labels sharing a word, and not about the one that shares none", () => {
+    const html = renderGrouping(finance(), "a@x.com");
+    assert.match(html, /“Finance”<\/strong> and <strong>“Finance lead”<\/strong> share/);
+    assert.doesNotMatch(html, /“Treasury”<\/strong> and/);
+  });
+
+  it("names who grouped a label, and shows what it counts as on the member", () => {
+    const html = renderGrouping(
+      finance({
+        treasury: {
+          label: "Treasury",
+          group: "Finance",
+          by: "b@x.com",
+          at: "2026-09-11T10:00:00Z",
+        },
+      }),
+      "a@x.com",
+    );
+    assert.match(html, /Grouped under Finance by Bo/);
+    assert.match(html, /counts as Finance/);
+  });
+
+  it("adds no text box until somebody asks for a new group", () => {
+    // Name and role for the viewer, and nothing else: grouping is chosen, not typed, unless a
+    // group nobody has written yet is asked for.
+    assert.equal((renderGrouping(finance(), "a@x.com").match(/<input/g) ?? []).length, 2);
+  });
+});

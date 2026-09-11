@@ -1,4 +1,4 @@
-import { AuthorStamp, Session, Thought } from "../types";
+import { AuthorStamp, RoleGroup, Session, Thought } from "../types";
 
 export interface ViewerIdentity {
   email: string;
@@ -128,4 +128,23 @@ export async function updateMyRosterEntry(
       body: JSON.stringify(entry),
     }),
   );
+}
+
+/**
+ * Groups a role label under another voice — its own spelling to keep it separate, null to clear
+ * the decision. Returns the engagement's whole map, which is what the caller should now hold.
+ */
+export async function setRoleGroup(
+  id: string,
+  label: string,
+  group: string | null,
+): Promise<Record<string, RoleGroup>> {
+  const data = await json<{ roleGroups: Record<string, RoleGroup> }>(
+    await fetch(`/api/engagement/${id}/role-groups`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ label, group }),
+    }),
+  );
+  return data.roleGroups;
 }

@@ -469,6 +469,21 @@ export default function App() {
     );
   };
 
+  /**
+   * Records what a role label counts as, and folds the server's answer straight back in for the
+   * roster save's reason: a regroup that changes nothing on screen for fifteen seconds reads as
+   * one that failed. The server returns the whole map, so this replaces it rather than merging.
+   * Errors are rethrown so the panel can show them beside the choice that failed.
+   */
+  const handleSetRoleGroup = async (label: string, group: string | null) => {
+    const engagementId = currentSession?.engagementId;
+    if (!engagementId) return;
+    const roleGroups = await engagementAPI.setRoleGroup(engagementId, label, group);
+    setCurrentSession((prev) =>
+      prev?.engagementId === engagementId ? { ...prev, roleGroups } : prev,
+    );
+  };
+
   const handleLoadSession = (id: string) => {
     const match = sessions.find((s) => s.id === id);
     if (match) {
@@ -800,6 +815,7 @@ export default function App() {
               onEditingChange={handleEditingChange}
               viewerEmail={viewer?.email}
               onSaveRosterEntry={currentSession.engagementId ? handleSaveRosterEntry : undefined}
+              onSetRoleGroup={currentSession.engagementId ? handleSetRoleGroup : undefined}
               aiEnabled={aiEnabled}
               chorusEnabled={chorusPrefs.enabled}
               onChorusToggle={handleChorusToggle}

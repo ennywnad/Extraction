@@ -41,6 +41,8 @@ export default function CoverageMap({
   coverage,
   pileSize,
   rolesDeclared,
+  recounted = false,
+  ungroupedPairs = 0,
 }: {
   coverage: AreaCoverage[];
   pileSize: number;
@@ -50,6 +52,14 @@ export default function CoverageMap({
    * must not make the map assert something about them.
    */
   rolesDeclared?: { declared: number; total: number } | null;
+  /**
+   * True when the voices drawn here were recounted against the roster and role groups as they
+   * are now, and came out different from when the level set was generated. The numbers are
+   * current; the level set's prose is not, and only regenerating changes that.
+   */
+  recounted?: boolean;
+  /** Pairs of role labels that share a word and are still counted as separate voices. */
+  ungroupedPairs?: number;
 }) {
   if (!coverage.length) return null;
 
@@ -128,6 +138,23 @@ export default function CoverageMap({
             Only {rolesDeclared!.declared} of {rolesDeclared!.total} have declared a role, so the
             voice counts above are grouping the roles the server assigned rather than the people in
             the room.
+          </span>
+        )}
+        {recounted && (
+          <span className="text-black font-bold">
+            {" "}
+            Voice counts above are recounted against the roster and role groups as they are now, and
+            have moved since this level set was generated — its written sections are older than
+            these numbers until it is regenerated.
+          </span>
+        )}
+        {ungroupedPairs > 0 && (
+          <span className="text-black font-bold">
+            {" "}
+            {ungroupedPairs === 1
+              ? "1 pair of role labels shares a word and is"
+              : `${ungroupedPairs} pairs of role labels share a word and are`}{" "}
+            counted as separate voices until somebody groups them or keeps them apart in the roster.
           </span>
         )}
       </p>

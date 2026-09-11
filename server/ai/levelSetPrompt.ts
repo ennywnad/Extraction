@@ -68,7 +68,10 @@ Topic: "${session.topic}"
 Stated intention: "${session.intention}"
 Contributor roles present: ${rolesPresent(session).join(", ") || "unknown"}
 
-Fragments contributed, labelled by the contributor's role:
+Fragments contributed, labelled by the contributor's role. A label written [Group / Role]
+means the room agreed that role speaks for that group: treat them as one voice when judging
+whether roles agree or conflict, and use the specific role when saying who is best placed to
+answer something.
 ${renderCorpus(session)}
 
 Coverage, already computed from the fragments — treat these counts as fact and do not

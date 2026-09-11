@@ -123,3 +123,57 @@ describe("coverage — voices count the room, not the stamp", () => {
     assert.equal(systems.voices, 2, "the declared role, plus the departed authors' stamp");
   });
 });
+
+describe("coverage — a spelling is not a voice, and a group is one", () => {
+  /**
+   * The defect free-text roles introduced. "Defined" needs twelve fragments from more than one
+   * voice, and "Finance" and "finance" were two — so one part of the business could get an area
+   * printed as defined in a client deliverable.
+   */
+  const byRole = (count: number, email: string, role: string): Thought[] =>
+    Array.from({ length: count }, (_, i) => ({
+      id: `${email}-${i}`,
+      text: "fragment",
+      timestamp: new Date().toISOString(),
+      mode: "free_stream",
+      author: { email, name: email, role },
+    }));
+
+  const processesIn = (thoughts: Thought[], over: Partial<Session> = {}) => {
+    const session = { id: "e", thoughts, ...over } as unknown as Session;
+    const everything = Object.fromEntries(thoughts.map((t) => [t.id, "Processes"]));
+    return computeCoverage(session, AREAS, everything).find((c) => c.area === "Processes")!;
+  };
+
+  const decided = (label: string, group: string) => ({
+    [label.toLowerCase()]: { label, group, by: "f@x.com", at: "2026-09-11T10:00:00.000Z" },
+  });
+
+  it("will not call an area defined because two people spelled one role differently", () => {
+    const processes = processesIn([
+      ...byRole(6, "a@x.com", "Finance"),
+      ...byRole(6, "b@x.com", "finance "),
+    ]);
+    assert.equal(processes.fragments, 12);
+    assert.equal(processes.voices, 1);
+    assert.equal(processes.status, "partial");
+  });
+
+  it("counts two labels the room grouped as one voice", () => {
+    const processes = processesIn(
+      [...byRole(6, "a@x.com", "FP&A"), ...byRole(6, "b@x.com", "Finance")],
+      { roleGroups: decided("FP&A", "Finance") },
+    );
+    assert.equal(processes.voices, 1);
+    assert.equal(processes.status, "partial");
+  });
+
+  it("keeps a split the room chose to keep", () => {
+    const processes = processesIn(
+      [...byRole(6, "a@x.com", "Finance lead"), ...byRole(6, "b@x.com", "Finance")],
+      { roleGroups: decided("Finance lead", "Finance lead") },
+    );
+    assert.equal(processes.voices, 2);
+    assert.equal(processes.status, "defined");
+  });
+});

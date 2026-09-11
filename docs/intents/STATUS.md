@@ -29,7 +29,102 @@ this file only records which pieces of one have become code.
 | [008](008-deploying-group-mode.md)             | Deploying group mode          | **in part** — three preparatory items; still never deployed |
 | [009](009-the-deferred-group-surface.md)       | The deferred group surface    | **in part** — the coverage map is built                     |
 | [010](010-model-armor.md)                      | Model Armor at the prompt     | unchanged                                                   |
-| [011](011-the-role-brief.md)                   | The role brief                | **in part** — roles can be declared                         |
+| [011](011-the-role-brief.md)                   | The role brief                | **in part** — roles can be declared, and grouped            |
+
+---
+
+## 2026-09-11 — 011, in part: a spelling is not a voice, and the room decides what is
+
+**Against [011](011-the-role-brief.md), and it answers the question that file said to settle
+first:** whether free-text roles may inflate `voices`. In `main` they could, and quietly did.
+The roster panel asks people to say what they own rather than pick from a list, and
+[coverage.ts](../../server/ai/coverage.ts) counted distinct role _strings_. So one "Finance" and
+one "finance" made two voices, and two is exactly what `defined` needs. One part of the business
+could get an area printed as defined in a client deliverable. The board's `roles` tile had the
+same defect through a second copy of the group-by.
+
+**Found by reading, not by using.** It was surfaced while choosing what to work on next from this
+log. Nobody has run a group engagement with declared roles outside a laptop, so no user could have
+hit it yet.
+
+**Neither answer 011 listed survived contact with the owner.** A bounded list throws away the
+specificity the role field exists to collect: "FP&A" and "Treasury" are both Finance, and the
+split can matter. Relative thresholds make `defined` easier to reach as a room grows and still
+count spellings. The shape that landed is two tiers, and the line between them is the design:
+
+- **Spelling is folded without asking anybody.** `roleKey` in
+  [voices.ts](../../src/utils/voices.ts) ignores case, spacing and Unicode width, because nobody
+  means "Finance " and "finance" as two parts of a business.
+- **Everything past spelling is a named human decision.** `Session.roleGroups` records, per
+  label, what the room decided it counts as — filed under another label, or kept separate — and
+  who decided. Suggestions point at labels sharing a word; they never merge. They can see that
+  "Finance lead" may be Finance and cannot see that "FP&A" is, which is why every label also
+  carries its own "counts as" choice. Same rule as coverage and the chorus: deciding that two
+  roles are the same is not a heuristic's job.
+
+**Nobody's words are rewritten.** The label stays on the roster and on every fragment. A group is
+a second fact about the engagement, which is also why "kept separate" has to be stored rather
+than inferred from absence: it is what stops a suggestion recurring, and a newcomer typing
+"Finance ops" is still asked.
+
+**Who may group was a real question, and the answer is deliberately provisional.** The app has no
+facilitator to give it to. "Facilitator" is a default role anyone can type, Generate is not
+restricted, `Session` does not record a creator, and planv1's "facilitator-owned" settings have
+never been enforced. The owner sees two or three tiers — facilitator, participant, view-only —
+and between-session tidying as the facilitator's. For now: **open to every member, marked in the
+panel as a facilitator task, every decision stamped from the verified identity.** The tiers are
+recorded as an open question in 011 rather than invented here, because the first in-app
+permission cuts against "who can reach a deployment is entirely IAM".
+
+**Three consequences that were the actual work.**
+
+_Its own route and its own store method,_ not a `META_FIELDS` entry. A whole map patched from one
+tab's stale snapshot would silently undo a grouping made in another, and `by` has to come from
+the identity rather than the body. `setRoleGroup` writes one key, at a `FieldPath`: a label is
+free text, and "Sr. Finance / FP&A" is the roster's dotted-email trap in a key nobody chose with
+storage in mind. Both cases are in the store contract.
+
+_The map recounts in the browser._ It printed `voices` as stored at synthesis, so a role declared
+afterwards had never moved it either — a gap older than this change. `fragmentIds` were already
+persisted, so voices are recounted from them against the roster and groups as they are now. That
+is why the status thresholds moved into `voices.ts` beside the resolver. Which area a fragment is
+_in_ is the classifier's answer and is left alone. When the recount differs from what was stored,
+the map says its numbers are newer than the level set's prose, because the conflicts and open
+questions were written by a model reading the old labels and no arithmetic can rewrite them.
+
+_The model reads both._ `[Finance / Treasury]`, group first, so two labels counted as one voice
+read as one, and the specific role after it, because which part of Finance said something is what
+"who is best placed to answer" needs. `rolesPresent` lists each voice once with its labels, and
+the level-set prompt says what the notation means. `by` never crosses the model boundary.
+
+**Two defects found by driving it, both invisible to the suite.** Headless Chromium against a
+keyless dev server: six people, a stored map written the way the old counting would have, grouping
+done in the browser as one person and checked from a second. The first run failed to find
+"Count both as Finance". One "Finance" and one "finance" tie, and an alphabetical tie-break picked
+the lowercase one, so the row title, the suggestion and the button all read like a typo the app had
+chosen. Ties now go to the spelling with more capitals, with a test. The screenshot then showed
+"1 pair of role labels share a word and is counted", fixed with its test tightened to both
+agreements.
+
+**Verified.** 347 tests, 0 failing, 1 skipped (the Firestore contract, as designed); 40 more than
+the entry below. Mutation-checked: with folding disabled, 11 tests fail, including the one this
+exists for ("will not call an area defined because two people spelled one role differently"),
+and the line was restored by edit rather than `git checkout`, for the reason recorded on
+2026-09-08. The drive passed 19 of 19 checks with no browser errors. It confirmed three decisions
+stored and each stamped with the person who made them, a second viewer seeing them, no typed role
+rewritten, and the map going from "2 voices · defined" to "1 voice · partial · one voice only".
+Looked at in both themes. No synthesis was attempted and no token was spent.
+
+**And against Firestore.** The contract cases for `setRoleGroup` — a key with a dot and a slash,
+`FieldValue.delete()` on clear, two keys written at once — pass against the emulator as well as
+the file store: `npm run test:firestore`, 359 tests, 0 skipped. Running it needed a Java 21
+runtime, which is what the emulator bundled with gcloud is compiled for; an older one will not
+start it, and CLAUDE.md now says so.
+
+**What it deliberately did not do.** No brief, no facilitator tier, no automatic merge, no
+hierarchy editor. Groups chain — a group is itself a label somebody may type — which covers "all
+of that is Finance, but this function needs the split" without a tree. 011's row is narrower, not
+closed.
 
 ---
 
