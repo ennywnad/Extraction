@@ -231,9 +231,10 @@ the container's ephemeral disk, which will vanish with the instance — the sing
 line here, and it is invisible from the app itself. `storage.live: false` only means no request
 has opened the store yet; load the app and check again.
 
-`model.backend` is one of `vertex`, `apikey`, `claude-vertex`, `claude-apikey` or `none` — the
-two `claude-*` values mean the provider behind the deployment is Claude rather than Gemini,
-which is a `MODEL_BACKEND` decision and not a code one.
+`model.backend` is `vertex`, `apikey` or `none` and says only **how the client authenticates**.
+`model.providers` says **who answers** — the providers the chain names and can actually reach.
+They are separate because Vertex serves both providers under the same ADC, and because a chain
+can name both and fall between them.
 
 `aiEnabled: false` means no model is reachable and every AI route is silently returning canned
 static output. Do not run a workshop in that state. It is a deliberate first-deploy state,
@@ -279,13 +280,17 @@ Keep enough versions to cover any revision you might roll back to.
   solo instance, deploy the same image as a second service without `--iap`.
 - **Using the Gemini Developer API instead of Vertex:** `export MODEL_BACKEND=apikey GEMINI_KEY=...`
   before bootstrap. That path adds Secret Manager and a key to rotate; Vertex needs neither.
-- **Running Claude instead of Gemini** is `MODEL_BACKEND=claude-vertex` and nothing else.
-  Claude is served from the same Vertex endpoint under the same ADC, so the deployment still
-  holds no key material — changing the model is not a change of security posture, which is the
-  entire argument for doing it this way. It does need Claude enabled in the project's Model
-  Garden, and `VERTEX_LOCATION` set somewhere that serves it (`global`, `us-east5`,
-  `us-central1`, `europe-west1`, `asia-southeast1`). **Never exercised against a real project
-  yet** — see `docs/intents/008`.
+- **Running Claude instead of Gemini** is one chain entry: `MODEL_CHAIN=claude:claude-opus-5`,
+  with `MODEL_BACKEND` left at `vertex`. Claude is served from the same Vertex endpoint under
+  the same ADC, so the deployment still holds no key material — changing the model is not a
+  change of security posture, which is the entire argument for doing it this way. It does need
+  Claude enabled in the project's Model Garden, and `VERTEX_LOCATION` set somewhere that serves
+  it (`global`, `us-east5`, `us-central1`, `europe-west1`, `asia-southeast1`). **Never
+  exercised against a real project yet** — see `docs/intents/008`.
+- **A chain can cross providers**, which is what qualifying the entries buys:
+  `MODEL_CHAIN=claude:claude-opus-5,gemini:gemini-3.5-flash` falls to Gemini when the Claude id
+  is not served. Entries whose provider has no credentials are skipped without a round trip, so
+  naming both on a deployment holding one set of keys is a normal state rather than an error.
 - **`MODEL_BACKEND` and `MODEL_CHAIN` replaced `GENAI_BACKEND` and `GEMINI_MODELS`.** The old
   names still work and log one deprecation line at boot, which is what lets the revision
   deployed _before_ the rename keep running. `deploy.sh` now pushes only the current names, so
@@ -293,8 +298,9 @@ Keep enough versions to cover any revision you might roll back to.
   one wins to be worked out from two files.
 - **The API keys keep their provider names.** `GEMINI_API_KEY` and `ANTHROPIC_API_KEY` sit
   beside each other and were deliberately not folded into one neutral variable: with two
-  providers there are two keys, and one name could not say which it held. `bootstrap-gcp.sh`
-  provisions whichever secret the selected backend needs, and `deploy.sh` mounts that one.
+  providers there are two keys, and one name could not say which it held. Under
+  `MODEL_BACKEND=apikey`, `bootstrap-gcp.sh` provisions a secret for each provider the chain
+  names and `deploy.sh` mounts them; under `vertex` there is no secret at all.
 - **Model ids** differ between backends and move faster than this repo does. `MODEL_CHAIN`
   overrides the chain; the server logs which model actually served a request, and fails loudly
   with the whole chain rather than swallowing each failure.

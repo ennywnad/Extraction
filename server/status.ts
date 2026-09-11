@@ -22,7 +22,7 @@
  * `source` and X-Extraction-AI-Source.
  */
 import type { AuthConfig } from "./authMode.ts";
-import { modelBackend, modelChain } from "./ai/client.ts";
+import { availableProviders, modelBackend, modelChain } from "./ai/client.ts";
 import { storeBackend, storeIsLive } from "./store/index.ts";
 import type { InstanceStatus } from "../src/types.ts";
 
@@ -43,12 +43,16 @@ import type { InstanceStatus } from "../src/types.ts";
 export type { InstanceStatus };
 
 export function instanceStatus(auth: AuthConfig): InstanceStatus {
-  const model = modelBackend();
+  const providers = availableProviders();
+  // "Which providers can answer" is the honest test of whether AI is on, not "which auth was
+  // configured": a deployment can name a backend and still reach nothing, and every AI route
+  // has a labelled static answer for exactly that case.
+  const backend = providers.length ? modelBackend() : "none";
   return {
     ok: true,
     identity: { mode: auth.mode, verified: auth.mode === "iap" },
     storage: { backend: storeBackend(), live: storeIsLive() },
-    model: { backend: model, chainLength: modelChain().length },
-    aiEnabled: model !== "none",
+    model: { backend, chainLength: modelChain().length, providers },
+    aiEnabled: providers.length > 0,
   };
 }

@@ -5,7 +5,7 @@ import rateLimit from "express-rate-limit";
 import { resolveAuthConfig } from "./server/authMode.ts";
 import { createRequireIdentity } from "./server/iapAuth.ts";
 import { createEngagementRouter } from "./server/engagementRoutes.ts";
-import { getProvider } from "./server/ai/client.ts";
+import { aiAvailable, generate } from "./server/ai/client.ts";
 import {
   BINARY_BRACKET_SCHEMA,
   DEVILS_ADVOCATE_SCHEMA,
@@ -146,9 +146,7 @@ app.get("/api/whoami", requireIdentity, (req, res) => {
 // 1. RECOMMEND A MODE BASED ON WARMUP ANSWERS
 app.post("/api/session/recommend", async (req, res) => {
   const { topic, intention, clarity, nature, timeAvailable, intentType } = req.body;
-  const provider = getProvider();
-
-  if (!provider) {
+  if (!aiAvailable()) {
     const recommended = clarity === "foggy" ? "free_stream" : "guided_drill";
     return sendFallback(res, {
       recommendation: recommended,
@@ -160,7 +158,7 @@ app.post("/api/session/recommend", async (req, res) => {
   }
 
   try {
-    const result = await provider.generate({
+    const result = await generate({
       prompt: recommendModePrompt({
         topic,
         intention,
@@ -181,9 +179,7 @@ app.post("/api/session/recommend", async (req, res) => {
 // 2. QUICK FIRE PROMPTS GENERATOR
 app.post("/api/session/quick-fire", async (req, res) => {
   const { topic, intention, pastThoughts } = req.body;
-  const provider = getProvider();
-
-  if (!provider) {
+  if (!aiAvailable()) {
     return sendFallback(res, {
       prompts: [
         `What's the first word that comes to mind when considering: ${topic}?`,
@@ -200,7 +196,7 @@ app.post("/api/session/quick-fire", async (req, res) => {
   }
 
   try {
-    const result = await provider.generate({
+    const result = await generate({
       prompt: quickFirePrompt({ topic, intention, pastThoughts }),
       schema: QUICK_FIRE_SCHEMA,
     });
@@ -214,9 +210,7 @@ app.post("/api/session/quick-fire", async (req, res) => {
 // 3. GUIDED DRILL INTERVIEW: Adaptive next question
 app.post("/api/session/drill-next", async (req, res) => {
   const { topic, intention, history, recentThoughts, advancedSettings } = req.body;
-  const provider = getProvider();
-
-  if (!provider) {
+  if (!aiAvailable()) {
     return sendFallback(res, {
       question: "Could you expand on the main blocker that feels most active right now?",
       contextNote: "Let's explore your core feeling.",
@@ -224,7 +218,7 @@ app.post("/api/session/drill-next", async (req, res) => {
   }
 
   try {
-    const result = await provider.generate({
+    const result = await generate({
       prompt: drillNextPrompt({ topic, intention, history, recentThoughts, advancedSettings }),
       schema: DRILL_NEXT_SCHEMA,
     });
@@ -238,9 +232,7 @@ app.post("/api/session/drill-next", async (req, res) => {
 // 3b. GUIDED DRILL DIALOGUE: Bi-directional chat clarification
 app.post("/api/session/drill-clarify", async (req, res) => {
   const { topic, intention, history, userComment, recentThoughts, advancedSettings } = req.body;
-  const provider = getProvider();
-
-  if (!provider) {
+  if (!aiAvailable()) {
     return sendFallback(res, {
       reply: `I understand you're asking about this with respect to "${topic}". Think of how this constraint forms the core bottleneck of what you are building or solving.`,
       nextQuestion: "How does this concern change your immediate strategic roadmap or next step?",
@@ -249,7 +241,7 @@ app.post("/api/session/drill-clarify", async (req, res) => {
   }
 
   try {
-    const result = await provider.generate({
+    const result = await generate({
       prompt: drillClarifyPrompt({
         topic,
         intention,
@@ -270,9 +262,7 @@ app.post("/api/session/drill-clarify", async (req, res) => {
 // 4. BINARY INTUITION / BRACKET PAIR GENERATOR
 app.post("/api/session/binary-bracket", async (req, res) => {
   const { topic, recentThoughts } = req.body;
-  const provider = getProvider();
-
-  if (!provider) {
+  if (!aiAvailable()) {
     return sendFallback(res, {
       optionA: "I'm holding onto this because I'm genuinely excited about its potential.",
       optionB: "I'm holding onto this because I'm terrified of what happens if I let it go.",
@@ -280,7 +270,7 @@ app.post("/api/session/binary-bracket", async (req, res) => {
   }
 
   try {
-    const result = await provider.generate({
+    const result = await generate({
       prompt: binaryBracketPrompt({ topic, recentThoughts }),
       schema: BINARY_BRACKET_SCHEMA,
     });
@@ -294,9 +284,7 @@ app.post("/api/session/binary-bracket", async (req, res) => {
 // 5. DEVIL'S ADVOCATE GENERATOR
 app.post("/api/session/devils-advocate", async (req, res) => {
   const { topic, recentThoughts } = req.body;
-  const provider = getProvider();
-
-  if (!provider) {
+  if (!aiAvailable()) {
     return sendFallback(res, {
       challenges: [
         "Is there a chance your standard of 'success' here is actually unrealistic?",
@@ -307,7 +295,7 @@ app.post("/api/session/devils-advocate", async (req, res) => {
   }
 
   try {
-    const result = await provider.generate({
+    const result = await generate({
       prompt: devilsAdvocatePrompt({ topic, recentThoughts }),
       schema: DEVILS_ADVOCATE_SCHEMA,
     });
@@ -321,9 +309,7 @@ app.post("/api/session/devils-advocate", async (req, res) => {
 // 6. SYNTHESIZE SESSION: Produce outline, summary, and action items
 app.post("/api/session/synthesize", async (req, res) => {
   const { topic, intention, thoughts, advancedSettings } = req.body;
-  const provider = getProvider();
-
-  if (!provider) {
+  if (!aiAvailable()) {
     // Structural only. Unlike the group level set, which refuses to generate at all rather
     // than write filler into a shared client deliverable, a solo outline is read by the one
     // person who just watched the banner tell them AI is off.
@@ -337,7 +323,7 @@ app.post("/api/session/synthesize", async (req, res) => {
   }
 
   try {
-    const result = await provider.generate({
+    const result = await generate({
       prompt: synthesizeSessionPrompt({ topic, intention, thoughts, advancedSettings }),
       schema: SYNTHESIZE_SESSION_SCHEMA,
     });

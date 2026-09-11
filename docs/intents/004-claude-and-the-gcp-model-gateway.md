@@ -77,18 +77,21 @@ service to operate.
 
 ## What the code already supports
 
-**Both halves are built.** `MODEL_BACKEND=claude-vertex` runs the app on Claude over Vertex
-under ADC; `claude-apikey` runs it on a first-party key for local development. The adapter is
+**Both halves are built.** One chain entry runs the app on Claude:
+`MODEL_CHAIN=claude:claude-opus-5` over Vertex under ADC, or the same entry with
+`MODEL_BACKEND=apikey` and an `ANTHROPIC_API_KEY` for local development. The adapter is
 [providers/claude.ts](../../server/ai/providers/claude.ts), behind
 [002](002-model-provider-seam.md)'s seam, and no route knows which provider it is talking to.
 
-- **The security posture is unchanged, which was the entire argument.** `claude-vertex` reuses
+- **The security posture is unchanged, which was the entire argument.** Claude on Vertex reuses
   the same project + region + ADC triple the Gemini Vertex branch already resolved, so the
   deployment still holds no key material.
-- **The chain is shared.** `MODEL_CHAIN` orders it for whichever provider is live, defaulting to
-  `claude-opus-5` — one id rather than two, because the chain advances on "this id is not
-  served here" and padding it with a cheaper model would be a silent downgrade of every
-  response rather than a fallback.
+- **The chain is provider-qualified, so it can cross providers.**
+  `claude:claude-opus-5,gemini:gemini-3.5-flash` falls to Gemini when the Claude id is not
+  served, and an entry whose provider has no credentials is skipped without a round trip. The
+  default chain stays Gemini-only: a default that reached for Claude would change what an
+  existing deployment does on its next restart, and the seam is meant to make the provider a
+  decision rather than to make it.
 - **The status gate needed no work at all.** `FATAL_STATUSES` and the rate-limit passthrough
   reason about HTTP status codes, and both SDKs put a numeric `status` on their errors — this
   file predicted that and it held exactly.
@@ -106,7 +109,8 @@ records for the deployment as a whole, and it applies here in full.
 ## What would have to change
 
 - **Run it once against a real project.** Enable Claude in the project's Model Garden, set
-  `MODEL_BACKEND=claude-vertex` and a `VERTEX_LOCATION` that serves it, and make one request.
+  `MODEL_CHAIN=claude:claude-opus-5` with `MODEL_BACKEND=vertex` and a `VERTEX_LOCATION` that
+  serves it, and make one request.
   Until that happens the adapter is verified only to the wire.
 - **Per-route provider selection**, which is where this intent said the capability actually
   pays off — a cheap model on `binary-bracket`, a frontier one on the level set. Deferred in

@@ -19,7 +19,7 @@ const deployed: InstanceStatus = {
   ok: true,
   identity: { mode: "iap", verified: true },
   storage: { backend: "firestore", live: true },
-  model: { backend: "vertex", chainLength: 3 },
+  model: { backend: "vertex", chainLength: 3, providers: ["gemini"] },
   aiEnabled: true,
 };
 
@@ -27,7 +27,7 @@ const freshClone: InstanceStatus = {
   ok: true,
   identity: { mode: "dev", verified: false },
   storage: { backend: "file", live: true },
-  model: { backend: "none", chainLength: 0 },
+  model: { backend: "none", chainLength: 0, providers: [] },
   aiEnabled: false,
 };
 
@@ -117,7 +117,18 @@ describe("status board", () => {
     const html = render(deployed);
     assert.match(html, /3 deep/);
     assert.match(html, /3 model ids are tried in order/);
-    assert.doesNotMatch(html, /gemini|flash|pro-/i);
+    // Model *ids* and their fragments. This used to forbid the bare word "gemini", which was
+    // a fine proxy while the provider was implicit and always that one — but the provider is
+    // now an explicit field on the payload, and a family name is a branch name of exactly the
+    // class this board already shows for storage and identity. An id is the narrower fact,
+    // and it is still the one that stays off an unauthenticated screen.
+    assert.doesNotMatch(html, /gemini-|flash|pro-|claude-|opus|sonnet/i);
+  });
+
+  it("names which provider is answering, which is the seam made visible", () => {
+    // The other half of the line above: the app's claim is that the provider is a property of
+    // the deployment, and a board that cannot say which one was picked cannot show that.
+    assert.match(render(deployed), /Gemini/);
   });
 
   it("draws exactly as many chain slots as there are model ids", () => {
@@ -125,7 +136,15 @@ describe("status board", () => {
     // which is the board overstating what the server told it.
     const slots = (html: string) => (html.match(/data-chain-slot="(first|later)"/g) ?? []).length;
     assert.equal(slots(render(deployed)), 3);
-    assert.equal(slots(render({ ...deployed, model: { backend: "apikey", chainLength: 2 } })), 2);
+    assert.equal(
+      slots(
+        render({
+          ...deployed,
+          model: { backend: "apikey", chainLength: 2, providers: ["gemini"] },
+        }),
+      ),
+      2,
+    );
   });
 
   it("draws an empty chain as empty rather than as unlit slots", () => {

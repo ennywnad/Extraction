@@ -184,14 +184,20 @@ export interface InstanceStatus {
     live: boolean;
   };
   model: {
-    /**
-     * Which of the ways this app can reach a model is live. `vertex`/`apikey` are Gemini,
-     * the two `claude-*` values are Claude — a provider is not a separate field, because
-     * every reader asks one question and two axes would mean four combinations to render.
-     */
-    backend: "vertex" | "apikey" | "claude-vertex" | "claude-apikey" | "none";
-    /** How many model ids the chain will try, not which ones. */
+    /** How the client authenticates — ADC as the service account, or a key. */
+    backend: "vertex" | "apikey" | "none";
+    /** How many entries the chain will try, not which ones. */
     chainLength: number;
+    /**
+     * Which providers the chain names *and* can reach. A branch name, like `vertex` — never
+     * a model id, so it stays inside the same disclosure line as the rest of this shape.
+     *
+     * This is the seam made observable: the app's claim is that the provider is a property of
+     * the deployment, and until this field there was no way to ask which one it had picked.
+     * It is a list rather than one value because a chain can legitimately name both and fall
+     * between them.
+     */
+    providers: ("gemini" | "claude")[];
   };
   aiEnabled: boolean;
 }

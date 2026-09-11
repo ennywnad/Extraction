@@ -31,10 +31,13 @@ APIS=(
   artifactregistry.googleapis.com
   cloudbuild.googleapis.com
 )
-case "${MODEL_BACKEND}" in
-  vertex | claude-vertex) APIS+=(aiplatform.googleapis.com) ;;
-  *) APIS+=(secretmanager.googleapis.com) ;;
-esac
+# Vertex serves both providers under the same ADC, so this follows the backend and not the
+# chain. See docs/intents/004: that equivalence is the whole argument for Claude on Vertex.
+if [[ "${MODEL_BACKEND}" == "vertex" ]]; then
+  APIS+=(aiplatform.googleapis.com)
+else
+  APIS+=(secretmanager.googleapis.com)
+fi
 gcloud services enable "${APIS[@]}"
 
 echo "==> Firestore database"
@@ -62,37 +65,35 @@ grant() {
 }
 echo "==> IAM"
 grant roles/datastore.user
-if [[ "${MODEL_BACKEND}" == "vertex" || "${MODEL_BACKEND}" == "claude-vertex" ]]; then
+if [[ "${MODEL_BACKEND}" == "vertex" ]]; then
   # Claude on Vertex authenticates the same way Gemini does — same role, same runtime service
-  # account, no key material. That equivalence is the argument for it; see docs/intents/004.
+  # account, no key material for either. That equivalence is the argument; see docs/intents/004.
   grant roles/aiplatform.user
 else
-  # Which key, and therefore which secret, follows from the provider. They are deliberately
-  # not one neutral variable: with two providers there are two keys.
-  if [[ "${MODEL_BACKEND}" == "claude-apikey" ]]; then
-    SECRET=anthropic-api-key
-    KEY_VAR=ANTHROPIC_KEY
-    KEY_VALUE="${ANTHROPIC_KEY:-}"
-  else
-    SECRET=gemini-api-key
-    KEY_VAR=GEMINI_KEY
-    KEY_VALUE="${GEMINI_KEY:-}"
-  fi
-  echo "==> API key secret (${SECRET})"
-  if gcloud secrets describe "${SECRET}" >/dev/null 2>&1; then
-    echo "    ${SECRET} already exists; add a version with:"
-    echo "    printf '%s' \"\$${KEY_VAR}\" | gcloud secrets versions add ${SECRET} --data-file=-"
-  else
-    : "${KEY_VALUE:?set ${KEY_VAR} when MODEL_BACKEND=${MODEL_BACKEND}}"
-    printf '%s' "${KEY_VALUE}" | gcloud secrets create "${SECRET}" --data-file=-
-  fi
-  # Bound to the one secret, not the project. secretAccessor at project scope would let the
-  # runtime read every secret anyone ever adds here, which is the same mistake as using the
-  # default compute service account — just smaller today.
-  echo "    granting roles/secretmanager.secretAccessor on ${SECRET} only"
-  gcloud secrets add-iam-policy-binding "${SECRET}" \
-    --member="serviceAccount:${RUNTIME_SA}" \
-    --role=roles/secretmanager.secretAccessor --condition=None --quiet >/dev/null
+  # Under `apikey` each provider the chain names brings its own key, and a chain may name
+  # both. They are deliberately not one neutral variable: with two providers there are two
+  # keys, and one name could not say which it held.
+  provision_key_secret() {
+    local secret="$1" key_var="$2" key_value="$3"
+    echo "==> API key secret (${secret})"
+    if gcloud secrets describe "${secret}" >/dev/null 2>&1; then
+      echo "    ${secret} already exists; add a version with:"
+      echo "    printf '%s' \"\$${key_var}\" | gcloud secrets versions add ${secret} --data-file=-"
+    else
+      : "${key_value:?set ${key_var} when MODEL_BACKEND=apikey and the chain names it}"
+      printf '%s' "${key_value}" | gcloud secrets create "${secret}" --data-file=-
+    fi
+    # Bound to the one secret, not the project. secretAccessor at project scope would let the
+    # runtime read every secret anyone ever adds here, which is the same mistake as using the
+    # default compute service account — just smaller today.
+    echo "    granting roles/secretmanager.secretAccessor on ${secret} only"
+    gcloud secrets add-iam-policy-binding "${secret}" \
+      --member="serviceAccount:${RUNTIME_SA}" \
+      --role=roles/secretmanager.secretAccessor --condition=None --quiet >/dev/null
+  }
+
+  [[ "${CHAIN_NAMES_GEMINI}" == true ]] && provision_key_secret gemini-api-key GEMINI_KEY "${GEMINI_KEY:-}"
+  [[ "${CHAIN_NAMES_CLAUDE}" == true ]] && provision_key_secret anthropic-api-key ANTHROPIC_KEY "${ANTHROPIC_KEY:-}"
 fi
 
 # --- Build identity ------------------------------------------------------------------------

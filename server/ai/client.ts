@@ -1,156 +1,134 @@
 /**
- * Which model provider this instance talks to, decided by configuration.
+ * The model seam: one call, two providers behind it, chosen by configuration.
  *
- * Identity resolves its branch at boot, storage picks Firestore or a JSON file by whether a
- * project id is set, and this is the same decision for the model. What changed is that it is
- * now a decision between *providers* rather than between two ways of reaching one of them:
- * `getGemini()` abstracted which Gemini you reached, and nothing abstracted that it was
- * Gemini. The adapters in ./providers hold that; this file only chooses.
+ * The app's central claim is that configuration decides behavior. That was true of identity
+ * and storage and only half true here — `getGemini()` abstracted *which Gemini* you reached
+ * and nothing abstracted *that it was Gemini*. It is true of the call now: a route states a
+ * prompt and a schema, and which provider answers is a property of the deployment.
  *
- * **`getProvider()` returns `null` when nothing is configured, and every AI route has a static
- * fallback.** That is the property that lets a fresh clone run end to end with no cloud setup
- * at all, and it survives having two providers — "no model" is one answer here, not one per
- * provider.
+ * **Two axes, not one.** `MODEL_BACKEND` says how the client authenticates — `vertex` (ADC as
+ * the runtime service account, no key material) or `apikey`. `MODEL_CHAIN` says who answers,
+ * as `provider:model` entries tried in order. Keeping them apart is what lets a chain fall
+ * from Claude to Gemini, and what keeps the configuration 2 + N rather than N × 2.
  *
- * **Configuration is read in ./modelEnv.ts**, which holds the renames and why the old names
- * still work. The short version: `GENAI_BACKEND` and `GEMINI_MODELS` named a provider in a
- * place that no longer is one, so they are now `MODEL_BACKEND` and `MODEL_CHAIN` — while the
- * API keys keep their provider names, because with two providers there are two keys and a
- * single neutral one could not say which.
+ * **Nothing here reaches for Claude on its own.** The default chain is Gemini-only, because a
+ * default that named Claude would change what an existing deployment does on its next restart.
+ * The seam makes the provider a decision; it does not make the decision.
+ *
+ * Configuration is read in ./modelEnv.ts, which holds the renames and why the old names still
+ * work. See docs/intents/002-model-provider-seam.md and 004-claude-and-the-gcp-model-gateway.md.
  */
-import type { ModelProvider } from "./providers/types.ts";
-import {
-  modelBackendSetting,
-  modelChainSetting,
-  providerKey,
-  resetDeprecationWarnings,
-} from "./modelEnv.ts";
-import {
-  GEMINI_DEFAULT_MODELS,
-  buildApiKeyClient as buildGeminiApiKey,
-  buildVertexClient as buildGeminiVertex,
-  geminiProvider,
-} from "./providers/gemini.ts";
-import {
-  CLAUDE_DEFAULT_MODELS,
-  buildApiKeyClient as buildClaudeApiKey,
-  buildVertexClient as buildClaudeVertex,
-  claudeProvider,
-} from "./providers/claude.ts";
+import { modelBackendSetting, modelChainSetting } from "./modelEnv.ts";
+import { runChain } from "./providers/chain.ts";
+import { GEMINI_DEFAULT_CHAIN, gemini, resetGemini } from "./providers/gemini.ts";
+import { claude, resetClaude } from "./providers/claude.ts";
+import type {
+  ChainEntry,
+  ModelBackend,
+  ModelRequest,
+  ModelResult,
+  Provider,
+  ProviderName,
+} from "./providers/types.ts";
 
 export { AiCallError, isRateLimited } from "./errors.ts";
-export { generateContentWithFallback } from "./providers/gemini.ts";
-export type { ModelProvider, GenerateRequest, GenerateResult } from "./providers/types.ts";
+export { runChain } from "./providers/chain.ts";
+export type {
+  ChainEntry,
+  JsonSchema,
+  ModelBackend,
+  ModelRequest,
+  ModelResult,
+  Provider,
+  ProviderName,
+} from "./providers/types.ts";
+
+const PROVIDERS: Record<ProviderName, Provider> = { gemini, claude };
 
 /**
- * Which branch this instance took — reported rather than only logged, so something other than
- * the boot log can answer "where is the model coming from".
+ * Splits `provider:model`, defaulting to Gemini for a bare id.
  *
- * `none` covers both "nothing configured" and "a backend was asked for and is misconfigured".
- * The two Claude entries are separate values rather than a provider field beside a backend
- * field, because every consumer of this asks one question: which of the ways this app can
- * reach a model is live. Splitting it into two axes would mean four combinations to render on
- * a board where only these five exist.
+ * The bare form is what every existing `GEMINI_MODELS` value looks like, and it keeps working
+ * for free — reading it as Gemini is both the compatible answer and the true one.
+ *
+ * An unknown prefix is dropped with a warning rather than throwing. A typo in one entry of a
+ * chain should cost that entry, not the whole deployment's ability to reach a model: the point
+ * of a chain is that it survives one member being wrong.
  */
-export type ModelBackend = "vertex" | "apikey" | "claude-vertex" | "claude-apikey" | "none";
-
-let provider: ModelProvider | null = null;
-let resolved = false;
-let backend: ModelBackend = "none";
-
-/** Vertex needs exactly this pair, whichever provider is served over it. */
-function vertexTarget(): { project: string; location: string } | null {
-  const project = process.env.FIRESTORE_PROJECT_ID?.trim();
-  const location = process.env.VERTEX_LOCATION?.trim();
-  return project && location ? { project, location } : null;
+export function parseChain(raw: string): ChainEntry[] {
+  const entries: ChainEntry[] = [];
+  for (const part of raw.split(",").map((p) => p.trim())) {
+    if (!part) continue;
+    const at = part.indexOf(":");
+    if (at === -1) {
+      entries.push({ provider: "gemini", model: part });
+      continue;
+    }
+    const provider = part.slice(0, at).trim();
+    const model = part.slice(at + 1).trim();
+    if (!model) {
+      console.warn(`Chain entry "${part}" names no model; ignoring it.`);
+      continue;
+    }
+    if (provider !== "gemini" && provider !== "claude") {
+      console.warn(`Chain entry "${part}" names unknown provider "${provider}"; ignoring it.`);
+      continue;
+    }
+    entries.push({ provider, model });
+  }
+  return entries;
 }
 
-export function getProvider(): ModelProvider | null {
-  if (resolved) return provider;
-  resolved = true;
-
-  const choice = modelBackendSetting();
-  const models = modelChain();
-
-  if (choice === "vertex" || choice === "claude-vertex") {
-    const target = vertexTarget();
-    if (!target) {
-      console.error(`${choice} requires FIRESTORE_PROJECT_ID and VERTEX_LOCATION; AI is disabled.`);
-      backend = "none";
-      return (provider = null);
-    }
-    if (choice === "claude-vertex") {
-      backend = "claude-vertex";
-      return (provider = claudeProvider(
-        buildClaudeVertex(target.project, target.location),
-        models,
-      ));
-    }
-    backend = "vertex";
-    return (provider = geminiProvider(buildGeminiVertex(target.project, target.location), models));
-  }
-
-  if (choice === "claude-apikey") {
-    const key = providerKey("ANTHROPIC_API_KEY");
-    if (!key) {
-      console.error("claude-apikey requires ANTHROPIC_API_KEY; AI is disabled.");
-      backend = "none";
-      return (provider = null);
-    }
-    backend = "claude-apikey";
-    return (provider = claudeProvider(buildClaudeApiKey(key), models));
-  }
-
-  // Unset or `apikey`: the Gemini Developer API, which is what a fresh clone with a key gets.
-  const key = providerKey("GEMINI_API_KEY");
-  if (key) {
-    backend = "apikey";
-    provider = geminiProvider(buildGeminiApiKey(key), models);
-  }
-  return provider;
+/** Models to try, in order, already split into provider and id. */
+export function modelChain(): ChainEntry[] {
+  const configured = modelChainSetting();
+  const parsed = configured ? parseChain(configured) : [];
+  return parsed.length ? parsed : parseChain(GEMINI_DEFAULT_CHAIN);
 }
 
 /**
- * The backend behind the live provider. Resolves it if nothing has asked yet, so this answers
- * the same before and after the first AI request.
+ * How the client authenticates. Reported rather than only logged, so something other than the
+ * boot log can answer "where is the model coming from".
  */
 export function modelBackend(): ModelBackend {
-  getProvider();
-  return backend;
-}
-
-/** Whether the selected provider is Claude — the two backends that reach it. */
-export function isClaudeBackend(b: ModelBackend): boolean {
-  return b === "claude-vertex" || b === "claude-apikey";
+  const setting = modelBackendSetting();
+  if (setting === "vertex") return "vertex";
+  if (setting === "apikey") return "apikey";
+  // Unset behaves as apikey, which is what a fresh clone with a key in .env expects.
+  return "apikey";
 }
 
 /**
- * Models to try, in order.
+ * The providers the chain names that can actually be reached under this backend.
  *
- * The default depends on which provider was selected, because a model id is only meaningful
- * against one of them. An override applies to whichever provider is live — it is a list of
- * ids for *this* deployment, not a Gemini list that Claude has to ignore.
- *
- * Verify the ids and their retirement dates against the backend you deploy with; they move
- * faster than this repo does, and each adapter carries the dates it was last checked against.
+ * A chain naming both providers on a deployment holding one set of credentials is a normal
+ * state rather than an error — so this answers what is live, and `aiAvailable()` is the
+ * question every route already asks.
  */
-export function modelChain(): string[] {
-  const configured = modelChainSetting()
-    ?.split(",")
-    .map((m) => m.trim())
-    .filter(Boolean);
-  if (configured?.length) return configured;
-
-  const choice = modelBackendSetting();
-  return choice === "claude-vertex" || choice === "claude-apikey"
-    ? CLAUDE_DEFAULT_MODELS
-    : GEMINI_DEFAULT_MODELS;
+export function availableProviders(): ProviderName[] {
+  const backend = modelBackend();
+  const named = new Set(modelChain().map((e) => e.provider));
+  return [...named].filter((name) => PROVIDERS[name].configured(backend));
 }
 
-/** Test seam: forget the resolved provider so a case can set different configuration. */
-export function resetProviderForTest(): void {
-  provider = null;
-  resolved = false;
-  backend = "none";
-  resetDeprecationWarnings();
+/** Whether any model at all can be reached. Every AI route has a static answer when not. */
+export function aiAvailable(): boolean {
+  return availableProviders().length > 0;
+}
+
+/**
+ * Asks the chain for a structured answer, and reports who gave it.
+ *
+ * Entries whose provider has no credentials are skipped without a round trip: a chain that
+ * names Claude first on a Gemini-only deployment should fall through to Gemini silently, not
+ * spend a request discovering that it cannot authenticate.
+ */
+export async function generate<T = unknown>(request: ModelRequest): Promise<ModelResult<T>> {
+  return runChain<T>(request, modelChain(), modelBackend(), (name) => PROVIDERS[name]);
+}
+
+/** Test seam: both adapters resolve their client once per process. */
+export function resetProviders(): void {
+  resetGemini();
+  resetClaude();
 }

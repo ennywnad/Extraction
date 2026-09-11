@@ -33,8 +33,9 @@ ENV_VARS+=",MODEL_BACKEND=${MODEL_BACKEND}"
 if [[ -n "${MODEL_CHAIN}" ]]; then
   ENV_VARS+=",MODEL_CHAIN=${MODEL_CHAIN}"
 fi
-# Both Vertex-served providers need the region; neither key-served one does.
-if [[ "${MODEL_BACKEND}" == "vertex" || "${MODEL_BACKEND}" == "claude-vertex" ]]; then
+# Vertex serves both providers under the same ADC, so the region is a property of the backend
+# rather than of whoever the chain names.
+if [[ "${MODEL_BACKEND}" == "vertex" ]]; then
   ENV_VARS+=",VERTEX_LOCATION=${VERTEX_LOCATION}"
 fi
 
@@ -42,7 +43,7 @@ echo "==> Deploying ${SERVICE} to ${REGION}"
 echo "    IAP audience:    ${IAP_AUDIENCE}"
 echo "    Model backend:   ${MODEL_BACKEND}"
 echo "    Model chain:     ${MODEL_CHAIN:-<app default>}"
-if [[ "${MODEL_BACKEND}" == "vertex" || "${MODEL_BACKEND}" == "claude-vertex" ]]; then
+if [[ "${MODEL_BACKEND}" == "vertex" ]]; then
   echo "    Vertex location: ${VERTEX_LOCATION}"
 fi
 
@@ -66,13 +67,16 @@ DEPLOY_ARGS=(
   # min-instances=0 means every workshop opens with a cold start pulling in both SDKs.
   --cpu-boost
 )
-# Vertex uses ADC as the runtime service account, so there is no secret to mount. A key-served
-# provider mounts its own: the keys are deliberately not one neutral variable, because with two
-# providers there are two of them.
+# Vertex uses ADC as the runtime service account, so there is no secret to mount at all. Under
+# `apikey` each provider the chain names brings its own key — deliberately not one neutral
+# variable, because with two providers there are two of them, and a chain may name both.
 if [[ "${MODEL_BACKEND}" == "apikey" ]]; then
-  DEPLOY_ARGS+=(--set-secrets "GEMINI_API_KEY=gemini-api-key:latest")
-elif [[ "${MODEL_BACKEND}" == "claude-apikey" ]]; then
-  DEPLOY_ARGS+=(--set-secrets "ANTHROPIC_API_KEY=anthropic-api-key:latest")
+  SECRETS=()
+  [[ "${CHAIN_NAMES_GEMINI}" == true ]] && SECRETS+=("GEMINI_API_KEY=gemini-api-key:latest")
+  [[ "${CHAIN_NAMES_CLAUDE}" == true ]] && SECRETS+=("ANTHROPIC_API_KEY=anthropic-api-key:latest")
+  if ((${#SECRETS[@]})); then
+    DEPLOY_ARGS+=(--set-secrets "$(IFS=,; echo "${SECRETS[*]}")")
+  fi
 fi
 
 gcloud "${DEPLOY_ARGS[@]}"

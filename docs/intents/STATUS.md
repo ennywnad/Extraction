@@ -33,6 +33,71 @@ this file only records which pieces of one have become code.
 
 ---
 
+## 2026-09-11 — The chain names its providers, and the seam's own rule is now a test
+
+**Against [002](002-model-provider-seam.md) and [004](004-claude-and-the-gcp-model-gateway.md),
+and it is the half of the parallel `model-seam` branch the entry below deliberately did not
+take.** That entry called it "the live alternative" and said the argument for it does not get
+weaker with time; this is that argument acted on rather than left in a file.
+
+**What was wrong with the shape it replaced.** `MODEL_BACKEND` crossed two questions into one
+enum — `vertex`, `apikey`, `claude-vertex`, `claude-apikey`, `none` — which is N × 2 values for
+a 2 × N question and would have been six on the next provider. Worse, it could not express the
+thing a chain exists for: **a chain was one provider's ids**, so a dead Claude id exhausted the
+chain instead of reaching Gemini. The two axes are now separate. `MODEL_BACKEND` says only how
+the client authenticates; `MODEL_CHAIN` carries `provider:model` entries and can cross between
+them. A bare id still means Gemini, so every `GEMINI_MODELS` value ever deployed keeps working
+unchanged — the compatibility came free from the parsing rule rather than from a shim.
+
+**Two things fall out that could not be built before.** An entry whose provider has no
+credentials is **skipped without a round trip**, so naming both providers on a deployment
+holding one set of keys is a normal state rather than a 401 that reads like an outage; and the
+failure message separates skipped entries from failed ones, because "nothing answered" and
+"nothing was reachable" are different problems and only one is fixed by changing a model id.
+
+**The translation step this intent budgeted for does not exist.** 002 said "the schemas are the
+whole job" and expected an adapter-side rewrite each. Gemini's `responseJsonSchema` takes plain
+JSON Schema — the nine were always ordinary JSON Schema wearing `Type.OBJECT` — so the _same
+object_ now reaches both providers untouched. That also dissolved a divergence the previous
+version had to manage by hand: the old `Type`-enum path had no field for `additionalProperties`
+and stripped it, while Claude requires it. Verified against a live Gemini call rather than a
+type: a real request came back schema-shaped through the rebuilt chain.
+
+**`runChain` takes its world as arguments**, so advance, stop, skip and carry-the-status are
+each exercisable with no SDK, no key and no environment variable — the same instinct as
+`coverage.ts`, where the part with a judgement in it does not need the world to be real. It is
+also what makes it the **contract both adapters answer**: a stub `Provider` is the same
+interface the real ones implement, so a rule proven once holds for Gemini and Claude rather
+than being asserted twice and drifting. `test/providerContract.test.ts` was deleted into it.
+
+**The seam's central rule is a test now, not a convention.**
+[modelSeam.test.ts](../../test/modelSeam.test.ts) scans the server source: an SDK import, a
+provider's request vocabulary, or a route naming a provider outside `server/ai/providers/`
+fails it. This is the failure mode the whole thing has — somebody adds a route, reaches for
+`@google/genai` because that is what the neighbouring code used to do, and **it works**.
+Nothing breaks, no test fails, and the app's central claim is quietly false for one route. It
+scans with comments stripped, because the rule is about code: a doc comment explaining why the
+old coupling is gone is the opposite of a coupling, and a test that forbade naming the old API
+would make the documentation worse to keep itself green.
+
+**One disclosure line moved, deliberately.** The board's test forbade the literal word
+`gemini`, which was a fine proxy for "no model ids" while the provider was implicit and always
+that one. The provider is now an explicit field, so the assertion narrowed to model ids and
+their fragments, and gained a second half asserting the provider _is_ named. `gemini` is a
+branch name of exactly the class this board already shows for storage and identity; an id is
+the narrower fact and still stays off an unauthenticated screen.
+
+**Verified.** 307 tests, 0 failing. Seven configurations driven end to end, including the two
+this shape exists for: a chain naming Claude with no Anthropic key falls through to Gemini and
+reports only `gemini` as available, and both keys present reports both. All seven solo routes
+still answer with a labelled fallback when nothing is reachable, and a real Gemini request
+returns through the rebuilt chain carrying both headers.
+
+Claude itself still has not answered. That needs Model Garden, and it is
+[008](008-deploying-group-mode.md)'s gap.
+
+---
+
 ## 2026-09-10 — The same seam had been built twice, and the other one was righter in places
 
 **Against no intent. It is a merge of two independent answers to

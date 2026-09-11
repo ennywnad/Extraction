@@ -1,6 +1,6 @@
 import type { Session } from "../../src/types.ts";
 import { getEngagementStore } from "../store/index.ts";
-import { getProvider } from "./client.ts";
+import { aiAvailable, generate } from "./client.ts";
 import { CLASSIFICATION_SCHEMA, LEVEL_SET_SCHEMA } from "./schema.ts";
 import { UserFacingError } from "./respond.ts";
 import { computeCoverage, type AreaCoverage } from "./coverage.ts";
@@ -34,10 +34,9 @@ export function isSynthesisRunning(engagementId: string): boolean {
 }
 
 async function classify(session: Session): Promise<Record<string, string>> {
-  const provider = getProvider();
-  if (!provider) return {};
+  if (!aiAvailable()) return {};
 
-  const { data: parsed } = await provider.generate<{
+  const { data: parsed } = await generate<{
     assignments?: { id?: unknown; area?: unknown }[];
   }>({
     prompt: classificationPrompt(session),
@@ -58,8 +57,7 @@ async function runSynthesis(
   generatedBy: string,
   settings?: { outputFilter?: string; cognitiveBiasAudit?: string },
 ): Promise<LevelSet> {
-  const provider = getProvider();
-  if (!provider) {
+  if (!aiAvailable()) {
     // No canned filler here. A placeholder summary written into a shared client deliverable
     // reads exactly like a real one, and nobody would know to regenerate it.
     throw new UserFacingError("No model is configured; cannot produce a level set.");
@@ -73,7 +71,7 @@ async function runSynthesis(
     )
     .join("\n");
 
-  const { data } = await provider.generate<Partial<LevelSet>>({
+  const { data } = await generate<Partial<LevelSet>>({
     prompt: levelSetPrompt(session, coverageSummary, settings),
     schema: LEVEL_SET_SCHEMA,
   });

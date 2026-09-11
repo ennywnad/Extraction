@@ -12,7 +12,7 @@
  */
 import type { Response } from "express";
 import { isRateLimited } from "./client.ts";
-import type { GenerateResult } from "./providers/types.ts";
+import type { ModelResult } from "./providers/types.ts";
 
 export type AiSource = "model" | "fallback";
 
@@ -35,11 +35,11 @@ const PROVIDER_HEADER = "X-Extraction-AI-Provider";
  * id and version served a given request is a narrower fact, and it stays in the server log
  * where `runChain` already puts it.
  */
-export function sendModel<T extends object>(res: Response, result: GenerateResult<T>) {
+export function sendModel<T>(res: Response, result: ModelResult<T>) {
   res.setHeader(HEADER, "model");
   res.setHeader(PROVIDER_HEADER, result.provider);
   return res.json({
-    ...result.data,
+    ...(result.data as object),
     source: "model" satisfies AiSource,
     provider: result.provider,
   });

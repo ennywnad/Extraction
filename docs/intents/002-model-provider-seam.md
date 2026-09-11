@@ -34,12 +34,21 @@ reach, and nothing abstracts that it is Gemini.
 
 ## What the code already supports
 
-**The seam is built.** `ModelProvider` in
+**The seam is built.** `Provider` in
 [providers/types.ts](../../server/ai/providers/types.ts) is the one internal shape, with two
 adapters behind it; [client.ts](../../server/ai/client.ts) does nothing but choose between
-them. A route calls `provider.generate({ prompt, schema })` and gets back parsed `data`
-alongside the provider and model that produced it. No handler imports `@google/genai`, and no
-handler names a provider.
+them. A route calls `generate({ prompt, schema })` and gets back parsed `data` alongside the
+provider and model that produced it. No handler imports an SDK and no handler names a
+provider — [modelSeam.test.ts](../../test/modelSeam.test.ts) scans the source to keep it that
+way, because the way a seam dies is somebody adding a route that reaches for the old SDK and
+it simply working.
+
+**The two axes are separate, and that is the shape worth keeping.** `MODEL_BACKEND` says how
+the client authenticates; `MODEL_CHAIN` says who answers, as `provider:model` entries. An
+earlier version crossed them into one five-value enum — N × 2 values for a 2 × N question,
+six on the next provider — and could not express the thing a chain exists for: falling from
+one provider to another. A bare id still means Gemini, so every `GEMINI_MODELS` value ever
+deployed keeps working.
 
 The coupling this file was written to measure is gone: the nine call sites that each assembled
 a Gemini-shaped request now pass a schema, and the 41 `Type` enum uses are one translation
@@ -48,9 +57,8 @@ imported by that adapter alone.
 
 What holds it up:
 
-- **Selection by presence of configuration** extends to four branches — `vertex`, `apikey`,
-  `claude-vertex`, `claude-apikey` — under `MODEL_BACKEND`, with the `GEMINI_*` names still
-  honoured.
+- **Selection by presence of configuration** covers two backends under `MODEL_BACKEND` and
+  any number of providers under `MODEL_CHAIN`, with the `GEMINI_*` names still honoured.
 - **Prompts were already provider-neutral**, as pure functions in
   [sessionPrompts.ts](../../server/ai/sessionPrompts.ts) and
   [levelSetPrompt.ts](../../server/ai/levelSetPrompt.ts). That turned out to be roughly half
@@ -76,25 +84,15 @@ Nothing, for the seam itself. What remains is what it was built to make cheap:
 - **Per-route provider selection**, which is the capability
   [004](004-claude-and-the-gcp-model-gateway.md) says makes this worth having. Deferred rather
   than open — see below.
-- **A provider-qualified chain**, which is a live alternative to the shape built here rather
-  than a future feature. A parallel implementation of this intent (the `model-seam` branch, see
-  [STATUS.md](STATUS.md)) split the two axes differently: `MODEL_BACKEND` says only _how to
-  authenticate_ — `vertex` or `apikey` — and each chain entry names its own provider, as
-  `claude:claude-opus-5,gemini:gemini-3.5-flash`. A bare id parses as Gemini, so every existing
-  `GEMINI_MODELS` value keeps working.
 
-  It is better on two counts. It is 2 + N values where this is N × 2 — a five-value enum for a
-  2×2 today, and six for a third provider — and it lets the chain **fall from one provider to
-  another**, which the shape here cannot do at all: a chain is one provider's ids and a dead id
-  exhausts it. What it costs is a rewrite of `ModelBackend`, the status payload and the board,
-  which is why it was not folded into the port that took the rest of that branch. Worth doing
-  deliberately; the argument for it does not get weaker with time, and it gets more expensive
-  with each provider added.
+**The schemas turned out not to be the job at all.** This file said "the schemas are the whole
+job" and budgeted a translation step per adapter. There is none. Gemini's `responseJsonSchema`
+and Claude's `output_config.format` both take plain JSON Schema, so the _same object_ goes into
+both with no rewriting — verified against a live Gemini call, not just a type. The nine schemas
+were always ordinary JSON Schema wearing `Type.OBJECT`, and the costume was the entire coupling.
 
-**The schemas were the whole job, and they are done.** The nine live in
-[schema.ts](../../server/ai/schema.ts) as plain JSON Schema; the Gemini adapter translates to
-`config.responseSchema` and drops `additionalProperties`, which Gemini's `Schema` has no field
-for; the Claude adapter passes the schema through `output_config.format` verbatim.
+The nine live in [schema.ts](../../server/ai/schema.ts) as plain JSON Schema, and both
+adapters pass them through untouched.
 
 The sharpest thing learned building it: **the two providers disagree about
 `additionalProperties` and `required` in a way that is invisible on one of them.** Claude
@@ -125,7 +123,7 @@ declares no `messages`, so even within one provider the honest common type is th
   (`required`, `additionalProperties`) are expressible in the TypeScript type, so they are
   enforced at compile time rather than by a validator.
 - ~~Is the provider chosen per-process or per-route?~~ **Deferred, deliberately, to keep it
-  from being drifted into.** Per-process today: one `MODEL_BACKEND` for the whole instance,
+  from being drifted into.** Per-process today: one `MODEL_CHAIN` for the whole instance,
   matching how identity and storage already select themselves. Per-route is still the version
   worth having — a cheap model on `drill-next`, a frontier one on the level set — but it needs
   a configuration surface for nine routes, and inventing one in the same change that

@@ -41,29 +41,37 @@ const GOLD = "var(--color-signal-amber)";
 const CORAL = "var(--color-signal-red)";
 
 /**
- * Every model backend, and what to call it on screen.
+ * How the client authenticates, and what to call it on screen.
  *
- * A `Record` keyed on the union rather than the ternary chain this used to be, because that
- * chain was the one place the "a new branch is a compile error" rule did not actually hold:
- * when the seam grew from two backends to four, `model.backend === "vertex" ? … : "None"`
- * kept compiling and drew both Claude backends as **None**, in coral, on the one screen whose
- * job is answering where the model comes from. Wrong, and wrong in the direction that reads
- * as "nothing is configured" on a working deployment.
+ * A `Record` keyed on the union rather than a ternary chain, because that chain was the one
+ * place the "a new branch is a compile error" rule did not actually hold: when the seam grew
+ * a branch, `model.backend === "vertex" ? … : "None"` kept compiling and drew a working
+ * deployment as **None**, in coral, on the one screen whose job is answering where the model
+ * comes from. Wrong, and wrong in the direction that reads as "nothing is configured".
  *
- * Keyed off `InstanceStatus["model"]["backend"]`, so a fifth backend fails `npm run lint`
- * here the way a twelfth extraction mode fails it in `EMPTY_MODE_PROGRESS`.
+ * Keyed off `InstanceStatus["model"]["backend"]`, so a new backend fails `npm run lint` here
+ * the way a twelfth extraction mode fails it in `EMPTY_MODE_PROGRESS`.
+ *
+ * The *provider* is a separate field and a separate axis — see `PROVIDER_LABELS`. Crossing
+ * the two into one enum is what produced the bug above.
  */
 type ModelBackend = InstanceStatus["model"]["backend"];
 
 const MODEL_BACKEND_LABELS: Record<ModelBackend, string> = {
   vertex: "Vertex",
   apikey: "API key",
-  "claude-vertex": "Claude on Vertex",
-  "claude-apikey": "Claude API key",
   none: "None",
 };
 
 const MODEL_BACKENDS = Object.keys(MODEL_BACKEND_LABELS) as ModelBackend[];
+
+/** Which provider answers, which is the question the seam exists to make askable. */
+type ProviderName = InstanceStatus["model"]["providers"][number];
+
+const PROVIDER_LABELS: Record<ProviderName, string> = {
+  gemini: "Gemini",
+  claude: "Claude",
+};
 
 interface SeamCard {
   key: BoardBox;
@@ -115,12 +123,15 @@ function seamsOf(status: InstanceStatus): SeamCard[] {
       others: MODEL_BACKENDS.filter((b) => b !== model.backend).map((b) =>
         MODEL_BACKEND_LABELS[b].toLowerCase(),
       ),
-      state: model.backend === "none" ? "Nothing configured" : "A client was built",
-      fill: model.backend === "none" ? CORAL : GREEN,
+      state:
+        model.providers.length === 0
+          ? "Nothing configured"
+          : `${model.providers.map((p) => PROVIDER_LABELS[p]).join(" then ")} answering`,
+      fill: model.providers.length === 0 ? CORAL : GREEN,
       detail:
-        model.backend === "none"
+        model.providers.length === 0
           ? "Nothing is broken. Every route has a fixed answer, and labels the response so nobody mistakes it for a generated one."
-          : `${model.chainLength} model ${model.chainLength === 1 ? "id is" : "ids are"} tried in order, and only for “this id is not served here”. Which ones is deployment topology, so it stays off this screen.`,
+          : `${model.chainLength} model ${model.chainLength === 1 ? "id is" : "ids are"} tried in order, and only for “this id is not served here”. A chain can name both providers and fall between them. Which ids is deployment topology, so it stays off this screen.`,
     },
     {
       key: "mcp",
