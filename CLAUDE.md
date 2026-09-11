@@ -19,8 +19,8 @@ solo (fragments in `localStorage`) and group (a shared pile on the server, behin
 Healthy `npm run check` ends with:
 
 ```
-# tests 306
-# pass 305
+# tests 307
+# pass 306
 # fail 0
 # skipped 1
 ```
@@ -46,15 +46,20 @@ Every backend picks itself by **presence of configuration**, not by a flag. Read
   `.data/`. So a fresh clone runs with no cloud setup. Both implementations answer one set of
   assertions in [test/storeContract.test.ts](test/storeContract.test.ts) — add to that file
   rather than to one store's tests, or the production store goes back to being assumed.
-- **Model** — `MODEL_BACKEND` picks both the provider and how it authenticates: `vertex` and
-  `apikey` are Gemini, `claude-vertex` and `claude-apikey` are Claude. Configuration is read in
+- **Model** — **two axes, and keeping them apart is load-bearing.** `MODEL_BACKEND` says only
+  _how the client authenticates_ (`vertex` = ADC, no key material; `apikey`). `MODEL_CHAIN`
+  says _who answers_, as `provider:model` entries tried in order — so a chain can name both
+  providers and fall between them, and a bare id means Gemini so every old `GEMINI_MODELS`
+  value still works. Crossing the two into one enum is how an earlier version ended up with
+  five values for a 2×2 and no way to express a cross-provider fallback.
+  Configuration is read in
   [server/ai/modelEnv.ts](server/ai/modelEnv.ts), which also honours the old
   `GENAI_BACKEND`/`GEMINI_MODELS` names behind one boot warning — that alias is what lets the
   revision deployed _before_ the rename keep running, since
   [scripts/deploy.sh](scripts/deploy.sh) pushes straight to production. **The API keys keep
   their provider names** (`GEMINI_API_KEY`, `ANTHROPIC_API_KEY`) and must not be folded into
   one neutral variable: two providers means two keys, and one name cannot say which it holds.
-  `getProvider()` returns `null` when unconfigured and **every AI route has a static fallback**
+  `aiAvailable()` is false when nothing is reachable and **every AI route has a static fallback**
   — the app must stay usable with no AI. Preserve that when adding a route, and send the
   fallback through `sendFallback()` from [server/ai/respond.ts](server/ai/respond.ts)
   so it is labelled (`source`, plus a header) rather than passed off as generated. The group
@@ -71,20 +76,29 @@ Every backend picks itself by **presence of configuration**, not by a flag. Read
   delegated to the model — a count of zero has to be right every time.
 - **The model call goes through a provider seam, and a route never names a provider.**
   [server/ai/providers/](server/ai/providers/) holds one adapter per provider behind
-  `ModelProvider`; [client.ts](server/ai/client.ts) only chooses between them. A route says
-  `provider.generate({ prompt, schema })` and gets back parsed `data` plus who answered.
+  `Provider`; [client.ts](server/ai/client.ts) only chooses between them. A route says
+  `generate({ prompt, schema })` and gets back parsed `data` plus who answered.
   Response schemas are plain JSON Schema in [server/ai/schema.ts](server/ai/schema.ts), one per
   call site — **not** inline in the handler, and never in a provider's own dialect. Adding an
-  AI route means adding a schema there; the adapters translate.
+  AI route means adding a schema there. The _same object_ reaches both providers untouched:
+  Gemini's `responseJsonSchema` and Claude's `output_config.format` both take plain JSON
+  Schema, so there is no translation step to keep in step.
+  [test/modelSeam.test.ts](test/modelSeam.test.ts) scans the source to keep it that way — an
+  SDK import or a provider's request vocabulary outside `server/ai/providers/` fails it,
+  because the way a seam dies is somebody adding a route that reaches for the old SDK and it
+  simply working.
   - `ObjectSchema` makes `required` and `additionalProperties: false` non-optional because
     Claude rejects a schema without them and Gemini silently accepts one, so the bug would
     pass every test run against the default backend. `test/schemaShape.test.ts` adds the part
     the type cannot say: that `required` is _complete_.
 - The model chain in [server/ai/providers/chain.ts](server/ai/providers/chain.ts) advances
-  **only** for "this model id is not served here". 400/401/403 are fatal and rethrown with
-  their status; transient 408/429/5xx are the SDKs' backoff to handle, not the chain's. It is
-  generic over both providers on purpose — two copies would drift, and the way they drift is
-  one of them retrying a bad credential against every model in the chain.
+  **only** for "this model is not served here". 400/401/403 are fatal and rethrown with their
+  status; transient 408/429/5xx are the SDKs' backoff to handle, not the chain's. An entry
+  whose provider has no credentials is **skipped without a round trip**, and skipped entries
+  are reported separately from failed ones — "nothing answered" and "nothing was reachable"
+  are different problems. `runChain` takes the chain, the backend and the provider lookup as
+  **arguments**, so every one of those decisions is testable with no SDK, key or env var —
+  same instinct as `coverage.ts`.
 - **An AI route reports a failure with `sendAiError()`**, never by formatting its own. A
   message reaches the caller only if it is a `UserFacingError`; everything else is summarised,
   because Gemini and Firestore errors both name the project, and `/api/session/*` has no

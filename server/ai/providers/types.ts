@@ -1,66 +1,81 @@
 /**
  * One internal shape for "ask a model for a structured answer".
  *
- * The app's central claim is that configuration decides behavior — identity, storage and the
- * AI backend each select themselves by the presence of the configuration they need. For the
- * model that claim used to be true of the *client* and false of the *call*: `getGemini()`
- * abstracted which Gemini you reached, and nothing abstracted that it was Gemini. Nine call
- * sites assembled a raw `@google/genai` request object each.
+ * Every model call in this app is the same call: a prompt, a JSON Schema the answer must
+ * satisfy, and parsed data back. That was already true before there was a seam — it was just
+ * written nine times in `@google/genai`'s dialect, so the app could say *which Gemini* it
+ * reached and not *that it was Gemini*.
  *
- * This is the missing half. A route now says what it wants and what shape it wants it in; a
- * provider decides how to ask for that.
+ * The seam is in-process and deliberately not an HTTP contract: 004 examined three real
+ * gateways and settled on Vertex itself as the gateway, so there is no proxy for a provider
+ * to sit behind. See docs/intents/002-model-provider-seam.md.
  *
- * **What is deliberately not abstracted away.** `GenerateResult` names the provider and the
- * model that answered rather than hiding them, because "which seam took which branch" is a
- * question this codebase has decided repeatedly should be answerable rather than inferred —
- * the same reason `storeBackend()` exists and `source` is on every AI response. A seam that
- * made the provider invisible would be re-solving the problem `/healthz` was built to fix.
- *
- * **An adapter owns its client.** Claude on Vertex is `@anthropic-ai/vertex-sdk`; Gemini is
- * `@google/genai`. There is no common client type to return, and pretending otherwise would
- * mean a union that every caller has to narrow. The client is part of what an adapter hides.
+ * **The two axes are separate, and keeping them separate is the point.** *Which provider
+ * answers* is a property of the chain; *how the client authenticates* is `ModelBackend`. An
+ * earlier version of this file crossed them into one five-value enum — `vertex`, `apikey`,
+ * `claude-vertex`, `claude-apikey`, `none` — which is N × 2 values for a 2 × N question, would
+ * have been six on the next provider, and could not express the thing a chain is for: falling
+ * from one provider to another. Vertex serves both providers under the same ADC, so the auth
+ * is genuinely one question and the provider genuinely another.
  */
 import type { JsonSchema } from "../schema.ts";
 
-/**
- * Which provider answered. Not which backend built the client — `vertex` and `apikey` are
- * both `gemini` here, because a route asking "who wrote this" means the model family, and
- * `/healthz` already reports the backend separately.
- */
+export type { JsonSchema };
+
+/** The two providers this app speaks. Not a plugin point; see 002's non-goals. */
 export type ProviderName = "gemini" | "claude";
 
-export interface GenerateRequest {
-  /** The assembled prompt. Prompts stay pure functions in sessionPrompts/levelSetPrompt. */
+/**
+ * How the client authenticates, which is a separate question from which provider answers.
+ *
+ * `vertex` is ADC as the runtime service account — no key material anywhere, and the client's
+ * data stays inside the project perimeter. Both providers are served under exactly that same
+ * auth, which is the whole reason 004 is a model change and not a security-posture change.
+ */
+export type ModelBackend = "vertex" | "apikey" | "none";
+
+export interface ModelRequest {
+  /** The whole prompt. Prompts are pure functions elsewhere and name no provider. */
   prompt: string;
-  /** The response shape, in plain JSON Schema. See ../schema.ts. */
+  /** What the answer must satisfy. Enforced by the provider, not by parsing and hoping. */
   schema: JsonSchema;
-  /**
-   * Output ceiling. Providers differ on whether this is required (Claude) or implicit
-   * (Gemini), so it is optional here and each adapter applies its own default.
-   */
+  /** Upper bound on the answer. Every schema here describes a small object. */
   maxTokens?: number;
 }
 
-export interface GenerateResult<T> {
-  /** Already parsed. Every call site used to run its own `JSON.parse(response.text || "{}")`. */
+export interface ModelResult<T = unknown> {
   data: T;
+  /** Who actually answered — not who was asked first. */
   provider: ProviderName;
-  /** The model id that actually answered, which may be any entry in the chain. */
   model: string;
 }
 
 /**
- * The default `T` is deliberately a record rather than `unknown`.
+ * One entry in the chain, already split.
  *
- * A route that does not name a shape still gets something spreadable into a response body,
- * which is what every one of them does with it. `unknown` would make the untyped call — the
- * common case, where the schema is the contract — the one that needs a cast.
+ * The chain is provider-qualified (`claude:claude-opus-5`) because a bare id cannot say which
+ * adapter should carry it, and the two providers' id spaces do not overlap in any way a
+ * lookup could exploit.
  */
-export interface ModelProvider {
+export interface ChainEntry {
+  provider: ProviderName;
+  model: string;
+}
+
+/**
+ * What an adapter has to do, and deliberately all it has to do.
+ *
+ * `configured` is separate from `generate` so the chain can skip an entry whose provider has
+ * no credentials without spending a round trip to discover it — a chain naming both providers
+ * on a deployment that only has one is a normal state, not an error.
+ */
+export interface Provider {
   readonly name: ProviderName;
-  /** The chain this provider will try, in order. Reported as a length, never as ids. */
-  models(): string[];
-  generate<T extends object = Record<string, unknown>>(
-    req: GenerateRequest,
-  ): Promise<GenerateResult<T>>;
+  /** Whether this provider can be reached at all under the current backend. */
+  configured(backend: ModelBackend): boolean;
+  /**
+   * Asks one specific model. Throws on failure, carrying the upstream HTTP status where the
+   * SDK exposed one — the chain reasons about status and nothing else.
+   */
+  generate(model: string, request: ModelRequest): Promise<unknown>;
 }

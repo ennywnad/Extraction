@@ -1,125 +1,125 @@
 /**
- * Claude behind the same seam.
+ * Claude, through `@anthropic-ai/vertex-sdk` on a deployment and `@anthropic-ai/sdk` locally.
  *
- * **Why this provider and not another.** The reason the deployment runs on Vertex is not that
- * Gemini is the best model; it is that Application Default Credentials mean no key material
- * ever exists in the deployment, and the client's material stays inside the project's own
- * perimeter. Claude on Vertex keeps that property exactly — `AnthropicVertex` takes a project
- * id and a region and authenticates through ADC, with no Anthropic key anywhere. So this is a
- * model change that is *not* also a security-posture change, which is the rare and valuable
- * case, and it is the whole argument in docs/intents/004.
+ * **This is the adapter that makes the seam a seam.** A provider interface with one
+ * implementation behind it is an indirection, not a seam, which is why 002 says it must never
+ * land alone — and Claude is the right thing to prove it with precisely because the two
+ * providers do not agree about anything at the wire: different SDKs, different client types,
+ * different auth objects, different ways of constraining output, different response shapes.
+ * Nothing here could have been faked by renaming a Gemini call.
  *
- * **Two clients, one code path.** `AnthropicVertex` and the first-party `Anthropic` both
- * extend `BaseAnthropic` and expose the same `messages` resource, so the backend decision is
- * made once when the client is built and nothing below it knows which one it got. That mirrors
- * `getGemini()`'s existing vertex/apikey shape rather than inventing a second idiom: Vertex
- * for the deployment, a key for the contributor with no gcloud setup.
+ * **On Vertex there is no key.** `AnthropicVertex` takes a project and a region and
+ * authenticates through ADC as the runtime service account — exactly the triple the Gemini
+ * Vertex branch already resolved. That is 004's whole argument: swapping the model does not
+ * touch the security posture, because the client's data never leaves the project perimeter
+ * and no key material exists in the deployment either way.
  *
- * **Structured output is the whole premise.** Verified GA on Vertex for Claude before this was
- * written — had it been first-party-only, the neutral schema in ../schema.ts would have been a
- * gamble rather than a translation. The schema goes across verbatim; see that file for the two
- * constraints (`additionalProperties: false`, complete `required`) it enforces in the type
- * system precisely because they are fatal here and invisible on Gemini.
+ * Structured outputs are GA on Vertex for both providers, which is the fact the seam rests on.
+ * Verified against the platform availability table rather than assumed — had constrained
+ * decoding been first-party-only for either provider, this file would be a much weaker thing.
  */
 import Anthropic from "@anthropic-ai/sdk";
 import { AnthropicVertex } from "@anthropic-ai/vertex-sdk";
-import { AiCallError } from "../errors.ts";
-import type { JsonSchema } from "../schema.ts";
-import { runChain } from "./chain.ts";
-import type { GenerateRequest, GenerateResult, ModelProvider } from "./types.ts";
+import type { ModelBackend, ModelRequest, Provider } from "./types.ts";
 
-/**
- * One model, not a chain.
- *
- * The chain advances on "this id is not served here", so a second entry is only worth having
- * when it is a *different* model that might be. Padding this with a cheaper Claude would not
- * be a fallback; it would be a silent downgrade of every response in the app, decided here
- * rather than by whoever configured the deployment. `MODEL_CHAIN` sets a longer chain for anyone
- * who wants one.
- */
-export const CLAUDE_DEFAULT_MODELS = ["claude-opus-5"];
+/** What the SDK accepts for a JSON-schema output format: an open record. */
+type SchemaRecord = { [key: string]: unknown };
 
-/**
- * Output ceiling. Hitting it truncates mid-thought and costs a retry, and the largest thing
- * this app asks for is a level set — a summary, a Markdown outline, and three lists, over the
- * whole pile. 16k leaves room for that while staying under the SDK's non-streaming timeout.
- */
-const DEFAULT_MAX_TOKENS = 16000;
+let client: Anthropic | AnthropicVertex | null = null;
+let resolved = false;
 
-/**
- * What this adapter needs from a client, which both of them are.
- *
- * `BaseAnthropic` is the shared superclass but declares no `messages` — that resource is
- * added by each subclass — so the union is the honest common type rather than the base one.
- * Both members expose the same `messages.create`, which is the entire surface used here.
- */
-export type ClaudeClient = Anthropic | AnthropicVertex;
+function build(backend: ModelBackend): Anthropic | AnthropicVertex | null {
+  if (backend === "vertex") {
+    const projectId = process.env.FIRESTORE_PROJECT_ID?.trim();
+    const region = process.env.VERTEX_LOCATION?.trim();
+    if (!projectId || !region) {
+      console.error(
+        "MODEL_BACKEND=vertex requires FIRESTORE_PROJECT_ID and VERTEX_LOCATION; Claude is disabled.",
+      );
+      return null;
+    }
+    // No apiKey argument exists on this constructor. ADC resolves the credentials.
+    return new AnthropicVertex({ projectId, region });
+  }
 
-export function buildVertexClient(projectId: string, region: string): AnthropicVertex {
-  return new AnthropicVertex({ projectId, region });
-}
-
-export function buildApiKeyClient(apiKey: string): Anthropic {
+  const apiKey = process.env.ANTHROPIC_API_KEY?.trim();
+  if (!apiKey || apiKey === "MY_ANTHROPIC_API_KEY") return null;
   return new Anthropic({ apiKey });
 }
 
-/**
- * Pull the JSON out of a response.
- *
- * With `output_config.format` the model's answer arrives as ordinary text that happens to
- * satisfy the schema, so this reads the text block rather than a dedicated field. `parse()`
- * and its `parsed_output` are the Zod-helper path; the neutral schema here is plain JSON
- * Schema, so the parse is ours.
- */
-export function textOf(message: Anthropic.Message): string {
-  const block = message.content.find((b) => b.type === "text");
-  return block?.type === "text" ? block.text : "";
-}
-
-/**
- * A refusal is a real outcome here, and one Gemini does not have.
- *
- * Safety classifiers can decline a request with HTTP 200 and `stop_reason: "refusal"` — no
- * JSON, no error thrown. Left unchecked that reaches `JSON.parse("")` and surfaces as a parse
- * error, which sends whoever is debugging it looking at the schema instead of at the prompt.
- * Server-side `fallbacks` would re-run it on another model, but that parameter is not
- * available on Vertex, so naming the outcome is the honest handling.
- */
-function assertAnswered(message: Anthropic.Message): void {
-  if (message.stop_reason === "refusal") {
-    throw new AiCallError("The model declined to answer this request.");
+function get(backend: ModelBackend): Anthropic | AnthropicVertex | null {
+  if (!resolved) {
+    resolved = true;
+    client = backend === "none" ? null : build(backend);
   }
+  return client;
 }
 
-export function claudeProvider(client: ClaudeClient, models: string[]): ModelProvider {
-  return {
-    name: "claude",
-    models: () => models,
-    async generate<T extends object = Record<string, unknown>>(
-      req: GenerateRequest,
-    ): Promise<GenerateResult<T>> {
-      const { value, model } = await runChain(models, (id) =>
-        client.messages.create({
-          model: id,
-          max_tokens: req.maxTokens ?? DEFAULT_MAX_TOKENS,
-          messages: [{ role: "user", content: req.prompt }],
-          output_config: {
-            // The neutral schema is already the shape this field wants. The cast is the
-            // SDK's open `Record<string, unknown>` accepting a closed interface, not a
-            // reshaping — see ../schema.ts.
-            format: {
-              type: "json_schema",
-              schema: req.schema as unknown as Record<string, unknown>,
-            },
-          },
-        }),
-      );
+/** Test seam, as with the Gemini adapter. */
+export function resetClaude(): void {
+  client = null;
+  resolved = false;
+}
 
-      assertAnswered(value);
-      return { data: JSON.parse(textOf(value) || "{}") as T, provider: "claude", model };
+/**
+ * Every schema in this app describes a small object — a recommendation, ten prompts, a level
+ * set. This is a ceiling against a runaway, not a budget: the answer is schema-constrained, so
+ * the model has nowhere to ramble to.
+ */
+const DEFAULT_MAX_TOKENS = 8192;
+
+/**
+ * The wire shape, as a pure function of the seam's shape — the counterpart to
+ * `geminiRequest`, and the pair is what a test can hold against each other.
+ */
+export function claudeRequest(model: string, request: ModelRequest) {
+  return {
+    model,
+    max_tokens: request.maxTokens ?? DEFAULT_MAX_TOKENS,
+    messages: [{ role: "user" as const, content: request.prompt }],
+    // The counterpart to Gemini's responseJsonSchema, and the *same object* goes into both.
+    // `output_format` is the deprecated spelling; this is the current one. The cast is only to
+    // satisfy the SDK's open-ended record type — the schema is deliberately a closed type so
+    // an author cannot reach for a keyword one of the two providers would silently drop.
+    output_config: {
+      format: { type: "json_schema" as const, schema: request.schema as unknown as SchemaRecord },
     },
   };
 }
 
-/** Re-exported so the seam's schema type is visible to callers building a provider by hand. */
-export type { JsonSchema };
+export const claude: Provider = {
+  name: "claude",
+
+  configured(backend: ModelBackend): boolean {
+    return get(backend) !== null;
+  },
+
+  async generate(model: string, request: ModelRequest): Promise<unknown> {
+    const ai = client;
+    if (!ai) throw new Error("Claude adapter asked to generate with no client");
+
+    const response = await ai.messages.create(claudeRequest(model, request));
+
+    // A refusal is a 200 with no usable content, so it is checked before the content is read
+    // rather than surfacing as a parse error three lines later. Server-side `fallbacks` would
+    // re-run it on another model, but that parameter is not available on Vertex — so naming
+    // the outcome is the honest handling, and the chain then treats it as any other failure.
+    if (response.stop_reason === "refusal") {
+      throw new Error("Claude declined to answer this prompt");
+    }
+
+    const text = response.content
+      .map((block) => (block.type === "text" ? block.text : ""))
+      .join("");
+    return JSON.parse(text || "{}");
+  },
+};
+
+/**
+ * Named only when a chain asks for it.
+ *
+ * The default chain stays Gemini-only on purpose: a default that reached for Claude would
+ * change what an existing deployment does on the next restart, and the seam is meant to make
+ * the provider a decision rather than to make it for anybody.
+ */
+export const CLAUDE_SUGGESTED_MODEL = "claude:claude-opus-5";

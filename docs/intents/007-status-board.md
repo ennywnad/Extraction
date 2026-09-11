@@ -29,8 +29,9 @@ serves it, so the board is a rendering job over one value. `source` /
 
 **The state space got larger, as predicted, and half of it is now real.**
 [004](004-claude-and-the-gcp-model-gateway.md) landed, so "which model answered" is no longer a
-boolean: `model.backend` is one of `vertex`, `apikey`, `claude-vertex`, `claude-apikey` or
-`none`, and `X-Extraction-AI-Provider` names the family per response.
+boolean: `model.backend` says how the client authenticates, `model.providers` lists who the
+chain names and can actually reach, and `X-Extraction-AI-Provider` names the family per
+response.
 [003](003-local-models-in-solo-mode.md) and [006](006-local-assists-before-submit.md) would add
 local, and per-route selection would let them vary within one session.
 
