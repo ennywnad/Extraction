@@ -55,6 +55,8 @@ interface WorkspaceProps {
    * no other position to describe yourself relative to.
    */
   onSaveRosterEntry?: (entry: { name: string; role: string }) => Promise<void>;
+  /** Groups a role label under another voice, or keeps it separate. Absent in solo mode. */
+  onSetRoleGroup?: (label: string, group: string | null) => Promise<void>;
   /**
    * What the pile answered to the fragment this viewer just contributed, and which fragment
    * it answered about. The key is carried because the echo is recomputed on every poll —
@@ -174,6 +176,7 @@ export default function Workspace({
   chorusEnabled = false,
   onChorusToggle,
   onSaveRosterEntry,
+  onSetRoleGroup,
   chorus,
   onChorusDismiss,
   loneIds,
@@ -424,6 +427,7 @@ export default function Workspace({
           session={session}
           viewerEmail={viewerEmail}
           onSave={onSaveRosterEntry}
+          onSetRoleGroup={onSetRoleGroup}
           onClose={() => setShowRoster(false)}
         />
       )}

@@ -31,6 +31,26 @@ export interface AuthorStamp {
 export const FACILITATOR_ROLE = "Facilitator";
 export const CONTRIBUTOR_ROLE = "Contributor";
 
+/**
+ * What one role label counts as when voices are counted. Engagements only.
+ *
+ * Keyed on `roleKey(label)` in `Session.roleGroups`, so every spelling of a label shares one
+ * decision and somebody who joins later typing the same thing inherits it. See
+ * src/utils/voices.ts for why this is a decision people make rather than one the app infers.
+ */
+export interface RoleGroup {
+  /** The label as it was spelled when the decision was made. */
+  label: string;
+  /**
+   * What it counts as. The label's own spelling means somebody looked and kept it separate —
+   * which is a different fact from nobody having looked, and is what stops a suggestion recurring.
+   */
+  group: string;
+  /** Who decided, from the verified identity. Shown to the room; never sent to a model. */
+  by: string;
+  at: string;
+}
+
 export interface Thought {
   id: string;
   text: string;
@@ -74,6 +94,11 @@ export interface Session {
   engagementId?: string;
   /** email -> identity, for rendering attribution. Engagements only. */
   roster?: Record<string, AuthorStamp>;
+  /**
+   * What each role label counts as when voices are counted, keyed on `roleKey(label)`.
+   * Engagements only, and written only through its own route — see `RoleGroup`.
+   */
+  roleGroups?: Record<string, RoleGroup>;
   topic: string;
   intention: string;
   isCustomIntention: boolean;

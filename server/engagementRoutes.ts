@@ -1,6 +1,8 @@
 import { randomUUID } from "node:crypto";
 import express, { type Request, type Response } from "express";
-import type { AuthorStamp, Session, Thought } from "../src/types.ts";
+import type { AuthorStamp, RoleGroup, Session, Thought } from "../src/types.ts";
+import { isDeclaredRole } from "../src/utils/roster.ts";
+import { roleKey } from "../src/utils/voices.ts";
 import { getEngagementStore } from "./store/index.ts";
 import { recordPoll } from "./pollWindow.ts";
 import { CONTRIBUTOR_ROLE, FACILITATOR_ROLE, VALID_MODES } from "./store/shape.ts";
@@ -354,6 +356,49 @@ export function createEngagementRouter() {
     const store = await getEngagementStore();
     await store.upsertRosterEntry(session.id, stamp);
     res.json(stamp);
+  });
+
+  /**
+   * What one role label counts as, for the coverage map's voices. Any member may set it.
+   *
+   * Grouping is tidying a facilitator would usually do between sessions, but the app has no
+   * facilitator to restrict it to — "Facilitator" is a default role anyone can type, and who
+   * reaches a deployment is IAM's question — so it is open to the roster and every decision is
+   * stamped with who made it. Whether it narrows to a facilitator tier is an open question in
+   * docs/intents/011-the-role-brief.md.
+   *
+   * Its own route rather than a `META_FIELDS` entry for two reasons: a whole map patched from one
+   * tab's stale snapshot would silently undo a grouping made in another, and `by` has to come
+   * from the verified identity rather than the body.
+   */
+  router.put("/:id/role-groups", async (req, res) => {
+    const session = await loadOr404(req.params.id, res);
+    if (!session) return;
+    const { email } = identityOf(req);
+    await ensureMember(session, email);
+
+    const label = str(req.body?.label, 120);
+    // The server's defaults are what an undeclared person carries, not a part of the business.
+    // Grouping one — or grouping a real role under one — would count a declaration as nobody's.
+    if (!label || !isDeclaredRole(label)) {
+      return res.status(400).json({ error: "label must be a role somebody declared" });
+    }
+
+    // null clears the decision, returning the label to "nobody has looked at this". A missing
+    // group is not taken to mean the same thing, because a client bug should not erase one.
+    let entry: RoleGroup | null = null;
+    if (req.body?.group !== null) {
+      const group = str(req.body?.group, 120);
+      if (!group) return res.status(400).json({ error: "group is required; send null to clear" });
+      if (!isDeclaredRole(group)) {
+        return res.status(400).json({ error: "A role cannot be grouped under a server default" });
+      }
+      entry = { label, group, by: email, at: new Date().toISOString() };
+    }
+
+    const store = await getEngagementStore();
+    const updated = await store.setRoleGroup(session.id, roleKey(label), entry);
+    res.json({ roleGroups: updated?.roleGroups ?? {} });
   });
 
   return router;

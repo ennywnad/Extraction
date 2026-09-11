@@ -85,7 +85,7 @@ const WORD = /[a-z][a-z0-9'’-]*/g;
  * split words in a pile of English notes, and where it is wrong nobody sees it — every term
  * shown to a human is the surface form somebody typed, never this.
  */
-function stem(word: string): string {
+export function stem(word: string): string {
   const w = word.replace(/['’]s$/, "");
   if (w.length > 4 && w.endsWith("ies")) return `${w.slice(0, -3)}y`;
   if (w.length > 5 && /(?:ss|sh|ch|x|z)es$/.test(w)) return w.slice(0, -2);

@@ -20,6 +20,7 @@ import { encodeSnapshot } from "../utils/shareLink";
 import CompareSettingsModal from "./CompareSettingsModal";
 import CoverageMap from "./CoverageMap";
 import { rosterState } from "../utils/roster";
+import { groupingSuggestions, recountCoverage } from "../utils/voices";
 
 interface ExportPanelProps {
   session: Session;
@@ -54,7 +55,14 @@ export default function ExportPanel({
   // From the level set for whoever generated it, and from the pile for everyone else: the
   // synthesize response goes only to the caller, while the mirrored copy arrives with the
   // next poll. Same value either way — a map of the pile the whole room is watching.
-  const coverage: AreaCoverage[] = levelSet?.coverage ?? session.coverage ?? [];
+  const stored: AreaCoverage[] = levelSet?.coverage ?? session.coverage ?? [];
+  // Recounted against the roster and role groups as they are now. Which area a fragment is in is
+  // the classifier's answer and stays as generated; how many voices are in an area is arithmetic,
+  // and a role declared or a label grouped since then should move it without a regenerate.
+  const { coverage, changed: recounted } = isEngagement
+    ? recountCoverage(session, stored)
+    : { coverage: stored, changed: false };
+  const ungroupedPairs = isEngagement ? groupingSuggestions(session).length : 0;
   // Null in solo mode, where there is no roster and so nothing to qualify.
   const rolesDeclared = session.roster
     ? (({ declared, total }) => ({ declared, total }))(rosterState(session))
@@ -281,6 +289,8 @@ export default function ExportPanel({
           coverage={coverage}
           pileSize={session.thoughts.length}
           rolesDeclared={rolesDeclared}
+          recounted={recounted}
+          ungroupedPairs={ungroupedPairs}
         />
       )}
 

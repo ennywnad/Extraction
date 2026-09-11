@@ -104,3 +104,22 @@ describe("coverage map — voices, when nobody has declared a role", () => {
     assert.match(html, /one voice only/, "the qualifier is trustworthy again");
   });
 });
+
+describe("coverage map — numbers that moved after the level set", () => {
+  const cells = [area({ area: "Systems", status: "partial", fragments: 3, voices: 1 })];
+  const draw = (props: { recounted?: boolean; ungroupedPairs?: number }) =>
+    renderToStaticMarkup(createElement(CoverageMap, { coverage: cells, pileSize: 3, ...props }));
+
+  it("says its numbers are newer than the level set's prose when a recount moved them", () => {
+    // The voices are arithmetic and can be recounted; the conflicts and open questions were
+    // written by a model reading the old labels, and cannot be.
+    assert.match(draw({ recounted: true }), /until it is regenerated/);
+    assert.doesNotMatch(draw({}), /regenerated/);
+  });
+
+  it("says when labels that share a word are still counted apart", () => {
+    assert.match(draw({ ungroupedPairs: 1 }), /1 pair of role labels shares a word and is/);
+    assert.match(draw({ ungroupedPairs: 2 }), /2 pairs of role labels share a word and are/);
+    assert.doesNotMatch(draw({}), /role labels/);
+  });
+});

@@ -66,6 +66,23 @@ describe("engagement stats", () => {
     assert.equal(stats.roles, 1);
   });
 
+  it("counts roles the way the coverage map does: spelling folded, groupings applied", () => {
+    // The board and the map both put this in front of the room. If one folded "Finance" and
+    // "finance" and the other did not, the same room would read as two different sizes.
+    const session = sessionWith({
+      thoughts: [
+        authored("1", "a@x.com", "Finance"),
+        authored("2", "b@x.com", "finance"),
+        authored("3", "c@x.com", "FP&A"),
+        authored("4", "d@x.com", "Legal"),
+      ],
+      roleGroups: {
+        "fp&a": { label: "FP&A", group: "Finance", by: "a@x.com", at: "2026-09-11T10:00:00.000Z" },
+      },
+    });
+    assert.equal(engagementStats(session, null, NOW).roles, 2);
+  });
+
   it("counts modes against the session's own progress map, not a second list", () => {
     // If this counted against a list of modes kept here, adding a mode would silently make
     // the board report "2 of 11" while the app had twelve.

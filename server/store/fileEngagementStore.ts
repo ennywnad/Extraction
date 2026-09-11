@@ -8,7 +8,7 @@
 
 import fs from "node:fs/promises";
 import path from "node:path";
-import type { AuthorStamp, Session, Thought } from "../../src/types.ts";
+import type { AuthorStamp, RoleGroup, Session, Thought } from "../../src/types.ts";
 import type {
   EngagementStore,
   EngagementSummary,
@@ -151,6 +151,19 @@ export class FileEngagementStore implements EngagementStore {
       const session = db[id];
       if (!session) return null;
       session.roster = { ...(session.roster ?? {}), [stamp.email]: stamp };
+      session.updatedAt = new Date().toISOString();
+      return structuredClone(session);
+    });
+  }
+
+  async setRoleGroup(id: string, key: string, group: RoleGroup | null): Promise<Session | null> {
+    return this.mutate((db) => {
+      const session = db[id];
+      if (!session) return null;
+      const groups = { ...(session.roleGroups ?? {}) };
+      if (group) groups[key] = group;
+      else delete groups[key];
+      session.roleGroups = groups;
       session.updatedAt = new Date().toISOString();
       return structuredClone(session);
     });

@@ -19,8 +19,8 @@ solo (fragments in `localStorage`) and group (a shared pile on the server, behin
 Healthy `npm run check` ends with:
 
 ```
-# tests 307
-# pass 306
+# tests 347
+# pass 346
 # fail 0
 # skipped 1
 ```
@@ -29,8 +29,8 @@ The skip is `FirestoreEngagementStore` in
 [test/storeContract.test.ts](test/storeContract.test.ts), which needs an emulator:
 
 ```
-gcloud emulators firestore start --host-port=localhost:8484   # needs a JRE on PATH
-npm run test:firestore                                        # 164 tests, 0 skipped
+gcloud emulators firestore start --host-port=localhost:8484   # needs Java 21+ on PATH
+npm run test:firestore                                        # 359 tests, 0 skipped
 ```
 
 ## Configuration decides behavior
@@ -74,6 +74,14 @@ Every backend picks itself by **presence of configuration**, not by a flag. Read
   call. Don't "simplify" this into an array diff.
 - Coverage arithmetic ([server/ai/coverage.ts](server/ai/coverage.ts)) is deliberately **not**
   delegated to the model — a count of zero has to be right every time.
+  - **A voice is a group of role labels, never a raw string.** Roles are free text, so anything
+    that counts or labels by role goes through `voiceOf` / `resolveVoice` in
+    [src/utils/voices.ts](src/utils/voices.ts): spelling is folded there, and
+    `Session.roleGroups` applies what the room decided a label counts as. Counting `roleOf`
+    directly is how "Finance" and "finance" became two voices — enough to print an area as
+    defined. Grouping is a named human decision, suggested by shared words and **never
+    inferred**; don't "improve" the suggestions into an automatic merge. The status thresholds
+    live beside it, because the map recounts voices in the browser after a regroup.
 - **The model call goes through a provider seam, and a route never names a provider.**
   [server/ai/providers/](server/ai/providers/) holds one adapter per provider behind
   `Provider`; [client.ts](server/ai/client.ts) only chooses between them. A route says

@@ -1,7 +1,7 @@
 # 011 — The role brief: what a consultant learns in a thirty-minute 1:1
 
 **Status:** intent. Not planned, not scheduled — but its mechanical half has landed: roles can
-now be declared, and the stub it describes below is fixed. See [STATUS.md](STATUS.md).
+now be declared, and grouped into the voices the coverage map counts. See [STATUS.md](STATUS.md).
 **Written:** 2026-09-05
 
 ## What
@@ -73,6 +73,16 @@ More than expected on the server, and nothing at all in the UI.
   in [coverage.ts](../../server/ai/coverage.ts) was capped at 2 in a room of any size and is
   not any more. Where nobody has declared, the coverage map and the status board say so rather
   than printing the number as though it meant something.
+- **A voice is a group of labels, not a spelling.** [voices.ts](../../src/utils/voices.ts) folds
+  case, spacing and width before anything is counted, and `Session.roleGroups` records what the
+  room decided each label counts as — filed under another label, or kept separate — with who
+  decided. Any member sets it through `PUT /api/engagement/:id/role-groups`; the roster panel
+  suggests labels that share a word and gives every label a "counts as" choice for the ones no
+  word gives away. Coverage, the board's `roles` tile and the corpus the model reads all resolve
+  through it — the model sees `[Finance / Treasury]`, group first — and the coverage map recounts
+  voices from the persisted fragment ids, so a regroup moves the numbers without a regenerate and
+  the map says when the level set's prose is older than them. Nobody's words are rewritten: the
+  label stays on the roster and on every fragment.
 - **Storage takes it for free.** `upsertRosterEntry` writes a whole `AuthorStamp`, and the
   Firestore implementation writes it at `FieldPath("roster", email)`, so a field added to
   `AuthorStamp` needs no store change and no migration — an old roster entry simply has no brief.
@@ -92,13 +102,12 @@ More than expected on the server, and nothing at all in the UI.
   the others by `str()` in the route — long enough for three sentences, short enough that nobody
   pastes a CV into it. It rides the roster to every viewer with the ordinary poll, as `coverage`
   already does.
-- ~~**A roster surface**, which does not exist.~~ Built — see above. What remains is the brief
-  field on the card that now exists.
 - **A decision about the prompt.** The briefs go into the level set as a preamble — _who is in
   the room and what each role means here_ — before the corpus rather than beside each fragment,
   so the prompt cost is one block per engagement instead of one per fragment. That is a change
   to [levelSetPrompt.ts](../../server/ai/levelSetPrompt.ts) and to nothing else, because prompts
-  are pure functions there.
+  are pure functions there. Role groups give the preamble a natural shape: one entry per voice,
+  with the briefs of the labels gathered under it.
 - **Nothing in solo mode.** A brief describes your position relative to other people. Alone,
   there is no other position, and `AuthorStamp` is absent from solo fragments by design.
 
@@ -113,13 +122,29 @@ More than expected on the server, and nothing at all in the UI.
 - **Is the drift kept?** Overwriting is one field; keeping the history is a small append-only
   list and the thing that makes "what changed about who owns what" answerable at all. The
   argument for versioning is the same one that made `LevelSet.version` worth having.
-- **Are free-text roles allowed to inflate `voices`?** If everyone types their own job title,
-  eight people produce eight roles, every area with two fragments has "2 voices", and `defined`
-  gets easier to reach as the room gets larger. Either the label stays a bounded set chosen from
-  a list (and the brief carries the specificity), or the thresholds in
-  [coverage.ts](../../server/ai/coverage.ts) stop being absolute. This is the question to settle
-  first, because it is the one that can silently corrupt a number the deliverable presents as
-  fact.
+- ~~**Are free-text roles allowed to inflate `voices`?**~~ **Resolved: free text stays, and the
+  room reconciles it.** Neither option this file first listed survived. A bounded list throws
+  away the specificity a role field exists to collect — "FP&A" and "Treasury" are both Finance
+  and the split can matter. Relative thresholds make "defined" easier to reach as a room grows
+  while still counting spellings. Instead: spelling is folded without asking anybody, and
+  everything past spelling is a **named human decision** — grouped under another label, or kept
+  separate — suggested where two labels share a word and never inferred. The limit is stated
+  rather than hidden: shared words can see that "Finance lead" may be Finance, and cannot see
+  that "FP&A" is, which is why every label also carries its own choice. Groups chain (a group is
+  itself a label somebody may type) rather than forming a tree, which covers "all of that is
+  Finance, but this function needs the split" without a hierarchy editor.
+- **Who is the facilitator, and what is different for them?** The app has no such person. It is
+  a default role string anyone can type, the Generate button is not restricted, `Session` does
+  not record who created an engagement, and [planv1](../../planv1/level-set-plan-v2.md) calls
+  `outputFilter` and `cognitiveBiasAudit` "facilitator-owned" and merging duplicates a facilitator
+  act with nothing enforcing either. The owner sees **two or three tiers — facilitator,
+  participant, view-only** — and between-session work (distilling, correcting, unifying) as the
+  facilitator's. Decided for now, while the surfaces are still being developed: **everything is
+  visible to everyone**, role grouping is marked as a facilitator task and open to all, and every
+  grouping is named. Deciding the tiers properly means recording a creator or a facilitator list
+  on the engagement, the app's first in-app permission — which cuts against "who can reach a
+  deployment is entirely IAM" and the roster being attribution rather than authorisation — and a
+  view-only tier needs a read path that does not auto-join. Worth its own intent if taken up.
 - **Who may read whose?** Self-service editing is already decided by the existing route. Whether
   the whole room sees each other's briefs is a different question, and the interesting answer is
   probably yes — a stakeholder reading what everyone else believes they own is most of the value,

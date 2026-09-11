@@ -11,7 +11,7 @@
  */
 
 import { FieldPath, FieldValue, Firestore } from "@google-cloud/firestore";
-import type { AuthorStamp, Session, Thought } from "../../src/types.ts";
+import type { AuthorStamp, RoleGroup, Session, Thought } from "../../src/types.ts";
 import type {
   EngagementStore,
   EngagementSummary,
@@ -176,6 +176,20 @@ export class FirestoreEngagementStore implements EngagementStore {
     await ref.update(
       new FieldPath("roster", stamp.email),
       stamp,
+      "updatedAt",
+      new Date().toISOString(),
+    );
+    return this.getEngagement(id);
+  }
+
+  async setRoleGroup(id: string, key: string, group: RoleGroup | null): Promise<Session | null> {
+    const ref = this.doc(id);
+    if (!(await ref.get()).exists) return null;
+    // The key is a role somebody typed, and "sr. finance / fp&a" is an ordinary one — the same
+    // dotted-path trap as the roster's email keys, so the same FieldPath answer.
+    await ref.update(
+      new FieldPath("roleGroups", key),
+      group ?? FieldValue.delete(),
       "updatedAt",
       new Date().toISOString(),
     );

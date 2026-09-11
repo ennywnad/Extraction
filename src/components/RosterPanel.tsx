@@ -3,6 +3,8 @@ import { motion } from "motion/react";
 import { Users, X, Check, AlertTriangle } from "lucide-react";
 import type { AuthorStamp, Session } from "../types";
 import { isDeclaredRole, rosterState } from "../utils/roster";
+import { resolveVoice, roleKey } from "../utils/voices";
+import RoleGroups from "./RoleGroups";
 
 /**
  * Who is in this engagement, and the one card in the app that is about you.
@@ -30,11 +32,14 @@ export default function RosterPanel({
   session,
   viewerEmail,
   onSave,
+  onSetRoleGroup,
   onClose,
 }: {
   session: Session;
   viewerEmail?: string;
   onSave: (entry: { name: string; role: string }) => Promise<void>;
+  /** Absent means grouping cannot be saved from here, so it is not offered. */
+  onSetRoleGroup?: (label: string, group: string | null) => Promise<void>;
   onClose: () => void;
 }) {
   const { members, declared, total, me } = rosterState(session, viewerEmail);
@@ -152,10 +157,20 @@ export default function RosterPanel({
         </div>
 
         <ul className="p-4 space-y-2">
-          {members.map((m) => (
-            <RosterRow key={m.email} member={m} isMe={m.email === me?.email} />
-          ))}
+          {members.map((m) => {
+            const voice = resolveVoice(session, m.role);
+            return (
+              <RosterRow
+                key={m.email}
+                member={m}
+                isMe={m.email === me?.email}
+                countsAs={voice.key === roleKey(m.role) ? null : voice.name}
+              />
+            );
+          })}
         </ul>
+
+        {onSetRoleGroup && <RoleGroups session={session} onSet={onSetRoleGroup} />}
 
         {/* The honest footer, in the same place and for the same reason as CoverageMap's. */}
         <div className="border-t-3 border-black bg-white px-4 py-3">
@@ -179,7 +194,16 @@ export default function RosterPanel({
   );
 }
 
-function RosterRow({ member, isMe }: { member: AuthorStamp; isMe: boolean }) {
+function RosterRow({
+  member,
+  isMe,
+  countsAs,
+}: {
+  member: AuthorStamp;
+  isMe: boolean;
+  /** The group this member's label was filed under, when it was; their own words stay primary. */
+  countsAs: string | null;
+}) {
   const declared = isDeclaredRole(member.role);
   return (
     <li
@@ -196,6 +220,7 @@ function RosterRow({ member, isMe }: { member: AuthorStamp; isMe: boolean }) {
           className={`block text-[10px] truncate ${declared ? "text-zinc-600" : "text-zinc-500 italic"}`}
         >
           {declared ? member.role : `${member.role} — not declared`}
+          {countsAs && <span className="text-zinc-500"> · counts as {countsAs}</span>}
         </span>
       </span>
       {!declared && (
