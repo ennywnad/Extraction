@@ -8,7 +8,7 @@
  * room except possibly the facilitator's.
  *
  * **A small model is the right model here, not a compromise.** The task is picking one label
- * from a closed set of four or ten. That is what a 23MB sentence embedder is genuinely good at,
+ * from a closed set of four or ten. That is what a small sentence embedder is genuinely good at,
  * and a 32B model is the wrong tool for choosing between `action`, `insight`, `fear` and `goal`
  * — it would be slower, enormous to fetch, and no better at it.
  *
@@ -30,6 +30,14 @@ const LIBRARY = "https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.2.0";
 /**
  * Small, quantised, and trained for exactly this comparison.
  *
+ * **What it actually costs, measured in Chrome against the dev server rather than estimated:**
+ * 26.8MB on the first use of the assist in a browser — 22.1MB of weights from the Hugging Face
+ * CDN over eleven requests, plus 4.8MB of library from jsdelivr over three. About 2 seconds to
+ * the first suggestion on a warm connection, and ~130ms for every one after it in that tab.
+ * Worth writing down because the number decides whether this is reasonable to switch on in a
+ * room: it is a one-off closer to loading a heavy page than to installing something, and it is
+ * paid only by somebody who turned the assist on.
+ *
  * Sentence-transformers checkpoints are fitted so that cosine distance between two pooled
  * outputs means semantic closeness. That is the assumption embedding.ts rests on, so the model
  * has to be one where it holds — a general language model's hidden states do not have that
@@ -47,12 +55,25 @@ function load(): Promise<unknown> {
       // bundler tries to resolve at build time.
       const url = LIBRARY;
       const lib = await import(/* @vite-ignore */ url);
-      return lib.pipeline("feature-extraction", MODEL, {
-        // WebGPU where the browser has it, WASM everywhere else. The fallback is the reason
-        // this backend can be the default: slower, and it still answers.
-        device: hasWebGPU() ? "webgpu" : "wasm",
-        dtype: "q8",
-      });
+      const build = (device: string) =>
+        lib.pipeline("feature-extraction", MODEL, { device, dtype: "q8" });
+
+      // WebGPU where it genuinely works, WASM everywhere else. **Tried rather than detected**,
+      // because asking the question is not the same as getting an answer: a browser can expose
+      // `navigator.gpu`, hand out an adapter, and still fail to stand up a WebGPU backend — a
+      // blocklisted driver, a VM, a headless session, Linux without Vulkan. This started life as
+      // `"gpu" in navigator`, which is true in all of those, and the result was not a slow
+      // assist but a broken one: `no available backend found`, thrown out of the first
+      // suggestion anybody asked for, on precisely the machines the fallback exists for.
+      if (await webGpuUsable()) {
+        try {
+          return await build("webgpu");
+        } catch (err) {
+          console.warn("WebGPU reported itself usable and then was not; falling back to WASM", err);
+        }
+      }
+      // Slower, and it answers. That is the whole reason this backend can be the default.
+      return build("wasm");
     })();
     // A failed load must not be cached as a permanent refusal — a flaky CDN fetch would
     // otherwise disable the assist for the life of the tab with no way back but a reload.
@@ -63,8 +84,34 @@ function load(): Promise<unknown> {
   return pipe;
 }
 
-function hasWebGPU(): boolean {
-  return typeof navigator !== "undefined" && "gpu" in navigator;
+/** The sliver of the WebGPU API this needs, so the probe can be asked without a browser. */
+export interface GpuLike {
+  requestAdapter?: () => Promise<unknown>;
+}
+
+/**
+ * Whether WebGPU is worth *attempting*, which is the strongest thing a probe can honestly say.
+ *
+ * `requestAdapter()` is the real question — it returns null when there is no usable GPU, where
+ * merely reading `navigator.gpu` hands back an object on machines that cannot run a shader. It is
+ * still only a strong hint, which is why `load()` treats a failure after this as ordinary rather
+ * than exceptional and falls back anyway.
+ *
+ * **Takes its world as an argument**, for the reason `runChain` and `chooseAssistant` do: the
+ * decision is the part worth testing and it should not need a GPU, a browser, or a global to be
+ * exercised. Defaults to the real one, so call sites say nothing.
+ */
+export async function webGpuUsable(
+  gpu: GpuLike | undefined = (globalThis.navigator as { gpu?: GpuLike } | undefined)?.gpu,
+): Promise<boolean> {
+  try {
+    if (!gpu?.requestAdapter) return false;
+    return (await gpu.requestAdapter()) != null;
+  } catch {
+    // A driver that refuses rather than declines. Indistinguishable from "no" downstream, and
+    // treating it differently would mean a crash where a slower answer was available.
+    return false;
+  }
 }
 
 const embed: Embedder = async (texts) => {
@@ -98,7 +145,7 @@ export function inPageAssistant(): LocalAssistant {
     async () => {
       // Deliberately not a load. `reachable` runs to decide whether to *offer* the assist, and
       // downloading a model to answer that question would make merely opening the settings cost
-      // 23MB on a conference wifi. What is checked is the only thing that can actually rule it
+      // 27MB on a conference wifi. What is checked is the only thing that can actually rule it
       // out: a browser too old to fetch a module at runtime.
       return typeof window !== "undefined" && typeof WebAssembly !== "undefined";
     },

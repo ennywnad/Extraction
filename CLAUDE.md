@@ -146,7 +146,11 @@ Every backend picks itself by **presence of configuration**, not by a flag. Read
   than one description of the category, and that is worth 13/28 against 18/28; a threshold that
   reads plausible can speak on four drafts in thirty-one. Change either by re-running the set,
   never by reading it. A model's own incantations — nomic's `classification:` task prefix — belong
-  in that runtime's adapter, since the other backend takes none. **The rule is shared and the bar
+  in that runtime's adapter, since the other backend takes none. **Capability is attempted, never
+  detected**: `"gpu" in navigator` is true on a blocklisted driver, in a VM and in a headless
+  session, so the in-page adapter asks `requestAdapter()` _and_ falls back to WASM when the
+  pipeline fails anyway — the presence check shipped once and broke the assist outright on exactly
+  the machines the fallback serves, while working perfectly on a developer laptop. **The rule is shared and the bar
   is not**: `Calibration` on `LocalAssistant` is two numbers swept per backend, because two
   embedders discriminate along different axes — nomic by proportion, MiniLM by distance — and the
   pair that gives one 89% gives the other 73%. That is not the drift the seam prevents; it is one

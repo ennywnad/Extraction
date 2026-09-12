@@ -1,8 +1,9 @@
 # 006 — Local assists before a fragment enters the pile
 
 **Status:** intent, in part — the seam, both backends and the two bounded assists are built, and
-calibrated — both backends, against the same held-out set, to 89% precision. The transport fork
-below is resolved: both, in that order. See [STATUS.md](STATUS.md).
+calibrated — both backends, against the same held-out set, to 89% precision — and the in-page one
+is verified running in a browser. The transport fork below is resolved: both, in that order. See
+[STATUS.md](STATUS.md).
 **Written:** 2026-09-03
 **Depends on:** nothing. See below — this turns out not to need
 [002](002-model-provider-seam.md) or [003](003-local-models-in-solo-mode.md).
@@ -297,11 +298,25 @@ transport was never the hard part. The trust boundary was.
   proportion, MiniLM spreads them out and separates them by distance — so no single pair serves
   both. Identical 18/28 top-1 across two unrelated checkpoints is also the best evidence that the
   exemplars are not overfitted to one model: the labels travel, only the bar is local.
-- **Does any of it work in a browser?** Untested, and now the last real gap. In-page was measured
-  under Node with the checkpoint, quantisation and pooling the adapter asks for, so the _scores_
-  are settled — what has never run is the runtime path: the CDN fetch, the WebGPU and WASM
-  execution providers, and what the first load costs somebody on conference wifi. That needs a
-  browser rather than a sweep.
+- ~~**Does any of it work in a browser?**~~ **Yes, and the fallback it depended on did not.** The
+  device check was `"gpu" in navigator`, which is true on machines with a blocklisted driver, in a
+  VM, in a headless session and on Linux without Vulkan — none of which can stand up a WebGPU
+  backend. The assist threw `no available backend found` on the first press, on exactly the
+  machines the WASM path exists to serve, and invisibly on any laptop where WebGPU works. It now
+  attempts WebGPU after asking `requestAdapter()` and falls back on any failure after that.
+  Verified in Chrome three ways, and driven end to end as a person uses it: "Listen First" into
+  Free Stream, a draft, the button, the chip, and `{"backend":"in-page","tag":"fear"}` on the
+  stored fragment. **The first load costs 26.8MB** — 22.1MB of weights plus 4.8MB of library —
+  about two seconds to the first suggestion and ~130ms after, paid once and only by somebody who
+  switched it on.
+- **Does it work anywhere other than Chrome on a good connection?** Unknown. Safari and Firefox
+  have not run it, and 26.8MB is one measured download rather than a distribution — a cold cache
+  on conference wifi is the case that decides whether this is usable in the room it was designed
+  for.
+- **Do the two localhost gates actually clear?** Still documented rather than tested. Driving the
+  Ollama backend from a browser needs the Chrome local-network permission and `OLLAMA_ORIGINS`,
+  which are one-time human actions. The adapter is measured — against a real model, at 89% — but
+  only ever called from Node.
 
 ## References
 
