@@ -16,6 +16,13 @@ import { decodeSnapshot } from "./utils/shareLink";
 import { Session, Thought, ExtractionMode, InstanceStatus } from "./types";
 import { engagementStats } from "./utils/engagementStats";
 import { setListening } from "./utils/askModel";
+import { setAssists, takeAccepted } from "./local/assist";
+import {
+  DEFAULT_ASSISTS,
+  loadAssistPrefs,
+  saveAssistPrefs,
+  type AssistPrefs,
+} from "./utils/assistPrefs";
 import { lastAnswer, subscribeToAnswers } from "./utils/lastAnswer";
 import { DEFAULT_PREFS, loadPrefs, savePrefs, type BoardPrefs } from "./utils/boardPrefs";
 import { buildIndex, echoFor, tally } from "./utils/chorus";
@@ -275,6 +282,7 @@ export default function App() {
   const [boardSettingsOpen, setBoardSettingsOpen] = useState(false);
   const [boardPrefs, setBoardPrefs] = useState<BoardPrefs>(DEFAULT_PREFS);
   const [chorusPrefs, setChorusPrefs] = useState<ChorusPrefs>(DEFAULT_CHORUS);
+  const [assistPrefs, setAssistPrefs] = useState<AssistPrefs>(DEFAULT_ASSISTS);
   const [themeChoice, setThemeChoice] = useState<ThemeChoice>(DEFAULT_THEME);
   /**
    * The fragment this viewer contributed last, and the only one the pile answers about.
@@ -311,6 +319,15 @@ export default function App() {
     setListening(listening);
   }, [listening]);
 
+  /**
+   * The same arrangement for the local assists, and for the same reason — see
+   * src/local/assist.ts. One effect, so the surfaces and the door cannot disagree about which
+   * assists are on.
+   */
+  useEffect(() => {
+    setAssists(assistPrefs);
+  }, [assistPrefs]);
+
   // Held in refs so the polling effect can read them without resubscribing every render.
   const engagementEtag = useRef<string | null>(null);
   const isEditingRef = useRef(false);
@@ -342,6 +359,7 @@ export default function App() {
 
     setBoardPrefs(loadPrefs());
     setChorusPrefs(loadChorusPrefs());
+    setAssistPrefs(loadAssistPrefs());
     setThemeChoice(loadThemeChoice());
 
     // Group mode is available only when the server says who we are.
@@ -568,6 +586,10 @@ export default function App() {
       timestamp: new Date().toISOString(),
       mode: currentSession.activeMode,
       swipeStatus,
+      // Consumed here because this is the one place a fragment is built, and keyed by the text
+      // so an acceptance cannot follow a draft that has since been rewritten. See
+      // src/local/assist.ts.
+      assist: takeAccepted(text) ?? undefined,
     };
 
     setLastContributed({ id: newThought.id, text });
@@ -731,6 +753,14 @@ export default function App() {
     });
   }, []);
 
+  const handleAssistToggle = useCallback((which: keyof AssistPrefs) => {
+    setAssistPrefs((prev) => {
+      const next = { ...prev, [which]: !prev[which] };
+      saveAssistPrefs(next);
+      return next;
+    });
+  }, []);
+
   const handleChorusToggle = useCallback(() => {
     setChorusPrefs((prev) => {
       const next = { enabled: !prev.enabled };
@@ -881,6 +911,8 @@ export default function App() {
               listening={listening}
               onListeningChange={handleListeningChange}
               chorusEnabled={chorusPrefs.enabled}
+              assistPrefs={assistPrefs}
+              onAssistToggle={handleAssistToggle}
               onChorusToggle={handleChorusToggle}
               chorus={chorus}
               onChorusDismiss={() => setLastContributed(null)}

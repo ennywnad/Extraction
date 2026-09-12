@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Mic, MicOff, AlertCircle, Sparkles, Send } from "lucide-react";
 import { Thought } from "../../types";
+import AssistBar from "../AssistBar";
 
 interface FreeStreamProps {
   topic: string;
@@ -150,6 +151,11 @@ export default function FreeStream({ topic, onAddThought }: FreeStreamProps) {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Between the box and the submit button, which is where docs/intents/006 argues a filing
+          decision belongs: after you have written, as you are about to submit, and never
+          hovering while you type. */}
+      <AssistBar text={text} />
 
       <div className="flex justify-between items-center">
         <span className="text-[11px] text-slate-400">

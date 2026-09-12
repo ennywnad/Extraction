@@ -20,7 +20,7 @@ export type { AreaCoverage, AreaStatus };
  */
 export function computeCoverage(
   session: Session,
-  areas: string[],
+  areas: readonly string[],
   classification: Record<string, string>,
 ): AreaCoverage[] {
   const present = new Set(session.thoughts.map((t) => t.id));

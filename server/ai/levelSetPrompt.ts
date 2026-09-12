@@ -1,19 +1,9 @@
 import type { Session } from "../../src/types.ts";
 import { renderCorpus, roleBriefs, rolesPresent } from "./corpus.ts";
+// Shared with the browser, which scores a draft against the same ten before submission.
+import { LEVEL_SET_AREAS } from "../../src/utils/levelSetAreas.ts";
 
-/** The areas a level set is assessed against. Stable, so coverage counts are comparable. */
-export const LEVEL_SET_AREAS = [
-  "Business processes in scope",
-  "Current-state systems & integrations",
-  "Operating model & ownership",
-  "Data & reporting",
-  "People, roles, change impact",
-  "Success measures",
-  "Security, compliance & residency",
-  "Risks & dependencies",
-  "Timeline & milestones",
-  "Commercials & funding envelope",
-];
+export { LEVEL_SET_AREAS };
 
 /**
  * Assigns every fragment to an area. Bounded label set, one fragment at a time — the kind of

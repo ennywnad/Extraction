@@ -32,8 +32,14 @@ interesting part — see [Degradation is declared](#degradation-is-declared).
 
 ## The AI layer
 
-All model calls are proxied server-side under `/api/session/*` and `/api/engagement/*`, so no
-credential ever reaches the browser. Four things are worth reading the code for:
+Every model call that involves the pile is proxied server-side under `/api/session/*` and
+`/api/engagement/*`, so no credential ever reaches the browser. The one exception proves the
+rule rather than bending it: an optional local assist, off by default, runs a small model **on
+the reader's own machine against their own unsubmitted draft** — see
+[docs/intents/006](docs/intents/006-local-assists-before-submit.md). That is a client-side model
+call, so the sentence above had to be narrowed rather than quietly contradicted; the _reason_
+behind the rule is untouched, because a runtime on localhost or in the page has no credential to
+expose and never sees anybody else's fragment. Four things are worth reading the code for:
 
 **Schema-constrained decoding, not prompt-and-hope.** Every route sends a `responseSchema` with
 `responseMimeType: "application/json"`, so the shape is enforced during decoding rather than
