@@ -124,6 +124,25 @@ export interface Session {
   intention: string;
   isCustomIntention: boolean;
   status: "intake" | "intention" | "recommendation" | "active" | "review" | "exported";
+  /**
+   * The room is writing and the app is deliberately not answering. Absent means it is.
+   *
+   * **A field rather than a seventh `status`.** It is orthogonal to every value `status` holds: a
+   * listening session is `active` — people are contributing. Folded into that union it would have
+   * to be re-entered afterwards as whatever the status would otherwise have been, and every
+   * switch on `status` would need a case meaning "and also still active".
+   *
+   * **Distinct from `aiEnabled`, which is a fact about the deployment** (see `InstanceStatus`).
+   * The interesting configuration is a fully-configured instance staying quiet on purpose, so the
+   * two must never be read as one: the banner for an accident is a warning, and the banner for a
+   * choice is a label. See docs/intents/005-listening-mode.md.
+   *
+   * **Per engagement rather than per contributor.** The state exists so a room can be briefed
+   * while it writes, and the suppression has to be a fact the pile carries — otherwise a
+   * facilitator could not quiet a room somebody else opened, and one person would be the only
+   * one hearing nothing back.
+   */
+  listening?: boolean;
   activeMode: ExtractionMode;
   thoughts: Thought[];
   modeProgress: Record<ExtractionMode, number>; // How many items generated or interaction step

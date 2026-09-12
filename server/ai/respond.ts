@@ -10,8 +10,8 @@
  * So the substitution is declared rather than silent: `source` on the body for the app, and a
  * header for everything that never parses the body — curl, a proxy log, a smoke test.
  */
-import type { Response } from "express";
-import { isRateLimited } from "./client.ts";
+import type { Request, Response } from "express";
+import { aiAvailable, isRateLimited } from "./client.ts";
 import type { ModelResult, ProviderName } from "./providers/types.ts";
 
 export type AiSource = "model" | "fallback";
@@ -68,8 +68,42 @@ export function sendGenerated<T extends object>(res: Response, body: T, provider
 }
 
 /**
- * A response the server substituted because no model is configured. `notice` is written for a
- * human reading the response, not for the UI, which has its own banner driven by /healthz.
+ * Whether a prompting route answers out of its own static set instead of asking a model.
+ *
+ * Two reasons, one decision, because the answer is the same body either way. `!available` is the
+ * accident this module exists for: nothing is reachable, so there is nothing to ask. `listening`
+ * is its opposite — a fully-configured deployment that has been asked to stay quiet while a room
+ * writes into the pile, which is the state docs/intents/005-listening-mode.md names. Both are
+ * labelled `fallback` by `sendFallback` below, because "a model did not write this" is the fact
+ * a response has to declare; *why* it did not is a fact about the session, and the workspace is
+ * where a person is told which of the two they are in.
+ *
+ * **Synthesis does not go through this.** Listening silences what the app says unasked — prompts,
+ * questions, brackets — and a level set is the one model call somebody has to click for, which
+ * is what "no synthesis until someone asks for it" means.
+ *
+ * **`=== true` rather than a truthy read**, for the reason `sanitizeMetaPatch` refuses to store a
+ * non-boolean `listening`: those two are the pair that has to agree. A caller sending `"yes"` gets
+ * a session that says nothing is quiet, so the routes must not then be quiet.
+ *
+ * **`available` is a parameter with the production wiring as its default**, the same instinct as
+ * `runChain` taking its providers as arguments. Without a key `aiAvailable()` is false, which
+ * swallows the listening half of this condition — so the test suite, which has no key by design,
+ * could not otherwise see it at all.
+ */
+export function servesFallback(req: Pick<Request, "body">, available = aiAvailable()): boolean {
+  return (req.body as { listening?: unknown } | undefined)?.listening === true || !available;
+}
+
+/**
+ * A response the server substituted rather than asked a model for — see `servesFallback` for the
+ * two reasons. `notice` is written for a human reading the response, not for the UI, which has
+ * its own banner: /healthz drives the one for a misconfigured deployment and `Session.listening`
+ * the one for a room that asked for quiet.
+ *
+ * The notice names both states because this function cannot tell them apart and should not have
+ * to: the body it returns is the same one either way, and the field a caller branches on —
+ * `source` — says the part that matters.
  */
 export function sendFallback<T extends object>(res: Response, body: T) {
   res.setHeader(HEADER, "fallback");
@@ -77,7 +111,7 @@ export function sendFallback<T extends object>(res: Response, body: T) {
     ...body,
     source: "fallback" satisfies AiSource,
     notice:
-      "AI is not configured on this server, so this response is a fixed placeholder and is not tailored to the session. See GENAI_BACKEND in .env.example.",
+      "This is a fixed placeholder rather than a generated response, so it is not tailored to the session. Either no model is configured on this server (see MODEL_BACKEND in .env.example) or this session asked the app to stay quiet.",
   });
 }
 

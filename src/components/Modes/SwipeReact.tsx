@@ -10,6 +10,7 @@ import {
   Sparkles,
   RefreshCw,
 } from "lucide-react";
+import { askModel } from "../../utils/askModel";
 import { recordAnswer } from "../../utils/lastAnswer";
 import { Thought } from "../../types";
 
@@ -66,10 +67,9 @@ export default function SwipeReact({ topic, onAddThought, thoughts }: SwipeReact
 
     try {
       // Use devil's advocate endpoint since it generates 3 challenges, or just simulate/fall back cleanly
-      const response = await fetch("/api/session/devils-advocate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ topic, recentThoughts: thoughts.slice(0, 5) }),
+      const response = await askModel("/api/session/devils-advocate", {
+        topic,
+        recentThoughts: thoughts.slice(0, 5),
       });
       if (response.ok) {
         const data = await response.json();

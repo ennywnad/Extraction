@@ -53,6 +53,7 @@ const META_FIELDS = [
   "modeHistory",
   "modeProgress",
   "status",
+  "listening",
   "topic",
   "intention",
   "synthesizedOutline",
@@ -124,6 +125,12 @@ function sanitizeMetaPatch(body: any) {
     ) {
       continue;
     }
+    // A boolean or nothing. Anything else is dropped rather than coerced, because this one field
+    // is read in two places that must agree: the workspace draws a banner from it, and
+    // `servesFallback` decides from the same value whether a prompting route answers out of its
+    // static set. A truthy string stored here would put the room in a state where the banner
+    // says one thing and the routes do the other.
+    if (key === "listening" && typeof value !== "boolean") continue;
     if (key === "advancedSettings" && value && typeof value === "object") {
       // promptingStyle shapes the questions one person is being asked, so it stays local to
       // each viewer. Persisting it would let one member's switch to a socratic tone change

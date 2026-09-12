@@ -163,6 +163,38 @@ describe("the level-set counter is the server's to write", () => {
   });
 });
 
+describe("quieting the room", () => {
+  it("carries a chosen quiet to everybody, and refuses to be quieted by a non-boolean", async () => {
+    // Listening is the room's state rather than each viewer's, so it has to survive the patch
+    // route and come back on the poll — a facilitator quieting a room they did not open is the
+    // case it exists for. Stored strictly: `servesFallback` reads the same value to decide
+    // whether a prompting route answers from its fixed set, and a coerced string here would
+    // leave the banner saying one thing while the routes did the other.
+    const eng = await newEngagement("kickoff briefing");
+
+    await as(B, `/api/engagement/${eng.id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ listening: true }),
+    });
+    assert.equal((await asJson(A, `/api/engagement/${eng.id}`)).listening, true);
+
+    const res = await as(A, `/api/engagement/${eng.id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ topic: "kickoff briefing", listening: "no" }),
+    });
+    assert.equal(res.status, 200, "the rest of the patch is still a valid one");
+
+    const after = await asJson(A, `/api/engagement/${eng.id}`);
+    assert.equal(after.listening, true, "a string overwrote the room's state");
+
+    await as(A, `/api/engagement/${eng.id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ listening: false }),
+    });
+    assert.equal((await asJson(B, `/api/engagement/${eng.id}`)).listening, false);
+  });
+});
+
 describe("concurrent contribution", () => {
   it("does not lose a fragment added while another contributor held a stale pile", async () => {
     const eng = await newEngagement("stale snapshot");

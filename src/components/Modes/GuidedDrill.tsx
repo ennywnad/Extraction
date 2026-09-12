@@ -11,6 +11,7 @@ import {
   MicOff,
   MessageSquareCode,
 } from "lucide-react";
+import { askModel } from "../../utils/askModel";
 import { recordAnswer } from "../../utils/lastAnswer";
 import { Thought } from "../../types";
 
@@ -121,16 +122,12 @@ export default function GuidedDrill({
   const fetchNextQuestion = async (updatedHistory = qaHistory) => {
     setLoading(true);
     try {
-      const response = await fetch("/api/session/drill-next", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          topic,
-          intention,
-          history: updatedHistory,
-          recentThoughts: thoughts.slice(0, 8),
-          advancedSettings,
-        }),
+      const response = await askModel("/api/session/drill-next", {
+        topic,
+        intention,
+        history: updatedHistory,
+        recentThoughts: thoughts.slice(0, 8),
+        advancedSettings,
       });
 
       if (response.ok) {
@@ -181,17 +178,13 @@ export default function GuidedDrill({
     if (isDialogueMode) {
       setLoading(true);
       try {
-        const response = await fetch("/api/session/drill-clarify", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            topic,
-            intention,
-            history: qaHistory,
-            userComment: currentText,
-            recentThoughts: thoughts.slice(0, 8),
-            advancedSettings,
-          }),
+        const response = await askModel("/api/session/drill-clarify", {
+          topic,
+          intention,
+          history: qaHistory,
+          userComment: currentText,
+          recentThoughts: thoughts.slice(0, 8),
+          advancedSettings,
         });
 
         if (response.ok) {

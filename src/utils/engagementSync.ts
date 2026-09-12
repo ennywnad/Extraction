@@ -11,11 +11,19 @@ const MUTABLE_FIELDS = [
   "swipeStatus",
 ] as const;
 
+/**
+ * Session fields this client may push, and the third copy of that list — `SessionMetaPatch` types
+ * it and `META_FIELDS` in server/engagementRoutes.ts enforces it. A field missing from this one
+ * fails silently and in the most confusing possible way: the update applies optimistically, the
+ * PATCH never carries it, and the refetch below snaps the value back with nothing logged. That is
+ * exactly what `listening` did before test/listening.test.ts started comparing the two lists.
+ */
 const SESSION_META_FIELDS = [
   "activeMode",
   "modeHistory",
   "modeProgress",
   "status",
+  "listening",
   "topic",
   "intention",
   "synthesizedOutline",

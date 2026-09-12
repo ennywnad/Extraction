@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { ShieldAlert, RefreshCw, Send, Check } from "lucide-react";
 import { Thought } from "../../types";
+import { askModel } from "../../utils/askModel";
 import { recordAnswer } from "../../utils/lastAnswer";
 
 interface DevilsAdvocateProps {
@@ -22,13 +23,9 @@ export default function DevilsAdvocate({ topic, onAddThought, thoughts }: Devils
   const fetchChallenges = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/session/devils-advocate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          topic,
-          recentThoughts: thoughts.slice(0, 8),
-        }),
+      const res = await askModel("/api/session/devils-advocate", {
+        topic,
+        recentThoughts: thoughts.slice(0, 8),
       });
       if (res.ok) {
         const data = await res.json();

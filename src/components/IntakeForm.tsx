@@ -18,7 +18,9 @@ import {
   Laptop,
   Coins,
   ClipboardList,
+  Ear,
 } from "lucide-react";
+import { askModel } from "../utils/askModel";
 import { recordAnswer } from "../utils/lastAnswer";
 import { Session, ExtractionMode } from "../types";
 import type { EngagementSummary } from "../utils/engagementAPI";
@@ -218,17 +220,13 @@ export default function IntakeForm({
     const actualIntention = intention === "custom" ? customIntention : intention;
 
     try {
-      const response = await fetch("/api/session/recommend", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          topic,
-          intention: actualIntention || "Unclutter scatter and organize core outline",
-          clarity,
-          nature,
-          timeAvailable,
-          intentType,
-        }),
+      const response = await askModel("/api/session/recommend", {
+        topic,
+        intention: actualIntention || "Unclutter scatter and organize core outline",
+        clarity,
+        nature,
+        timeAvailable,
+        intentType,
       });
 
       if (response.ok) {
@@ -250,8 +248,15 @@ export default function IntakeForm({
     }
   };
 
-  const handleLaunchWithMode = (mode: ExtractionMode) => {
+  /**
+   * `listening` is passed through rather than defaulted, so the only session that starts quiet is
+   * one somebody asked to start quiet. Note that launching into listening never calls
+   * /api/session/recommend — you cannot ask a model which mode to use in a state defined by not
+   * asking a model — which is why the third button below is not a variant of the first.
+   */
+  const handleLaunchWithMode = (mode: ExtractionMode, listening = false) => {
     onStartSession({
+      ...(listening ? { listening: true } : {}),
       topic: topic || "Untitled Extraction Session",
       intention: intention === "custom" ? customIntention : intention || "Unclutter scatter",
       activeMode: mode,
@@ -750,6 +755,17 @@ export default function IntakeForm({
                 >
                   <Sparkles className="w-4 h-4 shrink-0" />
                   Guide Me (Recommend a Mode)
+                </button>
+                <button
+                  disabled={!isFormValid}
+                  onClick={() => handleLaunchWithMode("free_stream", true)}
+                  title="Takes input and gives nothing back: no generated prompts, no questions, nothing asked of a model until you end it"
+                  className={`flex-1 flex justify-center items-center gap-2 px-5 py-3 border-2 border-black bg-frost hover:bg-powder text-black font-display font-black text-xs uppercase tracking-wider transition-all duration-150 shadow-hard-3 hover:shadow-hard-5 ${
+                    !isFormValid ? "opacity-40 cursor-not-allowed" : "cursor-pointer"
+                  }`}
+                >
+                  <Ear className="w-4 h-4 shrink-0" />
+                  Listen First (No Prompts)
                 </button>
                 <button
                   disabled={!isFormValid}
