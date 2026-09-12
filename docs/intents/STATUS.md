@@ -24,12 +24,73 @@ this file only records which pieces of one have become code.
 | [003](003-local-models-in-solo-mode.md)        | Local models in solo mode     | unchanged                                                       |
 | [004](004-claude-and-the-gcp-model-gateway.md) | Claude as a deployment choice | **in part** — built and stubbed; never run against Vertex       |
 | [005](005-listening-mode.md)                   | Listening mode                | **in part** — chosen, honoured, and labelled rather than warned |
-| [006](006-local-assists-before-submit.md)      | Local assists before submit   | **in part** — a seam, two backends, two bounded assists         |
+| [006](006-local-assists-before-submit.md)      | Local assists before submit   | **in part** — built, then calibrated against a real model       |
 | [007](007-status-board.md)                     | Status board                  | **in part** — reported, drawn, live, and every route labelled   |
 | [008](008-deploying-group-mode.md)             | Deploying group mode          | **in part** — three preparatory items; still never deployed     |
 | [009](009-the-deferred-group-surface.md)       | The deferred group surface    | **in part** — the coverage map is built                         |
 | [010](010-model-armor.md)                      | Model Armor at the prompt     | unchanged                                                       |
 | [011](011-the-role-brief.md)                   | The role brief                | **in part** — roles can be declared, grouped and briefed        |
+
+---
+
+## 2026-09-11 — 006, in part: the assist meets a real model, and most of the first guesses were wrong
+
+**Against [006](006-local-assists-before-submit.md), and it is the gap the entry below named
+rather than a new idea.** That entry shipped the seam and said plainly what it could not claim:
+the thresholds were calibrated against score distributions written by hand, because no machine
+the code had run on had an embedding runtime. One `ollama pull nomic-embed-text` later, three of
+the four decisions underneath this feature turn out to have been wrong, and none of them would
+have failed a test.
+
+**The assist would have looked broken rather than careful.** `MIN_RELATIVE_LIFT` shipped at 0.15
+and spoke on **four drafts out of thirty-one**. Real cosine similarities between a short draft
+and a short exemplar cluster far more tightly than invented ones do — exactly the direction the
+code comment guessed, and further than it guessed. Swept against a held-out set it is 0.10, with
+separation moving 0.5 to 0.8, chosen for precision over coverage because declining costs nothing
+and a confident wrong label on somebody's own half-formed thought is the failure the whole design
+is arranged to avoid.
+
+**A label is now several short exemplars rather than one careful description, and that is the
+substantive finding.** A description is a paragraph _about_ a topic, and a one-line draft
+compared against ten paragraphs matches whichever paragraph shares the most topic words — which
+is how "orders get rekeyed by hand between the warehouse system and the finance ledger" came back
+as **Timeline & milestones**. Exemplars are the same length, register and grammatical person as
+the thing being classified, so the comparison is like against like. Measured on a held-out set:
+13/28 for descriptions, **18/28** for exemplars. Scored by best match rather than average,
+because the exemplars for one label are deliberately spread across different ways of saying the
+thing and averaging would punish a label for covering its own ground.
+
+**The model needed to be asked properly.** Nomic's embedders are trained with a task prefix on
+every input and are not robust to its absence. `classification:` on both sides beat no prefix,
+and beat the asymmetric `search_query:`/`search_document:` pair, which is for retrieval and
+treats the draft and the label as different kinds of thing. It lives in the Ollama adapter rather
+than in the shared label layer, because it is a fact about that runtime's model — the in-page
+backend runs a sentence-transformers checkpoint that takes no prefix, and putting this one layer
+up would corrupt its inputs. The seam earned its keep here: a model-specific incantation had
+exactly one correct home and the type system pointed at it.
+
+**The held-out set is the part worth copying.** The first measurement scored 16/16 and was
+worthless, because the same hand had written the exemplars and the test drafts and several were
+near-paraphrases. The real set is twenty-eight drafts from a different engagement entirely — a
+hospital records programme rather than a warehouse ERP — plus three pieces of noise that must be
+refused. That is what took the honest number from an invented 16/16 to 18/28.
+
+**Verified, end to end through the shipped code.** 437 tests, 0 failing, 1 skipped. Driven
+against `nomic-embed-text` through Ollama with the shipped adapter, shipped labels and shipped
+thresholds: top-1 ranking 18/28; it offers a suggestion on 9 of 31; **8 correct, 0 wrong on real
+drafts**, one piece of noise let through ("I honestly do not know what to make of any of this
+yet" → Success measures); 89% precision. So it speaks about one time in three and is right about
+nine times in ten when it does. `npm run build` is clean and the client bundle still carries the
+CDN URL and none of the library.
+
+**What is still not claimed.** The in-page backend has not been through any of this. It runs a
+different checkpoint with a different score distribution, and while the two rules are scale-free
+by construction and should travel, "should" is the word the entry below used about the constants.
+Nobody should say in-page is calibrated until somebody runs this set through it. The sample is
+also small: 89% against 85% is one item, so what the sweep establishes is the region and not the
+decimal. And the numbers above are true of the exemplars _as written_ — adding a
+plausible-sounding one is not a free improvement, it moves every score, and the way to change
+them is to re-run the set rather than to read it.
 
 ---
 

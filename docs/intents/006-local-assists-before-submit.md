@@ -1,7 +1,8 @@
 # 006 — Local assists before a fragment enters the pile
 
-**Status:** intent, in part — the seam, both backends and the two bounded assists are built.
-The transport fork below is resolved: both, in that order. See [STATUS.md](STATUS.md).
+**Status:** intent, in part — the seam, both backends and the two bounded assists are built, and
+calibrated against a real embedding model through Ollama. The transport fork below is resolved:
+both, in that order. See [STATUS.md](STATUS.md).
 **Written:** 2026-09-03
 **Depends on:** nothing. See below — this turns out not to need
 [002](002-model-provider-seam.md) or [003](003-local-models-in-solo-mode.md).

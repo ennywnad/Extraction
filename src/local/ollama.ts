@@ -43,11 +43,28 @@ const MODEL = "nomic-embed-text";
  */
 const TIMEOUT_MS = 4000;
 
+/**
+ * The task prefix this model was trained to be asked with.
+ *
+ * Nomic's embedders are trained with a task prefix on every input, and they are not robust to
+ * its absence: without one the vectors drift toward topic and register, which is measurable
+ * rather than theoretical — the same held-out set scores worse with no prefix and worse again
+ * with the asymmetric `search_query:` / `search_document:` pair, which is for retrieval and
+ * treats the draft and the label as different kinds of thing. `classification:` on both sides is
+ * the symmetric one, and it is what this comparison actually is.
+ *
+ * It lives here rather than in labels.ts because it is a fact about *this runtime's model*, not
+ * about the labels. The in-page backend runs a sentence-transformers checkpoint that takes no
+ * prefix at all, and putting this in the shared layer would corrupt its inputs — which is the
+ * whole reason a prefix is the adapter's business.
+ */
+const TASK_PREFIX = "classification: ";
+
 const embed: Embedder = async (texts) => {
   const res = await fetch(`${ORIGIN}/api/embed`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ model: MODEL, input: texts }),
+    body: JSON.stringify({ model: MODEL, input: texts.map((t) => TASK_PREFIX + t) }),
     signal: AbortSignal.timeout(TIMEOUT_MS),
   });
   if (!res.ok) throw new Error(`Ollama answered ${res.status}`);
