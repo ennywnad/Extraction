@@ -1,4 +1,4 @@
-import type { AuthorStamp, RoleGroup, Session, Thought } from "../../src/types.ts";
+import type { AuthorStamp, RoleGroup, RosterEntry, Session, Thought } from "../../src/types.ts";
 
 /** Fields of a Session that a roster member may update. Never includes thoughts. */
 export type SessionMetaPatch = Partial<
@@ -96,7 +96,7 @@ export interface EngagementStore {
    * membership is the access boundary, so every caller may list every engagement on the
    * instance, and the roster is attribution rather than authorisation.
    */
-  upsertRosterEntry(id: string, stamp: AuthorStamp): Promise<Session | null>;
+  upsertRosterEntry(id: string, entry: RosterEntry): Promise<Session | null>;
 
   /**
    * Sets what one role label counts as, or clears the decision with null. `key` is

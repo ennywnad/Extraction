@@ -193,6 +193,20 @@ function contractSuite(label: string, makeStore: () => Promise<EngagementStore>)
       assert.equal(Object.keys(promoted?.roster ?? {}).length, 2, "an upsert must not add a key");
     });
 
+    it("carries a brief with its entry, and an entry rewritten without one drops it", async () => {
+      // Overwrite, not merge: a brief is optional, so clearing one is an entry that has none.
+      // Firestore replaces the map at a FieldPath and the file store replaces the key — a merge
+      // in either would keep a brief its author had deleted.
+      const { id } = await seed();
+      const briefed = { ...CONTRIBUTOR, role: "Treasury", brief: "Cash positioning and banks." };
+      const session = await store.upsertRosterEntry(id, briefed);
+      assert.deepEqual(session?.roster?.[CONTRIBUTOR.email], briefed);
+
+      const rewritten = await store.upsertRosterEntry(id, { ...CONTRIBUTOR, role: "Treasury" });
+      assert.equal(rewritten?.roster?.[CONTRIBUTOR.email].role, "Treasury");
+      assert.equal(rewritten?.roster?.[CONTRIBUTOR.email].brief, undefined);
+    });
+
     it("sets and clears a role group under a key a person typed", async () => {
       // A role label is free text, and "sr. finance / fp&a" is an ordinary thing to type. A dot
       // is the roster's Firestore trap over again, in a key nobody chose with storage in mind.

@@ -21,6 +21,27 @@ export interface AuthorStamp {
 }
 
 /**
+ * A member of an engagement's roster: their stamp, plus what they wrote about their own position.
+ *
+ * `brief` is here rather than on `AuthorStamp` because a stamp is copied onto every fragment when
+ * it is written, and a brief is a paragraph — first person, about a named person, and expected to
+ * be rewritten. Copied, it would sit on a hundred fragments saying whatever it said at 09:02. So
+ * the roster holds it once, and the route strips it when it stamps. TypeScript cannot enforce
+ * that strip — an entry is assignable to a stamp — so a test does.
+ */
+export interface RosterEntry extends AuthorStamp {
+  /**
+   * What this person owns, what they know that nobody else here does, and where their say stops.
+   * Optional and overwritten rather than versioned. The level set reads it under their role label,
+   * never their name.
+   */
+  brief?: string;
+}
+
+/** Long enough for three sentences, short enough that nobody pastes a CV. Both sides enforce it. */
+export const BRIEF_MAX_LENGTH = 600;
+
+/**
  * The two roles the server assigns when nobody has said otherwise.
  *
  * Here rather than beside the code that stamps them because both sides need them and they
@@ -93,7 +114,7 @@ export interface Session {
    */
   engagementId?: string;
   /** email -> identity, for rendering attribution. Engagements only. */
-  roster?: Record<string, AuthorStamp>;
+  roster?: Record<string, RosterEntry>;
   /**
    * What each role label counts as when voices are counted, keyed on `roleKey(label)`.
    * Engagements only, and written only through its own route — see `RoleGroup`.

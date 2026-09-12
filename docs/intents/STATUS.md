@@ -29,7 +29,66 @@ this file only records which pieces of one have become code.
 | [008](008-deploying-group-mode.md)             | Deploying group mode          | **in part** — three preparatory items; still never deployed |
 | [009](009-the-deferred-group-surface.md)       | The deferred group surface    | **in part** — the coverage map is built                     |
 | [010](010-model-armor.md)                      | Model Armor at the prompt     | unchanged                                                   |
-| [011](011-the-role-brief.md)                   | The role brief                | **in part** — roles can be declared, and grouped            |
+| [011](011-the-role-brief.md)                   | The role brief                | **in part** — roles can be declared, grouped and briefed    |
+
+---
+
+## 2026-09-11 — 011, in part: the brief, and the one place it must not be copied
+
+**Against [011](011-the-role-brief.md), and it is the half that entry below left for later:** the
+paragraph behind the label. Picked from this log as the next increment because it goes straight
+at the line 011 calls the most useful in the deliverable — _which role is best placed to answer
+this_ — which the model was answering from a bare `[Finance]`.
+
+**Two of its open questions were put to the owner rather than guessed**, because the last two
+answers 011 listed did not survive that. Overwrite rather than keep history, and briefs reach the
+model keyed by role rather than by name. A third was folded in on 011's own reasoning: the whole
+room reads each other's briefs, read-only.
+
+**The finding that shaped it was in the route, not the prompt.** 011 said to put `brief` on
+`AuthorStamp`. `POST /thoughts` stamps a fragment with the roster entry `ensureMember` returns,
+by reference. A brief on the stamp would have been copied, as first-person text about a named
+person, onto every fragment that person wrote. Each copy would keep what the brief said at the
+time, in a pile that is kept for good. So it is a field of `RosterEntry`, the roster's own type.
+The type cannot hold the line by itself, because an entry is assignable to a stamp, so `stampOf`
+picks the three fields and a route test asserts no fragment carries a brief.
+
+**What the model reads.** One block ahead of the corpus, one line per brief, labelled exactly as
+that role's fragments are — `[Finance / FP&A]` — so a brief joins what the role said by the same
+token. Two rules sit beside it. A brief is **not a fragment**: it counts towards no coverage and
+is no side of a conflict, or the prose would contradict the arithmetic it is told to treat as
+fact. And a brief under a server default is left out, because against the corpus it would
+describe every `[Contributor]` fragment in the room. The block is absent entirely when nobody
+wrote one, so a room that skips briefs gets the prompt it had before.
+
+**Clearing had to be expressible.** A name or role left out of a save is kept, which is right for
+fields everybody has. A brief is optional, so absent keeps it and an empty string clears it. The
+store contract pins the storage half: an entry rewritten without a brief has none, in both stores.
+
+**Verified.** 358 tests, 0 failing, 1 skipped (the Firestore contract, as designed); 11 more than
+the entry below. Mutation-checked: with `stampOf` removed from the fragment write, exactly one
+test fails — "keeps a brief on the roster and off every fragment" — and the line was restored by
+edit. Driven in headless Chromium against a keyless dev server, 17 of 17 checks, no browser
+errors. It covered writing a brief and seeing it stored with its newlines, a fragment written
+afterwards carrying none, a second person reading it with no way to edit it, and emptying the box
+clearing it without touching the role. It also checked that a poll carrying somebody else's brief
+in did not wipe the half-typed text of the person writing theirs. The level-set prompt was then
+built from the session the server stored rather than from a fixture. It carried both declared
+briefs by role, no names, and not the brief filed under a default. Looked at in both themes. No
+synthesis was attempted and no token was spent. Driving found nothing the suite had not; the one
+failure was a selector in the drive script.
+
+**Not run against Firestore.** The contract case is written for both stores, but this machine has
+no Java runtime, so the emulator would not start. The Firestore store replaces the map at a
+`FieldPath` on upsert, which is the behaviour the case asserts. The count in
+[CLAUDE.md](../../CLAUDE.md) — 371 — is the existing suite plus one contract case, by construction
+rather than observed.
+
+**What it deliberately did not do.** No history, no note when the level set is older than a
+brief, and nothing that points at two briefs claiming the same ground. That last one is the
+finding 011 argues for, and doing it without a model would be the kind of inference
+[voices.ts](../../src/utils/voices.ts) refuses to make, so it is recorded as a decision to take
+rather than built. No facilitator tier. 011's row is narrower, not closed.
 
 ---
 

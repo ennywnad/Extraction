@@ -34,6 +34,24 @@ function voiceLabel(session: Session, role: string): string {
 }
 
 /**
+ * What members wrote about their own position, one line each, labelled exactly as their fragments
+ * are in `renderCorpus` — so the model joins a brief to what that role said by the same token.
+ *
+ * Never by name, for `renderCorpus`'s reason: a brief is the one place a named person describes
+ * themselves, and the deliverable goes back to them. Two people under one label are two
+ * unattributed lines under it.
+ *
+ * Declared roles only. A brief filed under a server default would read as describing every
+ * fragment labelled [Contributor] — which is everybody who has not declared.
+ */
+export function roleBriefs(session: Session): string[] {
+  return Object.values(session.roster ?? {})
+    .filter((m) => m.brief?.trim() && isDeclaredRole(m.role))
+    .map((m) => `- [${voiceLabel(session, m.role.trim())}] ${m.brief!.replace(/\s+/g, " ").trim()}`)
+    .sort();
+}
+
+/**
  * The voices present, for prompts that reason about who has spoken. A group lists the labels
  * gathered under it, so "Finance" in the corpus is known to mean FP&A and Treasury here.
  */

@@ -1,7 +1,7 @@
 # 011 — The role brief: what a consultant learns in a thirty-minute 1:1
 
-**Status:** intent. Not planned, not scheduled — but its mechanical half has landed: roles can
-now be declared, and grouped into the voices the coverage map counts. See [STATUS.md](STATUS.md).
+**Status:** intent, mostly built. Roles can be declared, grouped into the voices the coverage map
+counts, and given a brief the level set reads. See [STATUS.md](STATUS.md).
 **Written:** 2026-09-05
 
 ## What
@@ -53,13 +53,14 @@ coverage arithmetic counts are, in the app as it stands, never actually set by a
 
 ## What the code already supports
 
-More than expected on the server, and nothing at all in the UI.
+All of the mechanics. What is left is judgement about what to do with briefs once people have
+written them.
 
-- **The route exists.** `PUT /api/engagement/:id/roster/me` in
-  [engagementRoutes.ts](../../server/engagementRoutes.ts) already lets a participant set their
-  own `name` and `role` and nobody else's — self-service is decided, and the identity comes from
-  the verified stamp rather than the body. A brief would be a third field on the same route, with
-  the same rule.
+- **The route takes a brief.** `PUT /api/engagement/:id/roster/me` in
+  [engagementRoutes.ts](../../server/engagementRoutes.ts) lets a participant set their own `name`,
+  `role` and `brief` and nobody else's — the identity comes from the verified stamp rather than the
+  body. A brief left out of a save is kept and an empty one clears it, because unlike a name or a
+  role it is optional; it is capped at `BRIEF_MAX_LENGTH` (600) on both sides.
 - **The client calls it now.** `updateMyRosterEntry` in
   [engagementAPI.ts](../../src/utils/engagementAPI.ts) was written and unused until
   [RosterPanel](../../src/components/RosterPanel.tsx) reached it. The optional `role` on
@@ -83,45 +84,53 @@ More than expected on the server, and nothing at all in the UI.
   voices from the persisted fragment ids, so a regroup moves the numbers without a regenerate and
   the map says when the level set's prose is older than them. Nobody's words are rewritten: the
   label stays on the roster and on every fragment.
-- **Storage takes it for free.** `upsertRosterEntry` writes a whole `AuthorStamp`, and the
-  Firestore implementation writes it at `FieldPath("roster", email)`, so a field added to
-  `AuthorStamp` needs no store change and no migration — an old roster entry simply has no brief.
-- **The pile's confidentiality rule already covers it.** `renderCorpus` labels fragments by role
-  and never by name, deliberately, so that model-authored characterisations of named individuals
-  stay out of a circulated document. A brief is written in the first person about a named person,
-  so it is exactly the input that rule exists to constrain — see the open questions.
-- **The surface exists, and it is where the brief would go.** `RosterPanel` lists the members
-  and gives each person an editable card for their own name and role. This intent's remaining
-  work is the brief itself — a third field on that card, a prompt decision, and the question of
-  whether history is kept — rather than the member list, which was most of the work and is
-  built.
+- **The brief is on the roster entry and never on a fragment.** It is a field of `RosterEntry` in
+  [types.ts](../../src/types.ts), the roster's own type, not of `AuthorStamp` — because a stamp
+  is copied onto every fragment when it is written, and a copied brief would sit on the pile
+  saying whatever it said at the time. An entry is assignable to a stamp, so the type cannot hold
+  that line; `stampOf` in the route picks the three fields, and a route test fails if a fragment
+  ever carries a brief. `upsertRosterEntry` replaces the whole entry in both stores, so a brief
+  needs no store method and no migration — an old entry simply has none — and the store contract
+  proves that rewriting an entry without one drops it, against Firestore as well as the file.
+- **The model reads briefs by role, never by name.** `roleBriefs` in
+  [corpus.ts](../../server/ai/corpus.ts) renders one line per brief, labelled exactly as that
+  role's fragments are — `[Finance / FP&A]` — so the model joins a brief to what the role said.
+  [levelSetPrompt.ts](../../server/ai/levelSetPrompt.ts) puts them in one block ahead of the
+  corpus, tells the model a brief is not a fragment (it counts towards no coverage and is no
+  side of a conflict) and describes a position rather than a person, and leaves the block out
+  entirely when nobody wrote one. A brief under a server default is left out, because against
+  the corpus it would describe every `[Contributor]` fragment.
+- **The room reads each other's.** `RosterPanel` gives the viewer a brief box under their role,
+  says before they save that everyone can read it and the level set reads it under the role, and
+  shows every member's brief read-only beneath their row.
 
 ## What would have to change
 
-- **A `brief` field on `AuthorStamp`** in [types.ts](../../src/types.ts), optional, capped like
-  the others by `str()` in the route — long enough for three sentences, short enough that nobody
-  pastes a CV into it. It rides the roster to every viewer with the ordinary poll, as `coverage`
-  already does.
-- **A decision about the prompt.** The briefs go into the level set as a preamble — _who is in
-  the room and what each role means here_ — before the corpus rather than beside each fragment,
-  so the prompt cost is one block per engagement instead of one per fragment. That is a change
-  to [levelSetPrompt.ts](../../server/ai/levelSetPrompt.ts) and to nothing else, because prompts
-  are pure functions there. Role groups give the preamble a natural shape: one entry per voice,
-  with the briefs of the labels gathered under it.
+- **Nothing says when the level set is older than the briefs.** The coverage map says when a
+  regroup moved its numbers after synthesis. A brief rewritten after synthesis changes who the
+  deliverable should call best placed to answer, and nothing tells the room. Saying so needs a
+  time on each brief, which overwriting does not keep.
+- **Overlaps and gaps between briefs are left to the level set's prose.** Two briefs claiming
+  the same territory is the day-one finding this file argues for. The model now reads both and
+  may say so, but nothing in the app points at it. Pointing at it without a model would be a
+  heuristic over free text — the inference [voices.ts](../../src/utils/voices.ts) refuses to
+  make about roles — so which of those it should be is worth deciding before building either.
 - **Nothing in solo mode.** A brief describes your position relative to other people. Alone,
   there is no other position, and `AuthorStamp` is absent from solo fragments by design.
 
 ## Open questions
 
-- **Does the brief cross the model boundary as written, or role-anonymised?** The pile is
-  role-labelled specifically so the model never characterises a named individual. A brief is a
-  named person describing themselves — consented and first-person, which is different from being
-  characterised, but it is still the one place named humans would enter a prompt. The cheap
-  answer is to send briefs keyed by role and never by name, which preserves the existing rule
-  exactly and costs nothing.
-- **Is the drift kept?** Overwriting is one field; keeping the history is a small append-only
-  list and the thing that makes "what changed about who owns what" answerable at all. The
-  argument for versioning is the same one that made `LevelSet.version` worth having.
+- ~~**Does the brief cross the model boundary as written, or role-anonymised?**~~ **Resolved: as
+  written, keyed by role.** The pile is role-labelled so the model never characterises a named
+  individual, and a brief is the one place a named person describes themselves. Each brief enters
+  the level set as a line under its role label and never a name, which keeps that rule exactly.
+  The rule cannot stop somebody naming themselves inside their own brief; the prompt says a brief
+  describes a position and not a person, the same instruction the corpus already relies on.
+- ~~**Is the drift kept?**~~ **Resolved for now: overwritten.** One optional field that rides
+  the roster was the smallest thing that put briefs in front of the model. History stays
+  possible without a migration, since an entry with no list simply has none. The argument for it
+  is unchanged: it is what would make "what changed about who owns what" answerable, for the same
+  reason `LevelSet.version` is worth having.
 - ~~**Are free-text roles allowed to inflate `voices`?**~~ **Resolved: free text stays, and the
   room reconciles it.** Neither option this file first listed survived. A bounded list throws
   away the specificity a role field exists to collect — "FP&A" and "Treasury" are both Finance
@@ -145,11 +154,10 @@ More than expected on the server, and nothing at all in the UI.
   on the engagement, the app's first in-app permission — which cuts against "who can reach a
   deployment is entirely IAM" and the roster being attribution rather than authorisation — and a
   view-only tier needs a read path that does not auto-join. Worth its own intent if taken up.
-- **Who may read whose?** Self-service editing is already decided by the existing route. Whether
-  the whole room sees each other's briefs is a different question, and the interesting answer is
-  probably yes — a stakeholder reading what everyone else believes they own is most of the value,
-  and it is what makes an overlap visible to the two people who have it rather than only to the
-  consultant.
+- ~~**Who may read whose?**~~ **Resolved: everyone, read-only.** Editing is self-service by the
+  route. Every brief is shown under its member's row, and the card says so before anybody saves.
+  A stakeholder reading what everyone else believes they own is most of the value, and it is what
+  makes an overlap visible to the two people who have it rather than only to the consultant.
 - **Does a stated boundary belong here at all?** "What I do not own" is arguably a second field
   with a different purpose: the brief is context for the model, a boundary is a claim the group
   can be shown and asked to ratify. Worth its own intent if it grows past a sentence.

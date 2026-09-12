@@ -54,7 +54,7 @@ interface WorkspaceProps {
    * Saves this viewer's own roster entry. Absent in solo mode, where there is no roster and
    * no other position to describe yourself relative to.
    */
-  onSaveRosterEntry?: (entry: { name: string; role: string }) => Promise<void>;
+  onSaveRosterEntry?: (entry: { name: string; role: string; brief: string }) => Promise<void>;
   /** Groups a role label under another voice, or keeps it separate. Absent in solo mode. */
   onSetRoleGroup?: (label: string, group: string | null) => Promise<void>;
   /**

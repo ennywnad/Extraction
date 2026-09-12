@@ -12,15 +12,21 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import RosterPanel from "../src/components/RosterPanel.tsx";
 import {
+  BRIEF_MAX_LENGTH,
   CONTRIBUTOR_ROLE,
   FACILITATOR_ROLE,
-  type AuthorStamp,
+  type RosterEntry,
   type Session,
 } from "../src/types.ts";
 
-const stamp = (email: string, name: string, role: string): AuthorStamp => ({ email, name, role });
+const stamp = (email: string, name: string, role: string, brief?: string): RosterEntry => ({
+  email,
+  name,
+  role,
+  ...(brief ? { brief } : {}),
+});
 
-const sessionWith = (members: AuthorStamp[]): Session =>
+const sessionWith = (members: RosterEntry[]): Session =>
   ({
     id: "e1",
     engagementId: "e1",
@@ -78,7 +84,33 @@ describe("roster panel", () => {
     // relying on the caller having read that route.
     const html = render(mixed, "a@x.com");
     assert.equal((html.match(/<input/g) ?? []).length, 2, "name and role, for the viewer only");
-    assert.match(html, /Save my role/);
+    assert.equal((html.match(/<textarea/g) ?? []).length, 1, "and one brief, the viewer's");
+    assert.match(html, /Save my entry/);
+  });
+
+  it("shows everybody's brief to the room, read-only", () => {
+    // What the others believe they own is where an overlap becomes visible to the two people
+    // who have it, rather than only to the consultant.
+    const room = sessionWith([
+      stamp("a@x.com", "Ana", "Owns billing"),
+      stamp("b@x.com", "Bo", "Platform", "I run the platform team and hold the deploy keys."),
+    ]);
+    const html = render(room, "a@x.com");
+    assert.match(html, /I run the platform team and hold the deploy keys\./);
+    assert.doesNotMatch(html, /<textarea[^>]*>I run the platform/, "never in an editable box");
+  });
+
+  it("prefills your own brief, capped where the server caps it", () => {
+    const html = render(
+      sessionWith([stamp("a@x.com", "Ana", "Owns billing", "Billing and refunds.")]),
+      "a@x.com",
+    );
+    assert.match(html, /Billing and refunds\.<\/textarea>/);
+    assert.match(html, new RegExp(`maxlength="${BRIEF_MAX_LENGTH}"`, "i"));
+  });
+
+  it("says who reads a brief, because it is the one field about yourself", () => {
+    assert.match(render(mixed, "a@x.com"), /under your role, never your name/);
   });
 
   it("prefills the field with a declared role but never with a default", () => {
@@ -91,7 +123,7 @@ describe("roster panel", () => {
   it("does not offer to edit an entry that does not exist yet", () => {
     const html = render(mixed, "stranger@x.com");
     assert.match(html, /not on this roster yet/);
-    assert.doesNotMatch(html, /Save my role/);
+    assert.doesNotMatch(html, /Save my entry/);
   });
 });
 
