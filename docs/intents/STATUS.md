@@ -33,6 +33,40 @@ this file only records which pieces of one have become code.
 
 ---
 
+## 2026-09-12 — 006: the localhost gates were not gates, and the one real gate is now a procedure
+
+**No code changed.** This entry exists because the entry below states, as a limit on what it
+verified, that "the Ollama backend has never been driven from a browser at all" and names two
+human actions that prevented it. Both halves turned out to be wrong, and a stale limit in this log
+is worse than no limit — it is the sentence the next person would plan around.
+
+**On localhost there are no gates.** A page on `http://localhost:3000` reaching
+`http://localhost:11434` is loopback to loopback, so no permission is involved and no mixed
+content arises; and current Ollama already returns `Access-Control-Allow-Origin` for
+`http://localhost:*` with nothing configured. So the Ollama adapter was driven from a real
+browser with no setup at all: correct on two drafts, correctly declining the lunch noise, ~135ms
+warm. Both backends have now answered in a browser.
+
+**For any other origin the runtime gate is real, and behaves as an allowlist.** Proven with a
+placeholder: a fake Cloud Run origin and a LAN origin both refused, both allowed after
+`OLLAMA_ORIGINS` and a restart, an unlisted origin still refused, localhost unaffected — and the
+preflighted POST verified through a browser from the LAN origin, not only with curl. The machine
+was returned to its baseline afterwards.
+
+**The finding worth keeping is the failure mode, not the recipe.** `osascript -e 'quit app
+"Ollama"'` can fail silently: the PIDs do not change, the variable is never read, and the result
+is indistinguishable from `OLLAMA_ORIGINS` not working. It cost a wrong conclusion here before the
+PIDs were checked. The procedure in 006 now ends by inspecting the running process rather than
+trusting the restart.
+
+**The browser gate could not be reproduced and is not claimed either way.** Chrome 152 allowed a
+private-LAN page to reach loopback in three configurations, including with
+`LocalNetworkAccessChecks` disabled. A private initiator is not a public one, so this says nothing
+about a deployed HTTPS page — which stays untestable until [008](008-deploying-group-mode.md).
+006's paragraph on it is now marked as documentation rather than as something observed.
+
+---
+
 ## 2026-09-11 — 006, in part: it runs in a browser, and the fallback it relied on did not
 
 **Against [006](006-local-assists-before-submit.md), and it closes the last thing the three

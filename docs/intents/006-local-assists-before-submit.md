@@ -168,27 +168,57 @@ Run, and localhost. So every workable design routes through it, and the real que
 Both are the browser calling localhost. That is worth knowing: the transport was never what
 made the larger idea hard.
 
-### Two gates, not one
+### Two gates, not one — and, measured, fewer than two
 
-**The browser gate.** Since Chrome 142 (late October 2025), Local Network Access is
-permission-gated: a page served from a public origin that fetches a loopback or local-network
-address is blocked, and the fetch rejects with a network error, until the user grants a prompt.
-That is a one-time native click rather than a config file, so it is better than it sounds. The
-part that matters most is that permission-gated local requests are **exempt from mixed-content
-checks** — which is the thing that would otherwise kill this outright. A deployed HTTPS page
-_can_ call `http://localhost:11434` once permission is granted.
+Both were written here from documentation. On 2026-09-11 they were exercised against a real
+Ollama on macOS and a real Chrome 152, and the picture is friendlier than this section assumed.
 
-**The runtime gate.** Ollama sends no CORS headers to a browser origin by default — only
-`127.0.0.1` and `0.0.0.0` are permitted — so the preflight fails. It needs
-`OLLAMA_ORIGINS=https://<the app origin>` and a restart.
+**Neither gate applies on localhost, which was the surprise.** A page on `http://localhost:3000`
+calling `http://localhost:11434` is loopback to loopback, so it is not a cross-boundary request
+and no permission is involved; it is also http to http, so mixed content never arises. And Ollama
+already returns `Access-Control-Allow-Origin` for `http://localhost:*` and `http://127.0.0.1:*`
+with nothing configured — the "only `127.0.0.1` and `0.0.0.0`" note below is out of date for
+current builds, at least as to the port. So **local development needs no setup at all**, and the
+in-browser verification of the Ollama adapter was done with both gates untouched.
 
-So a participant's setup is: click Allow, set one environment variable, restart the runtime.
-Fine for a demonstration on one machine. Enough friction that it will not happen spontaneously
-across a room — which is consistent with this being per-user and opt-in, but it does cap how
-far it can spread.
+**The runtime gate is real for any other origin, and is now a tested procedure.** With nothing
+set, a `https://…run.app` origin gets no CORS header and the preflight fails. Setting
+`OLLAMA_ORIGINS` to that origin and restarting fixes it, an origin _not_ in the list stays
+refused — so it is a genuine allowlist, not a blanket open — and localhost keeps working
+alongside. Verified through a browser, not only with curl: the app served from a LAN address made
+the preflighted POST to `/api/embed` succeed and return a suggestion.
 
-Verify both before building: browser behaviour here changed recently and may change again, and
-runtime defaults differ across Ollama, llama.cpp and LM Studio.
+On macOS the app is launched by the GUI and never sees a shell's environment, so `export` does
+nothing and it is `launchctl setenv OLLAMA_ORIGINS "<origin>"` followed by a genuine restart.
+**The trap is worth more than the recipe:** `osascript -e 'quit app "Ollama"'` can fail silently,
+leaving the process untouched, and the result is indistinguishable from the variable not working.
+Check the process rather than the intention:
+
+```sh
+launchctl setenv OLLAMA_ORIGINS "https://<the app origin>"
+pkill -f "Ollama.app/Contents/MacOS/Ollama"; sleep 2; open -a Ollama
+ps eww $(pgrep -f "Resources/ollama serve" | head -1) | tr ' ' '\n' | grep OLLAMA_ORIGINS
+```
+
+Empty output from the last line means the restart did not happen. `launchctl setenv` also does
+not survive a reboot. There is no file-based alternative: `~/.ollama/config.json` holds UI state
+only.
+
+**The browser gate could not be reproduced, and that is not the same as it not existing.** The
+claim above — public origin to loopback is blocked pending a prompt — was tested only by proxy,
+from a private LAN address rather than a public HTTPS one, and Chrome 152 allowed the request in
+three configurations including with `LocalNetworkAccessChecks` disabled. A private initiator is
+not a public one, so this says nothing about the deployed case, which remains the one that
+matters and the one that cannot be tested until there is a deployment. Treat the paragraph above
+as documentation rather than as something observed here.
+
+So a participant's setup is **one environment variable and a restart**, plus possibly a native
+click the first time a deployed page reaches localhost. Still enough friction that it will not
+happen spontaneously across a room — consistent with this being per-user and opt-in — but less
+than this section used to claim, and none of it at all for somebody running the app locally.
+
+Runtime defaults still differ across Ollama, llama.cpp and LM Studio, and none of the above was
+checked against the other two.
 
 ### The option that removes both gates
 
@@ -313,10 +343,17 @@ transport was never the hard part. The trust boundary was.
   have not run it, and 26.8MB is one measured download rather than a distribution — a cold cache
   on conference wifi is the case that decides whether this is usable in the room it was designed
   for.
-- **Do the two localhost gates actually clear?** Still documented rather than tested. Driving the
-  Ollama backend from a browser needs the Chrome local-network permission and `OLLAMA_ORIGINS`,
-  which are one-time human actions. The adapter is measured — against a real model, at 89% — but
-  only ever called from Node.
+- ~~**Do the two localhost gates actually clear?**~~ **On localhost there are no gates**, which
+  is not what this file assumed. Loopback to loopback is not a cross-boundary request, and Ollama
+  already allows `http://localhost:*` with nothing set — so the adapter was driven from a real
+  browser with no setup whatsoever, answering correctly and declining noise. For any other origin
+  the runtime gate is real, and is now a tested procedure with a documented silent failure; see
+  "Two gates, not one" above.
+- **Is the browser gate real for a deployed page?** Genuinely open, and it is the one thing here
+  that cannot be answered without [008](008-deploying-group-mode.md). An attempt to reproduce it
+  from a private LAN address failed — Chrome 152 allowed the request — but a private initiator is
+  not a public one, so that is not evidence either way about `https://…run.app` reaching
+  `http://localhost`.
 
 ## References
 
