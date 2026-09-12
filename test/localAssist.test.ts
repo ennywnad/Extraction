@@ -27,7 +27,7 @@ import AssistBar from "../src/components/AssistBar.tsx";
 import Workspace from "../src/components/Workspace.tsx";
 import type { Session, Thought } from "../src/types.ts";
 import { chooseAssistant, DEFAULT_ORDER } from "../src/local/choose.ts";
-import { inPageAssistant } from "../src/local/inPage.ts";
+import { inPageAssistant, webGpuUsable } from "../src/local/inPage.ts";
 import { ollamaAssistant } from "../src/local/ollama.ts";
 import { cosine, fromEmbedder } from "../src/local/embedding.ts";
 import { AREA_LABELS, TAG_LABELS } from "../src/local/labels.ts";
@@ -262,6 +262,35 @@ describe("chooseAssistant — which runtime answers", () => {
     // Order is a decision, not an accident: probing localhost fires a browser permission prompt,
     // so it must never happen to somebody who has not asked for a local model.
     assert.deepEqual(DEFAULT_ORDER, ["in-page", "ollama"]);
+  });
+});
+
+describe("choosing a device — asked, not assumed", () => {
+  it("says no when the browser has no WebGPU at all", async () => {
+    assert.equal(await webGpuUsable(undefined), false);
+  });
+
+  it("says no when WebGPU is advertised but yields no adapter", async () => {
+    // A blocklisted driver, a VM, a headless session, Linux without Vulkan. `"gpu" in navigator`
+    // is true in every one of them, which is what this used to check — and the result was not a
+    // slow assist but a broken one, throwing "no available backend found" out of the first
+    // suggestion anybody asked for, on exactly the machines the WASM fallback exists to serve.
+    assert.equal(await webGpuUsable({ requestAdapter: async () => null }), false);
+  });
+
+  it("says no when asking for an adapter throws", async () => {
+    assert.equal(
+      await webGpuUsable({
+        requestAdapter: async () => {
+          throw new Error("blocked by policy");
+        },
+      }),
+      false,
+    );
+  });
+
+  it("says yes only when an adapter actually comes back", async () => {
+    assert.equal(await webGpuUsable({ requestAdapter: async () => ({}) }), true);
   });
 });
 

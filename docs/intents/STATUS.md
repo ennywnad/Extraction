@@ -33,6 +33,66 @@ this file only records which pieces of one have become code.
 
 ---
 
+## 2026-09-11 — 006, in part: it runs in a browser, and the fallback it relied on did not
+
+**Against [006](006-local-assists-before-submit.md), and it closes the last thing the three
+entries below all declined to claim.** Every measurement so far had been taken under Node. The
+scores were settled; the _runtime path_ — the CDN import, the WebGPU and WASM execution
+providers, the weights, and what the first load actually costs — had never executed. Driven in
+Chrome through Playwright against the dev server, importing the shipped adapter from the app's own
+origin, so what ran is `src/local/inPage.ts` and not a reimplementation of it.
+
+**The headline is that the fallback was broken, and only in the situation it exists for.** The
+device check was `"gpu" in navigator`. That is true on every machine with a blocklisted driver, in
+a VM, in a headless session, and on Linux without Vulkan — all of which advertise `navigator.gpu`
+and none of which can stand up a WebGPU backend. So the adapter asked for `device: "webgpu"`,
+transformers.js threw `no available backend found`, and the assist died on the first suggestion
+anybody pressed for. Not slow: broken, on exactly the machines the WASM path was written to
+serve, and invisible on a developer laptop where WebGPU works.
+
+**Fixed by trying rather than detecting.** `requestAdapter()` is the real question — it returns
+null where reading `navigator.gpu` hands back an object — but it is still only a strong hint, so
+`load()` attempts WebGPU and falls back to WASM on any failure after it. Both halves matter: the
+probe stops the common case, and the catch covers a driver that passes the probe and fails the
+pipeline. `webGpuUsable` takes its world as an argument, for the reason `runChain` and
+`chooseAssistant` do, so the decision is exercisable with no GPU and no browser — three cases
+pinned, each caught by exactly one test.
+
+**Verified, in Chrome, three ways.** With WebGPU: correct answer, cold 1.9s, warm 127ms. With
+`navigator.gpu` present and yielding no adapter: correct answer via WASM — and demonstrably a
+different code path, since the score comes back 0.8476 against WebGPU's 0.8467, which is two sets
+of numeric kernels rather than a cached result. With `requestAdapter` throwing outright: the same.
+Before the fix the second and third threw.
+
+**What the first load actually costs, measured rather than estimated: 26.8MB.** 22.1MB of weights
+from the Hugging Face CDN over eleven requests, plus 4.8MB of library from jsdelivr over three;
+about two seconds to the first suggestion and ~130ms for each one after it in that tab. The code
+comment claimed 23MB, which was the model and not the page. It is a one-off closer to loading a
+heavy page than to installing something, and it is paid only by somebody who switched the assist
+on — which is the number that decides whether this is reasonable to turn on in a room, so it is
+now written where somebody weighing that will read it.
+
+**And the whole feature was driven as a person uses it**, not just the module: intake, "Listen
+First" into Free Stream, type a draft, press the button, take the chip, submit. The bar labelled
+itself `ON-DEVICE`, answered **fear** for "if the migration slips past March the board will pull
+the funding entirely", and the accepted suggestion arrived on the stored fragment as
+`{"backend":"in-page","tag":"fear"}`. No page errors. It offered a tag and **no area**, which is
+the refusal working: that draft is arguably Timeline, Commercials or Risks, and declining is the
+correct answer rather than a missing feature.
+
+**Verified.** 457 tests, 0 failing, 1 skipped. Mutation-checked three ways on the new probe: a
+reverted presence check, a swallowed throw, and a null adapter treated as usable — each caught by
+exactly one leaf test. Playwright and transformers.js were installed in a scratch directory, so
+the repo's own install is unchanged and still carries no model dependency.
+
+**What is still not claimed.** One browser, one machine, one connection. Safari and Firefox have
+not run this, and neither has a cold cache on bad wifi — the 26.8MB is a measurement of one
+download, not a distribution. The Ollama backend has never been driven from a browser at all: it
+needs the Chrome local-network permission and `OLLAMA_ORIGINS`, both of which are one-time human
+actions this could not perform, so its two gates remain documented rather than tested.
+
+---
+
 ## 2026-09-11 — 005 and 009, in part: the coverage wall, while the room is still writing
 
 **Against [005](005-listening-mode.md)'s last open question and [009](009-the-deferred-group-surface.md)'s
