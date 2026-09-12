@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { GitCommit, Sparkles, RefreshCw, ChevronRight } from "lucide-react";
 import { Thought, BinaryPair } from "../../types";
+import { recordAnswer } from "../../utils/lastAnswer";
 
 interface BinaryFrameProps {
   topic: string;
@@ -36,6 +37,7 @@ export default function BinaryFrame({ topic, onAddThought, thoughts }: BinaryFra
 
       if (response.ok) {
         const data = await response.json();
+        recordAnswer("binary bracket", response.headers, data);
         if (data.optionA && data.optionB) {
           setCurrentPair({
             id: crypto.randomUUID(),

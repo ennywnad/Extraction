@@ -10,6 +10,7 @@ import {
   Sparkles,
   RefreshCw,
 } from "lucide-react";
+import { recordAnswer } from "../../utils/lastAnswer";
 import { Thought } from "../../types";
 
 interface SwipeReactProps {
@@ -72,6 +73,7 @@ export default function SwipeReact({ topic, onAddThought, thoughts }: SwipeReact
       });
       if (response.ok) {
         const data = await response.json();
+        recordAnswer("devil's advocate", response.headers, data);
         if (data.challenges) {
           // Flatten challenges into statements
           return [

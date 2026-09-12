@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback, useSyncExternalStore } from "react";
 import { Cpu, Monitor, Moon, Sun } from "lucide-react";
 import { loadSessions, persistSession, deleteSession } from "./utils/localDB";
 import * as engagementAPI from "./utils/engagementAPI";
@@ -7,6 +7,7 @@ import { pushSessionUpdate } from "./utils/engagementSync";
 import { decodeSnapshot } from "./utils/shareLink";
 import { Session, Thought, ExtractionMode, InstanceStatus } from "./types";
 import { engagementStats } from "./utils/engagementStats";
+import { lastAnswer, subscribeToAnswers } from "./utils/lastAnswer";
 import { DEFAULT_PREFS, loadPrefs, savePrefs, type BoardPrefs } from "./utils/boardPrefs";
 import { buildIndex, echoFor, tally } from "./utils/chorus";
 import {
@@ -271,6 +272,17 @@ export default function App() {
    */
   const [lastContributed, setLastContributed] = useState<{ id: string; text: string } | null>(null);
   const aiEnabled = instanceStatus?.aiEnabled !== false;
+  /**
+   * Who wrote the last AI response this tab received.
+   *
+   * Read from a store rather than threaded down as a callback: the nine AI fetches live in
+   * eight components that share nothing else, so a prop would put the model seam on eight mode
+   * interfaces that are not about the model. See src/utils/lastAnswer.ts.
+   *
+   * The same getter serves as the server snapshot — there is no SSR here, and null is the
+   * truthful answer before anything has been asked in any case.
+   */
+  const currentAnswer = useSyncExternalStore(subscribeToAnswers, lastAnswer, lastAnswer);
 
   // Held in refs so the polling effect can read them without resubscribing every render.
   const engagementEtag = useRef<string | null>(null);
@@ -873,6 +885,7 @@ export default function App() {
               <StatusBoard
                 status={instanceStatus}
                 stats={boardStats}
+                lastAnswer={currentAnswer}
                 prefs={boardPrefs}
                 onPrefsChange={handleBoardPrefs}
                 settingsOpen={boardSettingsOpen}
@@ -887,6 +900,7 @@ export default function App() {
               variant="popup"
               status={instanceStatus}
               stats={boardStats}
+              lastAnswer={currentAnswer}
               prefs={boardPrefs}
               onPrefsChange={handleBoardPrefs}
               settingsOpen={boardSettingsOpen}

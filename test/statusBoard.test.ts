@@ -13,6 +13,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import StatusBoard from "../src/components/StatusBoard.tsx";
 import { DEFAULT_PREFS, type BoardPrefs } from "../src/utils/boardPrefs.ts";
 import type { EngagementStats } from "../src/utils/engagementStats.ts";
+import type { LastAnswer } from "../src/utils/lastAnswer.ts";
 import type { InstanceStatus } from "../src/types.ts";
 
 const deployed: InstanceStatus = {
@@ -56,11 +57,13 @@ const render = (
   engagement: EngagementStats | null = stats,
   over: Partial<BoardPrefs> = {},
   variant: "board" | "popup" = "board",
+  last: LastAnswer | null = null,
 ) =>
   renderToStaticMarkup(
     createElement(StatusBoard, {
       status,
       stats: engagement,
+      lastAnswer: last,
       prefs: prefs(over),
       onPrefsChange: () => {},
       settingsOpen: false,
@@ -175,6 +178,7 @@ describe("status board", () => {
       createElement(StatusBoard, {
         status: deployed,
         stats: null,
+        lastAnswer: null,
         prefs: prefs(),
         onPrefsChange: () => {},
         settingsOpen: true,
@@ -257,5 +261,80 @@ describe("status board", () => {
     for (const claim of [/IAP/, /Firestore/, /Vertex/, /Not served/, /On the roster/]) {
       assert.match(popup, claim);
     }
+  });
+
+  describe("the last response", () => {
+    const answered = (over: Partial<LastAnswer> = {}): LastAnswer => ({
+      route: "quick fire",
+      source: "model",
+      provider: "gemini",
+      at: Date.parse("2026-09-11T10:00:00.000Z"),
+      ...over,
+    });
+
+    it("says nothing has answered rather than implying something has", () => {
+      // Everything else on this board is boot configuration. Before any route has answered,
+      // a green "model" line would be the board reporting a request that never happened.
+      const html = render(deployed);
+      assert.match(html, /Last response/);
+      assert.match(html, /Nothing asked yet/);
+    });
+
+    it("names the family that answered, and still no model id", () => {
+      const html = render(deployed, stats, {}, "board", answered());
+      assert.match(html, /Model · Gemini/);
+      assert.doesNotMatch(html, /gemini-|flash|pro-|claude-|opus|sonnet/i);
+    });
+
+    it("declares a fallback instead of letting canned output pass as generated", () => {
+      // The failure server/ai/respond.ts exists to close: a fallback is shaped exactly like a
+      // generated answer, so a misconfigured deployment reads as a working one gone bland.
+      const html = render(deployed, stats, {}, "board", answered({ source: "fallback" }));
+      assert.match(html, /Fallback/);
+      assert.match(html, /served its fixed answer/);
+      assert.doesNotMatch(html, /Model · /);
+    });
+
+    it("refuses to read an unmarked response as a model answer", () => {
+      // The group synthesize route answers with a plain res.json and names no source. Absence
+      // is a fact about that route, never evidence about who wrote the words.
+      const html = render(
+        deployed,
+        stats,
+        {},
+        "board",
+        answered({ route: "level set", source: "unstated", provider: undefined }),
+      );
+      assert.match(html, /Not stated/);
+      assert.match(html, /not a claim either way/);
+      assert.doesNotMatch(html, /Model · /);
+    });
+
+    it("names the route that answered, so the line is about a request", () => {
+      const html = render(deployed, stats, {}, "board", answered({ route: "devil's advocate" }));
+      assert.match(html, /devil&#x27;s advocate route/);
+    });
+
+    it("draws no elapsed time, which a static render cannot keep true", () => {
+      const html = render(deployed, stats, {}, "board", answered());
+      assert.doesNotMatch(html, /ago|seconds|minutes/i);
+    });
+
+    it("reports the last response in the popup as well as on the board", () => {
+      const html = render(deployed, stats, {}, "popup", answered());
+      assert.match(html, /Last response/);
+      assert.match(html, /Model · Gemini/);
+    });
+
+    it("drops the line with the model box, since it is a fact about that seam", () => {
+      const html = render(
+        deployed,
+        stats,
+        { boxes: { ...DEFAULT_PREFS.boxes, model: false } },
+        "board",
+        answered(),
+      );
+      assert.doesNotMatch(html, /Last response/);
+    });
   });
 });

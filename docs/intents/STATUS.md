@@ -25,11 +25,67 @@ this file only records which pieces of one have become code.
 | [004](004-claude-and-the-gcp-model-gateway.md) | Claude as a deployment choice | **in part** — built and stubbed; never run against Vertex   |
 | [005](005-listening-mode.md)                   | Listening mode                | unchanged — but its wall now exists                         |
 | [006](006-local-assists-before-submit.md)      | Local assists before submit   | unchanged                                                   |
-| [007](007-status-board.md)                     | Status board                  | **in part** — reported, and now drawn (below)               |
+| [007](007-status-board.md)                     | Status board                  | **in part** — reported, drawn, and now live (below)         |
 | [008](008-deploying-group-mode.md)             | Deploying group mode          | **in part** — three preparatory items; still never deployed |
 | [009](009-the-deferred-group-surface.md)       | The deferred group surface    | **in part** — the coverage map is built                     |
 | [010](010-model-armor.md)                      | Model Armor at the prompt     | unchanged                                                   |
 | [011](011-the-role-brief.md)                   | The role brief                | **in part** — roles can be declared, grouped and briefed    |
+
+---
+
+## 2026-09-11 — 007, in part: the board says who wrote the last answer
+
+**Against [007](007-status-board.md), and it is the one design element that file listed as not
+built:** "Last response: model or fallback". Picked from this log as the next increment because
+it was the last unbuilt piece of an intent otherwise finished — and reading the code first found
+it was further from done than the file claimed.
+
+**007 described it as a threading job and it was not one.** That file says `source` /
+`X-Extraction-AI-Source` "are read by whichever mode component made the call". Nothing read
+them. The server has set both headers and both body fields since 002, and no client code touched
+any of it — so the board could not say whether the last answer came from a model or from a
+canned fallback, which is the exact failure [respond.ts](../../server/ai/respond.ts) exists to
+close: canned output is shaped like generated output, so a misconfigured deployment reads as a
+working one that has gone bland.
+
+**A store, not a prop.** The nine AI fetches live in eight components sharing nothing but
+`onAddThought`. Threading a callback down would have put a parameter about the model seam on
+eight mode interfaces that are not about the model, so the call sites record into
+[lastAnswer.ts](../../src/utils/lastAnswer.ts) and `App` reads it with `useSyncExternalStore`.
+One import at each end and no prop in between.
+
+**Three states rather than two, which is the finding.** The seven solo routes in
+[server.ts](../../server.ts) go through `sendModel` / `sendFallback` and always say which wrote
+the body. The group synthesize route in
+[engagementRoutes.ts](../../server/engagementRoutes.ts) answers with a plain
+`res.json(levelSet)` and says nothing. So an absent marker is a fact about that route, never
+evidence about the words, and `unstated` is a state of its own. Defaulting absence to `model`
+would have the board assert what it was never told, on the one screen whose whole job is
+refusing to do that. The route itself was left alone: making it report is a server change past
+this brief, and it is recorded in 007 as the remaining asymmetry.
+
+**Verified.** 376 tests, 0 failing, 1 skipped (the Firestore contract, as designed); 18 more
+than the entry below. Mutation-checked: with the `unstated` default changed to `model`, exactly
+two cases fail — "calls an unmarked response unstated rather than assuming a model wrote it" and
+"treats a body that is not an object as saying nothing" — and the line was restored.
+
+**Both branches driven against a running server rather than only fixtures.** With the key this
+machine holds: `X-Extraction-AI-Source: model`, `X-Extraction-AI-Provider: gemini`, and the same
+two fields on the body. With both keys set to their `.env.example` placeholders, which
+`providerKey` treats as unset: `X-Extraction-AI-Source: fallback`, **no provider header at
+all**, `source: "fallback"` with the notice, and `/healthz` reporting `providers: []`. That
+second run is what pins "never name a provider on a fallback" to the server's actual behaviour
+rather than to the parser being polite about it.
+
+**Not driven in a browser.** This machine has no puppeteer, playwright or jsdom, so unlike the
+entries below nothing was clicked. The board's wording is covered by the string-rendered tests
+and the wire by the two runs above; what neither covers is that `App` re-renders when a record
+lands, which is `useSyncExternalStore`'s contract and is asserted here only as store behaviour.
+
+**What it deliberately did not do.** No history — one value, not a log, because the board asks
+whether this deployment is answering and the most recent answer settles it; a log is a different
+feature with a retention question attached. No elapsed time, because a static render has no
+clock. No operator view, which stays 007's open item.
 
 ---
 

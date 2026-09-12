@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { ShieldAlert, RefreshCw, Send, Check } from "lucide-react";
 import { Thought } from "../../types";
+import { recordAnswer } from "../../utils/lastAnswer";
 
 interface DevilsAdvocateProps {
   topic: string;
@@ -31,6 +32,7 @@ export default function DevilsAdvocate({ topic, onAddThought, thoughts }: Devils
       });
       if (res.ok) {
         const data = await res.json();
+        recordAnswer("devil's advocate", res.headers, data);
         if (data.challenges && data.challenges.length > 0) {
           setChallenges(data.challenges);
         } else {

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Zap, ChevronRight, HelpCircle, AlertTriangle, RefreshCw, Sparkles } from "lucide-react";
 import { Thought } from "../../types";
+import { recordAnswer } from "../../utils/lastAnswer";
 
 interface QuickFireProps {
   topic: string;
@@ -39,6 +40,7 @@ export default function QuickFire({ topic, intention, onAddThought, thoughts }: 
       });
       if (response.ok) {
         const data = await response.json();
+        recordAnswer("quick fire", response.headers, data);
         if (data.prompts && data.prompts.length > 0) {
           setPrompts(data.prompts);
         } else {
