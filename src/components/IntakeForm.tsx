@@ -19,6 +19,7 @@ import {
   Coins,
   ClipboardList,
 } from "lucide-react";
+import { recordAnswer } from "../utils/lastAnswer";
 import { Session, ExtractionMode } from "../types";
 import type { EngagementSummary } from "../utils/engagementAPI";
 import CompareSettingsModal from "./CompareSettingsModal";
@@ -232,6 +233,7 @@ export default function IntakeForm({
 
       if (response.ok) {
         const data = await response.json();
+        recordAnswer("mode recommendation", response.headers, data);
         if (data.recommendation) {
           setRecommendationResult(data);
         } else {

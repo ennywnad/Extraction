@@ -15,6 +15,7 @@ import {
   RefreshCw,
   Plus,
 } from "lucide-react";
+import { recordAnswer } from "../utils/lastAnswer";
 import { AreaCoverage, Session } from "../types";
 import { encodeSnapshot } from "../utils/shareLink";
 import CompareSettingsModal from "./CompareSettingsModal";
@@ -115,6 +116,9 @@ export default function ExportPanel({
 
         if (!response.ok) throw new Error("HTTP error " + response.status);
         const data = await response.json();
+        // The group route answers with a plain res.json(levelSet) and names no source, so this
+        // records `unstated` there rather than letting absence read as "a model wrote it".
+        recordAnswer("level set", response.headers, data);
 
         if (session.engagementId) {
           // The server already persisted this version against the pile it was built from.

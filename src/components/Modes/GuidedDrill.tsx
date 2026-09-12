@@ -11,6 +11,7 @@ import {
   MicOff,
   MessageSquareCode,
 } from "lucide-react";
+import { recordAnswer } from "../../utils/lastAnswer";
 import { Thought } from "../../types";
 
 interface GuidedDrillProps {
@@ -134,6 +135,7 @@ export default function GuidedDrill({
 
       if (response.ok) {
         const data = await response.json();
+        recordAnswer("guided drill", response.headers, data);
         if (data.question) {
           setCurrentQuestion(data.question);
           setContextNote(data.contextNote || "Deep Extraction Thread");
@@ -194,6 +196,7 @@ export default function GuidedDrill({
 
         if (response.ok) {
           const data = await response.json();
+          recordAnswer("drill clarify", response.headers, data);
 
           // Capture as a conversational thought bubble in our pile!
           onAddThought(

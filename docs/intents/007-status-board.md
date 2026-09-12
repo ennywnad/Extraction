@@ -104,8 +104,17 @@ design decision rather than an afterthought.
 - **The shape admits what it does not know.** `storage.live` distinguishes a configured store
   from one this process has actually opened, which is the "say what you cannot see" constraint
   above already expressed in data rather than in prose.
-- **`source` / `X-Extraction-AI-Source`** already answer "who wrote this response" per
-  request, which is the live half of the board.
+- **`source` / `X-Extraction-AI-Source`** answer "who wrote this response" per request, and
+  the board now reads them — the live half.
+  [lastAnswer.ts](../../src/utils/lastAnswer.ts) is a small store the nine AI fetches record
+  into and the board reads through `useSyncExternalStore`, rather than a prop threaded through
+  eight mode components that share nothing but `onAddThought`. It draws **three** states, not
+  two: `model` names the family and never an id, `fallback` says the words were canned, and
+  `unstated` is what an unmarked response gets — the group synthesize route answers with a
+  plain `res.json(levelSet)` and names no source, so absence is a fact about that route and
+  never evidence that a model wrote it. Before anything has been asked, it says so rather than
+  drawing a state. No elapsed time: a static render has no clock, and "2m ago" in markup is
+  wrong by the time it is read.
 - **`Workspace.tsx` already renders a degradation banner** driven by `/healthz`, so there is
   precedent for the app reporting its own configuration to the user, and a component to learn
   the visual language from.
@@ -133,16 +142,16 @@ design decision rather than an afterthought.
 The audience decision has been made and taken the narrow branch: **the participant-safe view
 only.** Everything the board draws comes from `/healthz`, so it inherits that payload's
 disclosure test rather than needing one of its own. What is left is the other half of that
-split, and one line the design asked for:
+split:
 
 - **An operator view, if it turns out to be wanted.** What is this deployment, in more detail
   than an unauthenticated payload may carry — which means its own route behind
   `requireIdentity` and its own disclosure rule. Deliberately not built on the argument that it
   is cheaper to add later than to unpick.
-- **"Last response: model or fallback."** The live half of the board, and the one design
-  element not built. `source` / `X-Extraction-AI-Source` are read by whichever mode component
-  made the call, so surfacing it means threading the last-seen value out of nine fetches into
-  somewhere shared — a change to the modes rather than a rendering job.
+- **The group synthesize route still names no source.** The board reports that honestly as
+  `unstated`, which is why this is not urgent, but the asymmetry is real: seven solo routes say
+  who wrote the body and the one route producing a client deliverable does not. Making it
+  report is a server change rather than a board one.
 
 ## Open questions
 

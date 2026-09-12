@@ -1,6 +1,7 @@
 import { Check, Cpu, EyeOff, Maximize2, Settings, X } from "lucide-react";
 import type { InstanceStatus } from "../types";
 import type { EngagementStats } from "../utils/engagementStats";
+import type { LastAnswer } from "../utils/lastAnswer";
 import {
   BOX_ORDER,
   STAT_ORDER,
@@ -72,6 +73,57 @@ const PROVIDER_LABELS: Record<ProviderName, string> = {
   gemini: "Gemini",
   claude: "Claude",
 };
+
+/**
+ * Who wrote the most recent AI response, and how sure the board is allowed to sound.
+ *
+ * Everything else here is configuration — what this process was wired to at boot, none of it
+ * changing without a restart. This is the one line reporting that a request actually happened,
+ * which is what 007 means by the live half of the board.
+ *
+ * **Three states, not two.** `unstated` is not a quieter `model`. The seven solo routes go
+ * through `sendModel` / `sendFallback` and always say which wrote the body; the group
+ * synthesize route answers with a plain `res.json(levelSet)` and says nothing. So absence is a
+ * fact about that route, not evidence about the words — and rendering it as "model" would be
+ * this board asserting precisely what it was not told, on the screen whose whole job is
+ * refusing to do that.
+ *
+ * **No elapsed time.** A static render has no clock, and "2m ago" baked into markup is wrong
+ * by the time anybody reads it.
+ */
+function answerState(last: LastAnswer | null): { value: string; fill: string; note: string } {
+  if (!last) {
+    return {
+      value: "Nothing asked yet",
+      fill: "var(--color-zinc-200)",
+      note: "No AI route has answered in this tab. Everything above is what this process was wired to at boot — this line is the one that reports a request actually happening.",
+    };
+  }
+
+  if (last.source === "fallback") {
+    return {
+      value: "Fallback",
+      fill: GOLD,
+      note: `The ${last.route} route served its fixed answer. Canned output is shaped exactly like generated output, which is why the server declares the substitution rather than leaving somebody to notice a session has gone bland.`,
+    };
+  }
+
+  if (last.source === "unstated") {
+    return {
+      value: "Not stated",
+      fill: "var(--color-zinc-200)",
+      note: `The ${last.route} route answered without naming a source. That is not a claim either way about who wrote it — the route reports none, and guessing would be the one thing this board must not do.`,
+    };
+  }
+
+  return {
+    value: last.provider ? `Model · ${PROVIDER_LABELS[last.provider]}` : "Model",
+    fill: GREEN,
+    note: last.provider
+      ? `The ${last.route} route was answered by a model. The family is named; which model id served it is deployment topology and stays off an unauthenticated screen.`
+      : `The ${last.route} route was answered by a model, which did not name its family.`,
+  };
+}
 
 interface SeamCard {
   key: BoardBox;
@@ -262,6 +314,18 @@ function chip(text: string, fill?: string, key?: string) {
   );
 }
 
+/** The live half, drawn under the model seam in both variants. */
+function answerBlock(last: LastAnswer | null) {
+  const { value, fill, note } = answerState(last);
+  return (
+    <div className="border-t-2 border-black pt-3 flex flex-col gap-1.5">
+      <span className={`text-[9px] ${MONO}`}>Last response</span>
+      <div className="flex gap-1.5 flex-wrap">{chip(value, fill)}</div>
+      <span className="text-[11px] leading-snug text-zinc-600">{note}</span>
+    </div>
+  );
+}
+
 function Cannot({ compact }: { compact?: boolean }) {
   return (
     <div className="border-2 border-black bg-coral p-3.5 flex gap-3 items-start">
@@ -369,6 +433,12 @@ export interface StatusBoardProps {
   status: InstanceStatus | null;
   /** Null in solo mode: no engagement id means no roster and no shared pile to count. */
   stats: EngagementStats | null;
+  /**
+   * Who wrote the last AI response this tab received; null until one has. Required and
+   * nullable rather than optional, like `status` and `stats` above — "has not answered yet"
+   * is a state the board reports, not a prop somebody may leave off.
+   */
+  lastAnswer: LastAnswer | null;
   prefs: BoardPrefs;
   onPrefsChange: (next: BoardPrefs) => void;
   settingsOpen: boolean;
@@ -382,6 +452,7 @@ export interface StatusBoardProps {
 export default function StatusBoard({
   status,
   stats,
+  lastAnswer,
   prefs,
   onPrefsChange,
   settingsOpen,
@@ -574,6 +645,7 @@ export default function StatusBoard({
                   {seam.others.map((other) => chip(other, undefined, other))}
                 </div>
                 <span className="text-[11px] leading-snug text-zinc-600">{seam.detail}</span>
+                {seam.key === "model" && answerBlock(lastAnswer)}
               </div>
             </div>
           ))}
@@ -641,6 +713,7 @@ export default function StatusBoard({
               </div>
               <span className="text-[11px] leading-snug text-zinc-600">{model.detail}</span>
             </div>
+            {answerBlock(lastAnswer)}
           </div>
         )}
 
