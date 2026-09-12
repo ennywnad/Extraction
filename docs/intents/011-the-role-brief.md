@@ -71,7 +71,7 @@ written them.
   the defaults — but they are now defaults somebody can replace, and `roleOf` in
   [roster.ts](../../src/utils/roster.ts) resolves a fragment's role through the current roster,
   so a role declared mid-session applies to what that person already wrote. The `voices` count
-  in [coverage.ts](../../server/ai/coverage.ts) was capped at 2 in a room of any size and is
+  in [coverage.ts](../../src/utils/coverage.ts) was capped at 2 in a room of any size and is
   not any more. Where nobody has declared, the coverage map and the status board say so rather
   than printing the number as though it meant something.
 - **A voice is a group of labels, not a spelling.** [voices.ts](../../src/utils/voices.ts) folds

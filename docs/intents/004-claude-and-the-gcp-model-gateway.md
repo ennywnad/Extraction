@@ -102,8 +102,12 @@ service to operate.
   an empty parse surface as a schema problem.
 
 **Never exercised against a real project.** Everything above is verified against a stubbed
-transport by [providerContract.test.ts](../../test/providerContract.test.ts). Vertex has not
-served a Claude request for this app once — the same gap [008](008-deploying-group-mode.md)
+transport by [modelSeam.test.ts](../../test/modelSeam.test.ts), which holds the two request
+builders against each other, and [modelChain.test.ts](../../test/modelChain.test.ts), whose stub
+`Provider` is the interface both adapters implement. The refusal branch is the one exception and
+is verified by nothing: `generate` in [claude.ts](../../server/ai/providers/claude.ts) reads its
+client from module scope, so there is no seam to hand it a 200 carrying `stop_reason: "refusal"`.
+Vertex has not served a Claude request for this app once — the same gap [008](008-deploying-group-mode.md)
 records for the deployment as a whole, and it applies here in full.
 
 ## What would have to change

@@ -43,7 +43,7 @@ now. `contribute_fragment` is a smaller feature than any of the twelve modes and
 more fragments than several of them.
 
 **Coverage is worth exposing precisely because it is not model-generated.** The dark-area
-arithmetic in [coverage.ts](../../server/ai/coverage.ts) is deliberately computed rather than
+arithmetic in [coverage.ts](../../src/utils/coverage.ts) is deliberately computed rather than
 asked of a model, so a count of zero is right every time. Handing an agent a _computed_ map of
 what a group has not discussed is a genuinely different thing from asking it to guess.
 
@@ -140,7 +140,7 @@ Better than expected on the data side:
   author-only edit rule, and the "any member may file a card" rule all live in the route layer
   over that store, so the MCP adapter inherits the model rather than reinventing it.
 - **Coverage and synthesis are already functions, not handlers** —
-  [coverage.ts](../../server/ai/coverage.ts) and [synthesis.ts](../../server/ai/synthesis.ts)
+  [coverage.ts](../../src/utils/coverage.ts) and [synthesis.ts](../../server/ai/synthesis.ts)
   are callable directly, including the single-flight map. One caveat that matters for a
   resource: `computeCoverage` is arithmetic, but its input is `classify()`, a model call, and
   the result is mirrored onto the session at synthesis time. So a coverage resource serves the
