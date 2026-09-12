@@ -10,7 +10,7 @@
  * directly and never imports this; `fromEmbedder` is a convenience for the two that do, in the
  * same way server/ai/providers/ adapters share the chain but not a request shape.
  */
-import type { Label, LocalAssistant, LocalBackend, Scored } from "./types.ts";
+import type { Calibration, Label, LocalAssistant, LocalBackend, Scored } from "./types.ts";
 
 /** Turns text into vectors. One vector per input, in order. */
 export type Embedder = (texts: string[]) => Promise<number[][]>;
@@ -55,9 +55,11 @@ export function fromEmbedder(
   backend: LocalBackend,
   embed: Embedder,
   reachable: () => Promise<boolean>,
+  calibration: Calibration,
 ): LocalAssistant {
   return {
     backend,
+    calibration,
     reachable,
     async classify(text: string, labels: Label[]): Promise<Scored[]> {
       if (!labels.length) return [];

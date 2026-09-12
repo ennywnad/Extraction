@@ -1,8 +1,8 @@
 # 006 — Local assists before a fragment enters the pile
 
 **Status:** intent, in part — the seam, both backends and the two bounded assists are built, and
-calibrated against a real embedding model through Ollama. The transport fork below is resolved:
-both, in that order. See [STATUS.md](STATUS.md).
+calibrated — both backends, against the same held-out set, to 89% precision. The transport fork
+below is resolved: both, in that order. See [STATUS.md](STATUS.md).
 **Written:** 2026-09-03
 **Depends on:** nothing. See below — this turns out not to need
 [002](002-model-provider-seam.md) or [003](003-local-models-in-solo-mode.md).
@@ -284,12 +284,24 @@ transport was never the hard part. The trust boundary was.
   with nothing configured, while this suggests a tag to an author before submission. A test pins
   the gap they divide between them — a fragment that plainly expresses a fear while containing no
   word for one, which the lexical matcher returns nothing for by design.
-- **What are the two thresholds actually worth?** The open gap this increment leaves. Their
-  _shape_ is settled and mutation-checked, but the constants were calibrated against score
-  distributions written by hand, because no machine this has run on has an embedding runtime.
-  Real cosine similarities cluster more tightly than invented ones, and `MIN_RELATIVE_LIFT` is
-  the one that would feel it — too high and the assist never fires, too low and it files lunch.
-  Whoever runs this against a real runtime first should watch how often it declines.
+- ~~**What are the two thresholds actually worth?**~~ **Measured twice, and wrong both times
+  before that.** Set against distributions written by hand, the lift rule spoke on four drafts in
+  thirty-one and the assist would have looked broken. Corrected against `nomic-embed-text` it was
+  right for that model and left the _other_ backend at 73%. They are now per-backend
+  `Calibration` values on `LocalAssistant`, each swept over the same held-out set, with the rule
+  itself still in one place. Both backends speak on 9 of 31 at 89%. The same run replaced one
+  long description per label with several short exemplars (13/28 to 18/28 top-1) and added the
+  task prefix nomic is trained to be asked with.
+- ~~**Is the in-page backend calibrated?**~~ **It is, and it needed its own numbers.** The two
+  embedders discriminate along different axes — nomic packs its labels close and separates them by
+  proportion, MiniLM spreads them out and separates them by distance — so no single pair serves
+  both. Identical 18/28 top-1 across two unrelated checkpoints is also the best evidence that the
+  exemplars are not overfitted to one model: the labels travel, only the bar is local.
+- **Does any of it work in a browser?** Untested, and now the last real gap. In-page was measured
+  under Node with the checkpoint, quantisation and pooling the adapter asks for, so the _scores_
+  are settled — what has never run is the runtime path: the CDN fetch, the WebGPU and WASM
+  execution providers, and what the first load costs somebody on conference wifi. That needs a
+  browser rather than a sweep.
 
 ## References
 

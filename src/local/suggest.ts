@@ -20,68 +20,64 @@
  * the same reason the chorus refuses to editorialise: a confident wrong label on your own
  * half-formed thought is worse than no label, because you will take it.
  *
- * **Both constants are measured, and the first guesses were wrong.** They were originally set
- * against score distributions written by hand, and a run against a real embedding runtime showed
- * how badly that misses: real cosine similarities between a short draft and a short exemplar
- * cluster far more tightly than invented ones, so the first `MIN_RELATIVE_LIFT` of 0.15 spoke on
- * four drafts out of thirty-one. The assist would have looked broken rather than careful.
+ * **The constants are measured, they live per backend, and every guess so far has been wrong.**
+ * They were first set against score distributions written by hand. A run against a real runtime
+ * showed how badly that misses — real cosine similarities between a short draft and a short
+ * exemplar cluster far more tightly than invented ones, so a lift of 0.15 spoke on four drafts in
+ * thirty-one and the assist would have looked broken rather than careful. Corrected to nomic's
+ * numbers, the *other* backend then ran at 73%, because the correction had been measured on one
+ * model and quietly applied to both.
  *
- * The numbers below come from a sweep over a held-out set — twenty-eight drafts from an
- * engagement the exemplars were not written for, plus three pieces of noise that must be
- * refused. They are chosen for **precision over coverage**, which is the right trade here and
- * not a close call: declining costs nothing, and a confident wrong label on somebody's own
- * half-formed thought is the failure the whole design is arranged to avoid.
+ * So the numbers belong to the adapter and the rules belong here. Each pair comes from a sweep
+ * over the same held-out set — twenty-eight drafts from an engagement the exemplars were not
+ * written for, plus three pieces of noise that must be refused — and each is chosen for
+ * **precision over coverage**, which is not a close call: declining costs nothing, and a
+ * confident wrong label on somebody's own half-formed thought is the failure the whole design is
+ * arranged to avoid.
  *
- * | separation | lift | speaks on | precision |
- * | ---------: | ---: | --------: | --------: |
- * |        0.5 | 0.15 |      4/31 |       75% |
- * |        0.5 | 0.10 |     13/31 |       85% |
- * |    **0.8** | **0.10** | **9/31** |   **89%** |
- * |        1.0 | 0.05 |      9/31 |       78% |
+ * | backend            | separation | lift | speaks on | precision |
+ * | :----------------- | ---------: | ---: | --------: | --------: |
+ * | in-page (MiniLM)   |        1.2 | 0.10 |      9/31 |       89% |
+ * | ollama (nomic)     |        0.8 | 0.10 |      9/31 |       89% |
  *
- * So it offers something on roughly one draft in three and is right about nine times in ten when
- * it does. Two cautions for whoever changes these. The sample is small — 89% against 85% is one
- * item, not a finding; what the sweep establishes is the *region*, not the decimal. And they were
- * measured against one runtime (`nomic-embed-text` through Ollama); the rules are scale-free, so
- * they should travel, but the in-page backend has not been through this and nobody should claim
- * it has until it is.
+ * Both offer something on roughly one draft in three and are right about nine times in ten when
+ * they do — which is the property worth holding steady as backends are added, rather than the
+ * numbers themselves. Two cautions for whoever changes them. The sample is small: 89% against
+ * 85% is one item, so a sweep establishes the *region* and not the decimal. And what differs
+ * between those two rows is not noise — nomic separates its labels by proportion and MiniLM by
+ * spread, which is why one shared pair cannot serve both and why a new backend has to be swept
+ * rather than handed the nearest existing pair.
  */
 import { contentWords } from "../utils/chorus.ts";
-import type { Label, LocalAssistant, Scored } from "./types.ts";
+import type { Calibration, Label, LocalAssistant, Scored } from "./types.ts";
 
 /**
- * How far clear of the runner-up the winner has to be, in standard deviations of the field.
+ * The two rules, stated once here and set per backend in each adapter's `calibration`.
  *
- * Scale-free by construction, so it means the same thing to a MiniLM embedding in the page and
- * to whatever somebody has pulled into Ollama. This is the rule that refuses a coin toss: a
- * fragment genuinely about two of the ten areas gets no suggestion rather than an arbitrary one.
- */
-const MIN_SEPARATION = 0.8;
-
-/**
- * How far above the field the winner has to be as a fraction of its own score.
+ * **Separation** is the rule that refuses a coin toss: the winner has to be clear of the
+ * runner-up, in standard deviations of the field, so a fragment genuinely about two of the ten
+ * areas gets no suggestion rather than an arbitrary one.
  *
- * The companion rule, and the one that refuses noise. Ten areas scoring 0.200, 0.200, 0.199,
- * 0.210 is a draft about none of them, but the field is so tight that the 0.01 lead is a large
- * number of standard deviations — decisive by every measure of *spread*, and meaningless. So
- * separation alone is not enough: the gap also has to be worth something in proportion to the
- * numbers being compared, which a tight cluster of noise can never manage and a real match
- * always does.
+ * **Lift** is the rule that refuses noise: the winner has to be above the field by a worthwhile
+ * fraction *of its own score*. Ten areas scoring 0.200, 0.200, 0.199, 0.210 is a draft about
+ * none of them, and the field is so tight that the 0.01 lead is many standard deviations —
+ * decisive by every measure of spread, and meaningless. It also disposes of the case where
+ * nothing matched at all: a negative best score yields a negative lift, refused here rather than
+ * by a guard of its own, which would be a branch no input can reach.
  *
- * It also disposes of the case where nothing matched at all. A negative best score is the least
- * dissimilar of a set of wrong answers, and dividing a positive gap by it yields a negative lift
- * — refused here rather than by a guard of its own, because a separate check for it would be a
- * branch no input can reach and the next reader would take it for load-bearing.
+ * **Both rules apply to every backend; only the numbers differ.** That split is the point. Two
+ * embedders disagree about their own geometry more than they look like they should — against the
+ * same held-out set nomic separates its labels by proportion and MiniLM by spread — so a single
+ * shared pair leaves one of them either mute or wrong. See `Calibration` in types.ts.
  *
- * **There was a third rule here and removing it was the fix, not a simplification.** It asked
- * that the winner stand a fixed number of standard deviations above the mean — which sounds like
- * this one and is not, because a z-score has a ceiling of `sqrt(n - 1)`. Over ten areas that
+ * **There was a third rule and removing it was the fix, not a simplification.** It asked that the
+ * winner stand a fixed number of standard deviations above the *mean*, which sounds like the
+ * second rule and is not, because a z-score has a ceiling of `sqrt(n - 1)`. Over ten areas that
  * ceiling is 3 and a threshold of 1.6 is ordinary; over the *four* pile tags it is 1.73, so the
  * same threshold demanded a near-perfect one-hot and the tag assist would have sat there almost
- * never firing, for a reason invisible from reading it. Any rule in units of spread has to be
- * one that does not tighten as the label set shrinks.
+ * never firing, for a reason invisible from reading it. Any rule in units of spread has to be one
+ * that does not tighten as the label set shrinks.
  */
-const MIN_RELATIVE_LIFT = 0.1;
 
 /**
  * The least a draft can be and still be classifiable, counted in content words.
@@ -110,7 +106,7 @@ export interface Suggestion {
  * labels to have a field at all, a runtime that returned nothing, a dead heat, or a draft that
  * simply is not about any of these things.
  */
-export function pick(scores: Scored[]): Suggestion | null {
+export function pick(scores: Scored[], calibration: Calibration): Suggestion | null {
   // Three is the least that can have a winner, a runner-up and a field to stand out from. With
   // two, "clear of the runner-up" and "above the mean" are the same sentence twice.
   if (scores.length < 3) return null;
@@ -129,10 +125,10 @@ export function pick(scores: Scored[]): Suggestion | null {
   const ranked = [...scores].sort((a, b) => b.score - a.score);
   const [top, second] = ranked;
 
-  if ((top.score - second.score) / stdev < MIN_SEPARATION) return null;
+  if ((top.score - second.score) / stdev < calibration.separation) return null;
 
   const lift = (top.score - mean) / top.score;
-  if (lift < MIN_RELATIVE_LIFT) return null;
+  if (lift < calibration.lift) return null;
 
   return { id: top.id, lift };
 }
@@ -156,5 +152,5 @@ export async function suggestFrom(
   labels: Label[],
 ): Promise<Suggestion | null> {
   if (!worthScoring(text)) return null;
-  return pick(await assistant.classify(text, labels));
+  return pick(await assistant.classify(text, labels), assistant.calibration);
 }

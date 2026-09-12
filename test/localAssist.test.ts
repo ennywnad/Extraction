@@ -27,6 +27,8 @@ import AssistBar from "../src/components/AssistBar.tsx";
 import Workspace from "../src/components/Workspace.tsx";
 import type { Session, Thought } from "../src/types.ts";
 import { chooseAssistant, DEFAULT_ORDER } from "../src/local/choose.ts";
+import { inPageAssistant } from "../src/local/inPage.ts";
+import { ollamaAssistant } from "../src/local/ollama.ts";
 import { cosine, fromEmbedder } from "../src/local/embedding.ts";
 import { AREA_LABELS, TAG_LABELS } from "../src/local/labels.ts";
 import { pick, suggestFrom, worthScoring } from "../src/local/suggest.ts";
@@ -65,6 +67,7 @@ function stub(
 ): LocalAssistant {
   return {
     backend,
+    calibration: { separation: 0.5, lift: 0.15 },
     reachable: async () => {
       if (typeof opts.reachable === "function") return opts.reachable();
       return opts.reachable ?? true;
@@ -78,15 +81,20 @@ describe("pick — which label wins, and when none does", () => {
   const scored = (...values: number[]): Scored[] =>
     values.map((score, i) => ({ id: `l${i}`, score }));
 
+  // The rule is what these exercise, not any model's numbers, so the bar is set here rather than
+  // borrowed from an adapter — a shipped calibration moving must not silently rewrite what the
+  // arithmetic is asserted to do.
+  const BAR = { separation: 0.5, lift: 0.15 };
+
   it("takes a label that stands clear of the field", () => {
-    const got = pick(scored(0.9, 0.1, 0.12, 0.08, 0.11));
+    const got = pick(scored(0.9, 0.1, 0.12, 0.08, 0.11), BAR);
     assert.equal(got?.id, "l0");
   });
 
   it("refuses when every label scores the same", () => {
     // The state a runtime lands in when it could not read the input at all. Picking the first
     // here is the most convincing possible way to be wrong: it looks exactly like a real answer.
-    assert.equal(pick(scored(0.4, 0.4, 0.4, 0.4)), null);
+    assert.equal(pick(scored(0.4, 0.4, 0.4, 0.4), BAR), null);
   });
 
   it("refuses when the top two are too close to separate", () => {
@@ -96,13 +104,13 @@ describe("pick — which label wins, and when none does", () => {
     // the winner stands far enough above the field to clear both of the others, which is what
     // makes this the case that pins the rule rather than one caught on the way past.
     const twoWinners = scored(0.8, 0.79, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1);
-    assert.equal(pick(twoWinners), null);
+    assert.equal(pick(twoWinners, BAR), null);
   });
 
   it("refuses a winner that is merely the largest of a flat field", () => {
     // "Where should we have lunch" against ten areas of a consulting engagement. One of them is
     // still the highest.
-    assert.equal(pick(scored(0.21, 0.2, 0.2, 0.199, 0.2, 0.2)), null);
+    assert.equal(pick(scored(0.21, 0.2, 0.2, 0.199, 0.2, 0.2), BAR), null);
   });
 
   it("judges four tags as readily as ten areas", () => {
@@ -114,19 +122,19 @@ describe("pick — which label wins, and when none does", () => {
     // goal, not an action or an insight. That is the shape the old rule threw away.
     const four = scored(0.6, 0.45, 0.2, 0.2);
     const ten = scored(0.6, 0.45, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2);
-    assert.equal(pick(four)?.id, "l0", "a clear winner among four tags must survive");
-    assert.equal(pick(ten)?.id, "l0");
+    assert.equal(pick(four, BAR)?.id, "l0", "a clear winner among four tags must survive");
+    assert.equal(pick(ten, BAR)?.id, "l0");
   });
 
   it("refuses when there is no field to stand out from", () => {
-    assert.equal(pick(scored(0.9, 0.1)), null);
-    assert.equal(pick([]), null);
+    assert.equal(pick(scored(0.9, 0.1), BAR), null);
+    assert.equal(pick([], BAR), null);
   });
 
   it("refuses when nothing matched at all", () => {
     // Every label a worse fit than no fit. The least dissimilar of a set of wrong answers is
     // still a wrong answer, and it is the one a naive `max` would hand over most confidently.
-    assert.equal(pick(scored(-0.1, -0.5, -0.6, -0.55)), null);
+    assert.equal(pick(scored(-0.1, -0.5, -0.6, -0.55), BAR), null);
   });
 });
 
@@ -151,6 +159,7 @@ describe("suggestFrom — the short-draft rule runs before the runtime", () => {
     let asked = false;
     const watcher: LocalAssistant = {
       backend: "in-page",
+      calibration: { separation: 0.5, lift: 0.15 },
       reachable: async () => true,
       classify: async (_t, labels) => {
         asked = true;
@@ -176,6 +185,7 @@ describe("the seam — scores in, one per label, in order", () => {
       "in-page",
       async (texts) => texts.map((t) => vectors[t]),
       async () => true,
+      { separation: 0.5, lift: 0.15 },
     );
     const got = await assistant.classify("draft", [
       { id: "a", texts: ["a"] },
@@ -197,6 +207,7 @@ describe("the seam — scores in, one per label, in order", () => {
       "ollama",
       async () => [[1, 0]],
       async () => true,
+      { separation: 0.5, lift: 0.15 },
     );
     assert.deepEqual(await assistant.classify("draft", TAG_LABELS), []);
   });
@@ -251,6 +262,45 @@ describe("chooseAssistant — which runtime answers", () => {
     // Order is a decision, not an accident: probing localhost fires a browser permission prompt,
     // so it must never happen to somebody who has not asked for a local model.
     assert.deepEqual(DEFAULT_ORDER, ["in-page", "ollama"]);
+  });
+});
+
+describe("calibration — one rule, a bar measured per backend", () => {
+  it("gives every shipped backend a measured bar", () => {
+    // A backend with no calibration of its own is a backend running on somebody else's numbers,
+    // which is exactly how the in-page assist shipped at 73% precision.
+    for (const make of [inPageAssistant, ollamaAssistant]) {
+      const { backend, calibration } = make();
+      assert.ok(calibration, `${backend} ships with no calibration`);
+      assert.ok(calibration.separation > 0 && calibration.lift > 0, `${backend} bar is not set`);
+    }
+  });
+
+  it("does not hand one backend another's numbers", () => {
+    // Not a style preference. The two models disagree about their own geometry — nomic separates
+    // its labels by proportion and MiniLM by spread — so identical pairs here would mean one of
+    // them was never swept, and the sweep is the only thing that makes these numbers true.
+    assert.notDeepEqual(
+      inPageAssistant().calibration,
+      ollamaAssistant().calibration,
+      "identical bars mean one backend inherited the other's measurement",
+    );
+  });
+
+  it("applies the assistant's own bar rather than a shared constant", async () => {
+    // The same scores, the same labels, two runtimes: the strict one declines what the lenient
+    // one offers. If this ever stops being true, the calibration has drifted back into a module
+    // constant and the weaker backend is riding on the stronger one's measurement again.
+    const scores = [0.6, 0.45, 0.2, 0.2];
+    const make = (calibration: { separation: number; lift: number }): LocalAssistant => ({
+      backend: "in-page",
+      calibration,
+      reachable: async () => true,
+      classify: async (_t, labels) => labels.map((l, i) => ({ id: l.id, score: scores[i] ?? 0 })),
+    });
+    const draft = "the vendor may not have the connector ready and we have no fallback at all";
+    assert.ok(await suggestFrom(make({ separation: 0.5, lift: 0.1 }), draft, TAG_LABELS));
+    assert.equal(await suggestFrom(make({ separation: 2.5, lift: 0.1 }), draft, TAG_LABELS), null);
   });
 });
 

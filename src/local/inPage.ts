@@ -80,12 +80,28 @@ const embed: Embedder = async (texts) => {
   return output.tolist();
 };
 
+/**
+ * Measured, not chosen. Swept over the held-out set against this exact checkpoint: 9 of 31
+ * drafts get a suggestion and 89% of those are right, with all three pieces of noise refused.
+ *
+ * Separation is doing the work and lift is nearly inert here, which is the opposite of the
+ * Ollama adapter's shape — this checkpoint spreads its labels out and discriminates by distance,
+ * so the bar that matters is how far clear the winner is. Handed nomic's pair instead, this
+ * backend spoke on 15 of 31 at 73%.
+ */
+const CALIBRATION = { separation: 1.2, lift: 0.1 };
+
 export function inPageAssistant(): LocalAssistant {
-  return fromEmbedder("in-page", embed, async () => {
-    // Deliberately not a load. `reachable` runs to decide whether to *offer* the assist, and
-    // downloading a model to answer that question would make merely opening the settings cost
-    // 23MB on a conference wifi. What is checked is the only thing that can actually rule it
-    // out: a browser too old to fetch a module at runtime.
-    return typeof window !== "undefined" && typeof WebAssembly !== "undefined";
-  });
+  return fromEmbedder(
+    "in-page",
+    embed,
+    async () => {
+      // Deliberately not a load. `reachable` runs to decide whether to *offer* the assist, and
+      // downloading a model to answer that question would make merely opening the settings cost
+      // 23MB on a conference wifi. What is checked is the only thing that can actually rule it
+      // out: a browser too old to fetch a module at runtime.
+      return typeof window !== "undefined" && typeof WebAssembly !== "undefined";
+    },
+    CALIBRATION,
+  );
 }
