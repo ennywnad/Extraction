@@ -1,4 +1,10 @@
-import { CONTRIBUTOR_ROLE, FACILITATOR_ROLE, type AuthorStamp, type Session } from "../types";
+import {
+  CONTRIBUTOR_ROLE,
+  FACILITATOR_ROLE,
+  type AuthorStamp,
+  type RosterEntry,
+  type Session,
+} from "../types";
 
 /**
  * Who is in the room, and how much of that the app actually knows.
@@ -29,12 +35,12 @@ export function isDeclaredRole(role: string | undefined): boolean {
 }
 
 export interface RosterState {
-  members: AuthorStamp[];
+  members: RosterEntry[];
   /** Members whose role they chose themselves. */
   declared: number;
   total: number;
   /** This viewer's own entry, when they are on the roster. */
-  me: AuthorStamp | null;
+  me: RosterEntry | null;
   /** True when the viewer is still carrying whatever the server assigned them. */
   mineUndeclared: boolean;
 }

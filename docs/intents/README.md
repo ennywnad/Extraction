@@ -11,19 +11,19 @@ built. These are the opposite end: ideas that have not earned a plan yet.
 it before the table below: an intent whose file still reads as untouched may have had a slice
 built, and the log says which slice and what it deliberately left alone.
 
-| #                                              | Intent                                             | Depends on | Cost if attempted today                                                         |
-| :--------------------------------------------- | :------------------------------------------------- | :--------- | :------------------------------------------------------------------------------ |
-| [001](001-mcp-server-over-the-pile.md)         | An MCP server over the pile                        | —          | Assessed and parked. Not cost — the value went elsewhere. See its file.         |
-| [002](002-model-provider-seam.md)              | A provider-neutral model seam                      | —          | **Built.** Two adapters behind `ModelProvider`; per-route selection deferred.   |
-| [003](003-local-models-in-solo-mode.md)        | Local models in solo mode                          | 002        | Small — 002 exists now, and was shaped to take this as the degraded case.       |
-| [004](004-claude-and-the-gcp-model-gateway.md) | Claude, and the model as a deployment choice       | 002        | **Built, never run.** Needs one request against a project with Claude enabled.  |
-| [005](005-listening-mode.md)                   | Listening mode — a kickoff with no model           | —          | Smallest on this list. Mostly already true.                                     |
-| [006](006-local-assists-before-submit.md)      | Local assists before a fragment enters the pile    | —          | Cheap to build, independent of everything else. The cost is setup, not code.    |
-| [007](007-status-board.md)                     | A status board that looks like the rest of the app | —          | Small, and now smaller: the reporting half landed, the drawing has not.         |
-| [008](008-deploying-group-mode.md)             | Deploying group mode for the first time            | —          | Not code, and still not done. Its two code-shaped preparations have landed.     |
-| [009](009-the-deferred-group-surface.md)       | The deferred group surface                         | —          | A catalogue; the coverage map is built, the other seven stay deferred.          |
-| [010](010-model-armor.md)                      | Model Armor over the prompt boundary               | —          | Unknown until someone prices it. One seam to change; the policy is the work.    |
-| [011](011-the-role-brief.md)                   | The role brief, per participant                    | —          | Small. The count it fixed and the voices it groups are built; the brief is not. |
+| #                                              | Intent                                             | Depends on | Cost if attempted today                                                           |
+| :--------------------------------------------- | :------------------------------------------------- | :--------- | :-------------------------------------------------------------------------------- |
+| [001](001-mcp-server-over-the-pile.md)         | An MCP server over the pile                        | —          | Assessed and parked. Not cost — the value went elsewhere. See its file.           |
+| [002](002-model-provider-seam.md)              | A provider-neutral model seam                      | —          | **Built.** Two adapters behind `ModelProvider`; per-route selection deferred.     |
+| [003](003-local-models-in-solo-mode.md)        | Local models in solo mode                          | 002        | Small — 002 exists now, and was shaped to take this as the degraded case.         |
+| [004](004-claude-and-the-gcp-model-gateway.md) | Claude, and the model as a deployment choice       | 002        | **Built, never run.** Needs one request against a project with Claude enabled.    |
+| [005](005-listening-mode.md)                   | Listening mode — a kickoff with no model           | —          | Smallest on this list. Mostly already true.                                       |
+| [006](006-local-assists-before-submit.md)      | Local assists before a fragment enters the pile    | —          | Cheap to build, independent of everything else. The cost is setup, not code.      |
+| [007](007-status-board.md)                     | A status board that looks like the rest of the app | —          | Small, and now smaller: the reporting half landed, the drawing has not.           |
+| [008](008-deploying-group-mode.md)             | Deploying group mode for the first time            | —          | Not code, and still not done. Its two code-shaped preparations have landed.       |
+| [009](009-the-deferred-group-surface.md)       | The deferred group surface                         | —          | A catalogue; the coverage map is built, the other seven stay deferred.            |
+| [010](010-model-armor.md)                      | Model Armor over the prompt boundary               | —          | Unknown until someone prices it. One seam to change; the policy is the work.      |
+| [011](011-the-role-brief.md)                   | The role brief, per participant                    | —          | Mostly built: roles are declared, grouped and briefed. Drift and overlap are not. |
 
 ## How to read these
 

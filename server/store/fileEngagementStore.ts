@@ -8,7 +8,7 @@
 
 import fs from "node:fs/promises";
 import path from "node:path";
-import type { AuthorStamp, RoleGroup, Session, Thought } from "../../src/types.ts";
+import type { AuthorStamp, RoleGroup, RosterEntry, Session, Thought } from "../../src/types.ts";
 import type {
   EngagementStore,
   EngagementSummary,
@@ -146,7 +146,7 @@ export class FileEngagementStore implements EngagementStore {
     });
   }
 
-  async upsertRosterEntry(id: string, stamp: AuthorStamp): Promise<Session | null> {
+  async upsertRosterEntry(id: string, stamp: RosterEntry): Promise<Session | null> {
     return this.mutate((db) => {
       const session = db[id];
       if (!session) return null;

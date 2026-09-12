@@ -458,7 +458,7 @@ export default function App() {
    * Errors are rethrown rather than toasted: the panel keeps the text and shows the message
    * beside the field, which is where somebody who just lost a sentence is looking.
    */
-  const handleSaveRosterEntry = async (entry: { name: string; role: string }) => {
+  const handleSaveRosterEntry = async (entry: { name: string; role: string; brief: string }) => {
     const engagementId = currentSession?.engagementId;
     if (!engagementId) return;
     const stamp = await engagementAPI.updateMyRosterEntry(engagementId, entry);

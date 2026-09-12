@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "motion/react";
 import { Users, X, Check, AlertTriangle } from "lucide-react";
-import type { AuthorStamp, Session } from "../types";
+import { BRIEF_MAX_LENGTH, type RosterEntry, type Session } from "../types";
 import { isDeclaredRole, rosterState } from "../utils/roster";
 import { resolveVoice, roleKey } from "../utils/voices";
 import RoleGroups from "./RoleGroups";
@@ -24,6 +24,12 @@ import RoleGroups from "./RoleGroups";
  * thing that makes "which role is best placed to answer this" answerable at all. That
  * sentence is on the card rather than in documentation nobody opens.
  *
+ * **The brief is the paragraph behind the label**, and optional. It is the one field in the app
+ * where somebody writes about themselves, so the card says who reads it: the whole room, and the
+ * level set under the role label and never the name. Everybody else's is shown read-only beneath
+ * their row, because a stakeholder reading what the others believe they own is where an overlap
+ * becomes visible to the two people who have it. See docs/intents/011-the-role-brief.md.
+ *
  * **Self-service only, and the server agrees.** `PUT /roster/me` takes the identity from the
  * verified stamp and not from the body, so this cannot edit anybody else even if it tried. The
  * other entries are rendered read-only because that is what they are, not as a UI courtesy.
@@ -37,7 +43,8 @@ export default function RosterPanel({
 }: {
   session: Session;
   viewerEmail?: string;
-  onSave: (entry: { name: string; role: string }) => Promise<void>;
+  /** `brief` is sent as typed, so an emptied field clears it rather than keeping the old text. */
+  onSave: (entry: { name: string; role: string; brief: string }) => Promise<void>;
   /** Absent means grouping cannot be saved from here, so it is not offered. */
   onSetRoleGroup?: (label: string, group: string | null) => Promise<void>;
   onClose: () => void;
@@ -46,6 +53,7 @@ export default function RosterPanel({
 
   const [name, setName] = useState(me?.name ?? "");
   const [role, setRole] = useState(isDeclaredRole(me?.role) ? me!.role : "");
+  const [brief, setBrief] = useState(me?.brief ?? "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -55,6 +63,7 @@ export default function RosterPanel({
   useEffect(() => {
     setName(me?.name ?? "");
     setRole(isDeclaredRole(me?.role) ? me!.role : "");
+    setBrief(me?.brief ?? "");
   }, [me?.email]);
 
   const submit = async () => {
@@ -63,7 +72,7 @@ export default function RosterPanel({
     setSaving(true);
     setError(null);
     try {
-      await onSave({ name: name.trim() || (me?.name ?? ""), role: trimmed });
+      await onSave({ name: name.trim() || (me?.name ?? ""), role: trimmed, brief: brief.trim() });
       onClose();
     } catch (e) {
       // Kept open with the text intact. A roster edit that silently failed would leave
@@ -135,6 +144,30 @@ export default function RosterPanel({
                 className="w-full border-2 border-black bg-white px-2.5 py-1.5 text-xs text-black"
                 placeholder="What you own in this engagement"
               />
+              <div className="flex items-baseline justify-between gap-2 mt-3 mb-1">
+                <label
+                  htmlFor="roster-brief"
+                  className="block text-[9px] font-mono font-bold uppercase tracking-wider text-black"
+                >
+                  Brief · optional
+                </label>
+                <span className="text-[9px] font-mono text-zinc-600">
+                  {brief.length}/{BRIEF_MAX_LENGTH}
+                </span>
+              </div>
+              <textarea
+                id="roster-brief"
+                value={brief}
+                onChange={(e) => setBrief(e.target.value)}
+                maxLength={BRIEF_MAX_LENGTH}
+                rows={3}
+                className="w-full border-2 border-black bg-white px-2.5 py-1.5 text-xs text-black resize-y"
+                placeholder="What you are responsible for, what you know that nobody else here does, and where your say stops."
+              />
+              <p className="text-[10px] leading-relaxed text-black mt-1">
+                Everyone in this engagement can read it. The level set reads it under your role,
+                never your name.
+              </p>
               {error && (
                 <p className="mt-2 border-2 border-black bg-coral px-2.5 py-1.5 text-[10px] text-black">
                   {error}
@@ -146,7 +179,7 @@ export default function RosterPanel({
                 className="mt-3 px-3.5 py-1.5 border-2 border-black bg-black text-white text-xs font-bold font-display uppercase tracking-wider flex items-center gap-1.5 cursor-pointer shadow-hard-2 disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <Check className="w-3.5 h-3.5" />
-                {saving ? "Saving…" : "Save my role"}
+                {saving ? "Saving…" : "Save my entry"}
               </button>
             </>
           ) : (
@@ -199,7 +232,7 @@ function RosterRow({
   isMe,
   countsAs,
 }: {
-  member: AuthorStamp;
+  member: RosterEntry;
   isMe: boolean;
   /** The group this member's label was filed under, when it was; their own words stay primary. */
   countsAs: string | null;
@@ -207,7 +240,7 @@ function RosterRow({
   const declared = isDeclaredRole(member.role);
   return (
     <li
-      className={`border-2 border-black p-2.5 flex items-center justify-between gap-3 ${
+      className={`border-2 border-black p-2.5 flex items-start justify-between gap-3 ${
         declared ? "bg-white" : "bg-zinc-100"
       }`}
     >
@@ -222,6 +255,12 @@ function RosterRow({
           {declared ? member.role : `${member.role} — not declared`}
           {countsAs && <span className="text-zinc-500"> · counts as {countsAs}</span>}
         </span>
+        {/* Wrapped rather than truncated: a brief cut at one line is a different claim. */}
+        {member.brief && (
+          <span className="block mt-1 text-[10px] leading-relaxed text-black whitespace-pre-line break-words">
+            {member.brief}
+          </span>
+        )}
       </span>
       {!declared && (
         <AlertTriangle className="w-3.5 h-3.5 shrink-0 text-black" aria-label="Role not declared" />

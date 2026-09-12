@@ -1,6 +1,13 @@
 import { randomUUID } from "node:crypto";
 import express, { type Request, type Response } from "express";
-import type { AuthorStamp, RoleGroup, Session, Thought } from "../src/types.ts";
+import {
+  BRIEF_MAX_LENGTH,
+  type AuthorStamp,
+  type RoleGroup,
+  type RosterEntry,
+  type Session,
+  type Thought,
+} from "../src/types.ts";
 import { isDeclaredRole } from "../src/utils/roster.ts";
 import { roleKey } from "../src/utils/voices.ts";
 import { getEngagementStore } from "./store/index.ts";
@@ -56,6 +63,14 @@ const META_FIELDS = [
 
 const str = (v: unknown, max: number): string | undefined =>
   typeof v === "string" && v.trim() ? v.trim().slice(0, max) : undefined;
+
+/**
+ * What a fragment is stamped with: who, and in what role — never the roster entry itself. An entry
+ * carries a brief, which somebody will rewrite, and a fragment keeps its stamp for good. Picked
+ * field by field because a `RosterEntry` is assignable to an `AuthorStamp`, so the type alone would
+ * wave the whole entry through.
+ */
+const stampOf = ({ email, name, role }: AuthorStamp): AuthorStamp => ({ email, name, role });
 
 function displayNameFor(email: string): string {
   const local = email.split("@")[0] ?? email;
@@ -149,10 +164,10 @@ export function createEngagementRouter() {
   const identityOf = (req: Request) => req.identity!;
 
   /** The caller's roster entry, auto-provisioned so nobody is ever blocked from contributing. */
-  async function ensureMember(session: Session, email: string): Promise<AuthorStamp> {
+  async function ensureMember(session: Session, email: string): Promise<RosterEntry> {
     const existing = session.roster?.[email];
     if (existing) return existing;
-    const stamp: AuthorStamp = {
+    const stamp: RosterEntry = {
       email,
       name: displayNameFor(email),
       role: CONTRIBUTOR_ROLE,
@@ -260,7 +275,7 @@ export function createEngagementRouter() {
       text,
       timestamp: new Date().toISOString(),
       mode,
-      author,
+      author: stampOf(author),
     };
     const promptContext = str(req.body?.promptContext, 500);
     if (promptContext) thought.promptContext = promptContext;
@@ -342,20 +357,25 @@ export function createEngagementRouter() {
     res.json({ roster: session.roster ?? {} });
   });
 
-  // Self-service only: you may correct your own display name and role, nobody else's.
+  // Self-service only: you may correct your own display name, role and brief, nobody else's.
   router.put("/:id/roster/me", async (req, res) => {
     const session = await loadOr404(req.params.id, res);
     if (!session) return;
     const { email } = identityOf(req);
     const current = await ensureMember(session, email);
-    const stamp: AuthorStamp = {
+    const entry: RosterEntry = {
       email,
       name: str(req.body?.name, 120) ?? current.name,
       role: str(req.body?.role, 120) ?? current.role,
     };
+    // Everybody has a name and a role, so leaving one out keeps it. A brief is optional, so a save
+    // has to be able to say "none": absent keeps it, and a string with nothing in it clears it.
+    const brief =
+      typeof req.body?.brief === "string" ? str(req.body.brief, BRIEF_MAX_LENGTH) : current.brief;
+    if (brief) entry.brief = brief;
     const store = await getEngagementStore();
-    await store.upsertRosterEntry(session.id, stamp);
-    res.json(stamp);
+    await store.upsertRosterEntry(session.id, entry);
+    res.json(entry);
   });
 
   /**

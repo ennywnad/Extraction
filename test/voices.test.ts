@@ -16,8 +16,16 @@ import {
   roleLabels,
   voiceGroups,
 } from "../src/utils/voices.ts";
-import { renderCorpus, rolesPresent } from "../server/ai/corpus.ts";
-import type { AreaCoverage, AuthorStamp, RoleGroup, Session, Thought } from "../src/types.ts";
+import { renderCorpus, roleBriefs, rolesPresent } from "../server/ai/corpus.ts";
+import { levelSetPrompt } from "../server/ai/levelSetPrompt.ts";
+import type {
+  AreaCoverage,
+  AuthorStamp,
+  RoleGroup,
+  RosterEntry,
+  Session,
+  Thought,
+} from "../src/types.ts";
 
 const AT = "2026-09-11T10:00:00.000Z";
 
@@ -238,5 +246,50 @@ describe("what the model reads", () => {
 
   it("lists each voice once, with the labels gathered under it", () => {
     assert.deepEqual(rolesPresent(session), ["Contributor", "Finance (FP&A)", "Legal"]);
+  });
+});
+
+describe("what the model reads — briefs", () => {
+  const briefed = (m: AuthorStamp, brief: string): RosterEntry => ({ ...m, brief });
+  const ana = briefed(
+    member("ana@x.com", "Ana Lindqvist", "FP&A"),
+    "I own the rolling forecast.\n\nI do not sign off capex.",
+  );
+  const bo = briefed(member("bo@x.com", "Bo Okafor", "Legal"), "Contracts and data residency.");
+  const cy = briefed(member("cy@x.com", "Cy", "Contributor"), "I run the warehouse floor.");
+  const di = member("di@x.com", "Di", "Legal");
+  const session = room(
+    [ana, bo, cy, di],
+    [decided("FP&A", "Finance")],
+    [said("1", ana), said("2", bo)],
+  );
+
+  it("labels a brief the way that role's fragments are labelled, and never names anybody", () => {
+    // The same token as the corpus, so the model joins a brief to what that role said.
+    assert.match(renderCorpus(session), /#1 \[Finance \/ FP&A\]/);
+    const lines = roleBriefs(session);
+    assert.deepEqual(lines, [
+      "- [Finance / FP&A] I own the rolling forecast. I do not sign off capex.",
+      "- [Legal] Contracts and data residency.",
+    ]);
+    assert.doesNotMatch(lines.join("\n"), /Ana|Lindqvist|Okafor|@x\.com/);
+  });
+
+  it("leaves out a brief filed under a server default", () => {
+    // Read against the corpus it would describe every [Contributor] fragment — everybody undeclared.
+    assert.doesNotMatch(roleBriefs(session).join("\n"), /warehouse/);
+  });
+
+  it("puts the block before the corpus, and says a brief is not a fragment", () => {
+    const prompt = levelSetPrompt(session, "coverage");
+    const block = prompt.indexOf("- [Legal] Contracts and data residency.");
+    assert.ok(block !== -1, "the brief reaches the prompt");
+    assert.ok(block < prompt.indexOf("#1 [Finance / FP&A]"), "ahead of the fragments it explains");
+    assert.match(prompt, /not a fragment/);
+  });
+
+  it("leaves the prompt as it was when nobody wrote one", () => {
+    const plain = member("ana@x.com", "Ana", "FP&A");
+    assert.doesNotMatch(levelSetPrompt(room([plain], [], [said("1", plain)]), "c"), /own position/);
   });
 });

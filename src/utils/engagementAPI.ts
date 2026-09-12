@@ -1,4 +1,4 @@
-import { AuthorStamp, RoleGroup, Session, Thought } from "../types";
+import { AuthorStamp, RoleGroup, RosterEntry, Session, Thought } from "../types";
 
 export interface ViewerIdentity {
   email: string;
@@ -119,9 +119,9 @@ export async function deleteThought(id: string, thoughtId: string): Promise<void
 
 export async function updateMyRosterEntry(
   id: string,
-  entry: { name?: string; role?: string },
-): Promise<AuthorStamp> {
-  return json<AuthorStamp>(
+  entry: { name?: string; role?: string; brief?: string },
+): Promise<RosterEntry> {
+  return json<RosterEntry>(
     await fetch(`/api/engagement/${id}/roster/me`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },

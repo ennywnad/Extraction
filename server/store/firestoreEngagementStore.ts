@@ -11,7 +11,7 @@
  */
 
 import { FieldPath, FieldValue, Firestore } from "@google-cloud/firestore";
-import type { AuthorStamp, RoleGroup, Session, Thought } from "../../src/types.ts";
+import type { AuthorStamp, RoleGroup, RosterEntry, Session, Thought } from "../../src/types.ts";
 import type {
   EngagementStore,
   EngagementSummary,
@@ -168,7 +168,7 @@ export class FirestoreEngagementStore implements EngagementStore {
     return true;
   }
 
-  async upsertRosterEntry(id: string, stamp: AuthorStamp): Promise<Session | null> {
+  async upsertRosterEntry(id: string, stamp: RosterEntry): Promise<Session | null> {
     const ref = this.doc(id);
     if (!(await ref.get()).exists) return null;
     // Email addresses contain dots, which Firestore reads as field-path separators in a

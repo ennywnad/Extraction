@@ -301,3 +301,44 @@ describe("role groups", () => {
     assert.equal(res.status, 200, "a regroup that nobody else's poll ever carries");
   });
 });
+
+describe("the brief", () => {
+  const saveEntry = (who, id, body) =>
+    as(who, `/api/engagement/${id}/roster/me`, { method: "PUT", body: JSON.stringify(body) });
+
+  it("keeps a brief on the roster and off every fragment", async () => {
+    // A stamp is copied onto each fragment and kept for good; a brief is a paragraph somebody
+    // will rewrite. Copied, it would sit on the pile saying whatever it said at the time.
+    const eng = await newEngagement("brief stays on the roster");
+    await saveEntry(A, eng.id, { role: "Finance", brief: "Owns the forecast." });
+    const thought = await contribute(A, eng.id, "Close takes nine days");
+    assert.equal(thought.author.role, "Finance");
+    assert.equal("brief" in thought.author, false, "not on the response");
+    const { roster, thoughts } = await asJson(A, `/api/engagement/${eng.id}`);
+    assert.equal(roster[A].brief, "Owns the forecast.");
+    assert.equal(
+      thoughts.some((t) => "brief" in (t.author ?? {})),
+      false,
+      "not in the stored pile",
+    );
+  });
+
+  it("leaves a brief alone when a save does not mention it, and clears it when emptied", async () => {
+    const eng = await newEngagement("brief overwrite");
+    await saveEntry(A, eng.id, { role: "Finance", brief: "Owns the forecast." });
+    const renamed = await (await saveEntry(A, eng.id, { name: "Sofia Lindqvist" })).json();
+    assert.equal(renamed.brief, "Owns the forecast.");
+    const cleared = await (await saveEntry(A, eng.id, { brief: "   " })).json();
+    assert.equal("brief" in cleared, false);
+    assert.equal(cleared.role, "Finance", "clearing a brief is not clearing a role");
+  });
+
+  it("sets only the caller's brief, and caps it", async () => {
+    const eng = await newEngagement("brief cap");
+    await saveEntry(A, eng.id, { role: "Finance", brief: "Mine." });
+    await saveEntry(B, eng.id, { email: A, brief: "x".repeat(5000) });
+    const { roster } = await asJson(A, `/api/engagement/${eng.id}`);
+    assert.equal(roster[A].brief, "Mine.", "the body's email is not an identity");
+    assert.equal(roster[B].brief.length, 600);
+  });
+});

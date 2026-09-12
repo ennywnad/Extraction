@@ -1,5 +1,5 @@
 import type { Session } from "../../src/types.ts";
-import { renderCorpus, rolesPresent } from "./corpus.ts";
+import { renderCorpus, roleBriefs, rolesPresent } from "./corpus.ts";
 
 /** The areas a level set is assessed against. Stable, so coverage counts are comparable. */
 export const LEVEL_SET_AREAS = [
@@ -62,12 +62,26 @@ export function levelSetPrompt(
 bias, sunk cost, or convenient assumption — citing the fragments that show it.`
       : "Omit the blind-spots section.";
 
+  // One block per engagement rather than a note per fragment, and absent entirely when nobody has
+  // written one, so a room that skipped briefs gets exactly the prompt it got before they existed.
+  const briefs = roleBriefs(session);
+  const briefBlock = briefs.length
+    ? `
+What some roles wrote about their own position here: what they own, what they know that nobody
+else in the room does, and where their say stops. Labelled the way their fragments are below.
+Use it to judge whether a claim is made from inside that role's remit, and to say which role is
+best placed to answer an open question. A brief is not a fragment — do not count it towards
+coverage or cite it as one side of a conflict — and it describes a position, not a person.
+${briefs.join("\n")}
+`
+    : "";
+
   return `You are writing the level-set deliverable for a consulting engagement.
 
 Topic: "${session.topic}"
 Stated intention: "${session.intention}"
 Contributor roles present: ${rolesPresent(session).join(", ") || "unknown"}
-
+${briefBlock}
 Fragments contributed, labelled by the contributor's role. A label written [Group / Role]
 means the room agreed that role speaks for that group: treat them as one voice when judging
 whether roles agree or conflict, and use the specific role when saying who is best placed to
