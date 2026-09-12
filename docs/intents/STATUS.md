@@ -17,19 +17,88 @@ this file only records which pieces of one have become code.
 
 ## Where each intent stands
 
-| #                                              | Intent                        | State                                                       |
-| :--------------------------------------------- | :---------------------------- | :---------------------------------------------------------- |
-| [001](001-mcp-server-over-the-pile.md)         | MCP server over the pile      | unchanged                                                   |
-| [002](002-model-provider-seam.md)              | Provider-neutral model seam   | **landed** — per-route selection deliberately deferred      |
-| [003](003-local-models-in-solo-mode.md)        | Local models in solo mode     | unchanged                                                   |
-| [004](004-claude-and-the-gcp-model-gateway.md) | Claude as a deployment choice | **in part** — built and stubbed; never run against Vertex   |
-| [005](005-listening-mode.md)                   | Listening mode                | unchanged — but its wall now exists                         |
-| [006](006-local-assists-before-submit.md)      | Local assists before submit   | unchanged                                                   |
-| [007](007-status-board.md)                     | Status board                  | **in part** — reported, drawn, and now live (below)         |
-| [008](008-deploying-group-mode.md)             | Deploying group mode          | **in part** — three preparatory items; still never deployed |
-| [009](009-the-deferred-group-surface.md)       | The deferred group surface    | **in part** — the coverage map is built                     |
-| [010](010-model-armor.md)                      | Model Armor at the prompt     | unchanged                                                   |
-| [011](011-the-role-brief.md)                   | The role brief                | **in part** — roles can be declared, grouped and briefed    |
+| #                                              | Intent                        | State                                                         |
+| :--------------------------------------------- | :---------------------------- | :------------------------------------------------------------ |
+| [001](001-mcp-server-over-the-pile.md)         | MCP server over the pile      | unchanged                                                     |
+| [002](002-model-provider-seam.md)              | Provider-neutral model seam   | **landed** — per-route selection deliberately deferred        |
+| [003](003-local-models-in-solo-mode.md)        | Local models in solo mode     | unchanged                                                     |
+| [004](004-claude-and-the-gcp-model-gateway.md) | Claude as a deployment choice | **in part** — built and stubbed; never run against Vertex     |
+| [005](005-listening-mode.md)                   | Listening mode                | unchanged — but its wall now exists                           |
+| [006](006-local-assists-before-submit.md)      | Local assists before submit   | unchanged                                                     |
+| [007](007-status-board.md)                     | Status board                  | **in part** — reported, drawn, live, and every route labelled |
+| [008](008-deploying-group-mode.md)             | Deploying group mode          | **in part** — three preparatory items; still never deployed   |
+| [009](009-the-deferred-group-surface.md)       | The deferred group surface    | **in part** — the coverage map is built                       |
+| [010](010-model-armor.md)                      | Model Armor at the prompt     | unchanged                                                     |
+| [011](011-the-role-brief.md)                   | The role brief                | **in part** — roles can be declared, grouped and briefed      |
+
+---
+
+## 2026-09-11 — 007, in part: the route that writes the deliverable says who wrote it
+
+**Against [007](007-status-board.md), and it is the asymmetry the entry below recorded rather than
+closed:** seven solo routes say who wrote the body and the one route producing a client
+deliverable did not. Picked from this log as the next increment because the entry below built the
+board's live line and then had to draw `unstated` for the single response that matters most.
+
+**The finding was in the same place as last time — the provider was already being thrown away.**
+007 framed this as making a route "report". But `generate()` has returned `{ data, provider }`
+since the chain was provider-qualified, and both call sites in
+[synthesis.ts](../../server/ai/synthesis.ts) destructured only `data`. So who answered was
+computed and discarded twice before the route could have named it. The route was the last link,
+not the missing one.
+
+**A level set is two model calls, and that is the decision rather than the plumbing.** A
+classification pass feeds [coverage.ts](../../server/ai/coverage.ts)'s arithmetic, then a second
+call writes the prose, and each runs the chain **independently** — so the cross-provider chain the
+2026-09-11 entry below made possible can have them answered by different families. `answeringProvider`
+names the writer only when no second family contributed, and otherwise the response says `model`
+and names nobody. Naming the prose writer would credit it with coverage fed by another family;
+omitting the family whenever two calls happened would lose the fact in the ordinary case where
+both were the same. The narrow rule is the only one that overstates nothing.
+
+**That state was already drawable, which is why no client code changed.** The board has rendered
+a model answer with no family as "Model · did not name its family" since it was built, and
+`readAnswer` already returned `{ source: "model", provider: undefined }` for it. A design that
+needed a fourth state would have been the wrong one.
+
+**`source` was never the uncertain half.** Synthesis refuses to write filler into a shared
+deliverable, so a level set exists only if a model wrote it — `model` is not a claim this route
+has to hedge. The two fields answer different questions and only one of them was ever open.
+
+**`sendGenerated`, and the headers still set in one place.** `sendModel` takes a `ModelResult` and
+spreads its `data`; this body is assembled by the server out of two calls plus fields it owns, so
+there is no `ModelResult` to hand over. `sendModel` delegates to the new helper rather than the
+route setting headers of its own, so the route still names no provider and
+[modelSeam.test.ts](../../test/modelSeam.test.ts) is untouched.
+
+**`unstated` stays, and now nothing in the tree produces it.** It is the only safe reading of a
+route that says nothing, and the next route added without the helper lands there rather than being
+read as a model answer. The two tests that used the level set as their example of an unreporting
+route now use a hypothetical one — the same assertion, no longer resting on a fact that has
+changed.
+
+**Verified.** 385 tests, 0 failing, 1 skipped (the Firestore contract, as designed); 9 more than
+the entry below. Mutation-checked: with the guard's `return undefined` changed to `return writer`,
+exactly one case fails — "names nobody when the prose and the classification came from different
+families" — and the line was restored by edit rather than `git checkout`, for the reason recorded
+on 2026-09-08.
+
+**Driven against a real model, because the suite structurally cannot be.** `npm test` runs with no
+key and synthesis refuses to fall back, so the labelled path is unreachable there — which is also
+why the decision and the labelling are pure functions tested without a server. With this machine's
+Gemini key, against a two-fragment pile: 200, `X-Extraction-AI-Source: model`,
+`X-Extraction-AI-Provider: gemini`, both fields on the body agreeing with both headers, the ten
+coverage areas and `pileVersion` intact, **no model id in any header or body field**, `source` and
+`provider` absent from the stored session, one run counted and the session advanced. 14 of 14.
+
+**The mixed-provider branch has not been observed.** It needs two sets of credentials and this
+machine holds one, so the case the design exists for is covered by unit tests and by reading,
+exactly as Claude itself still is. It fails towards saying less, which is the safe direction.
+
+**What it deliberately did not do.** No field on the stored level set recording who wrote it — the
+label is a fact about a response, and a stored level set is only ever model-written, so persisting
+it would be a second copy of something already true by construction. No per-route provider
+selection, no history, and no operator view, which stays 007's one remaining item.
 
 ---
 

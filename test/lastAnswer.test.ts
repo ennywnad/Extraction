@@ -45,11 +45,25 @@ describe("reading who answered", () => {
   });
 
   it("calls an unmarked response unstated rather than assuming a model wrote it", () => {
-    // The load-bearing case. The group synthesize route answers with a plain res.json and
-    // names no source; defaulting that to "model" would have the board assert what it was
-    // never told, which is the one thing it exists not to do.
-    const answer = readAnswer("level set", headers(), { summary: "..." }, AT);
+    // The load-bearing case. Every route in the app declares a source today, so this is what
+    // protects the board from the next one that forgets to: defaulting absence to "model"
+    // would have it assert what it was never told, the one thing it exists not to do.
+    const answer = readAnswer("some new route", headers(), { summary: "..." }, AT);
     assert.equal(answer.source, "unstated");
+    assert.equal(answer.provider, undefined);
+  });
+
+  it("reads a model answer that names no family as a model answer", () => {
+    // Not a defect and not `unstated`. The group level set is two model calls, and when a
+    // cross-provider chain has them answered by different families the route says `model` and
+    // names none rather than crediting one with a body it half wrote.
+    const answer = readAnswer(
+      "level set",
+      headers({ "X-Extraction-AI-Source": "model" }),
+      { summary: "..." },
+      AT,
+    );
+    assert.equal(answer.source, "model");
     assert.equal(answer.provider, undefined);
   });
 

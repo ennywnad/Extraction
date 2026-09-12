@@ -110,11 +110,22 @@ design decision rather than an afterthought.
   into and the board reads through `useSyncExternalStore`, rather than a prop threaded through
   eight mode components that share nothing but `onAddThought`. It draws **three** states, not
   two: `model` names the family and never an id, `fallback` says the words were canned, and
-  `unstated` is what an unmarked response gets — the group synthesize route answers with a
-  plain `res.json(levelSet)` and names no source, so absence is a fact about that route and
-  never evidence that a model wrote it. Before anything has been asked, it says so rather than
-  drawing a state. No elapsed time: a static render has no clock, and "2m ago" in markup is
-  wrong by the time it is read.
+  `unstated` is what an unmarked response gets. Before anything has been asked, it says so
+  rather than drawing a state. No elapsed time: a static render has no clock, and "2m ago" in
+  markup is wrong by the time it is read.
+- **Every route declares who wrote its body**, including the group level set, which is the one
+  response carrying a client deliverable and was the last one answering with a bare
+  `res.json(levelSet)`. It goes through `sendGenerated` in
+  [respond.ts](../../server/ai/respond.ts), which labels a body the route assembled itself
+  rather than one `generate` returned whole. So `unstated` is now a state nothing in the tree
+  produces — kept because absence is still the only safe reading of a route that says nothing,
+  and a route added without the helper lands there rather than being read as a model answer.
+- **A model answer may name no family, and that is distinct from naming no source.** A level set
+  is built from two model calls, and each runs the chain independently, so a chain crossing
+  providers can have the classification answered by one family and the prose by another.
+  `answeringProvider` in [synthesis.ts](../../server/ai/synthesis.ts) names the writer only when
+  no second family contributed, and otherwise the response says `model` and names nobody — which
+  the board already drew, as "Model" with the family unstated.
 - **`Workspace.tsx` already renders a degradation banner** driven by `/healthz`, so there is
   precedent for the app reporting its own configuration to the user, and a component to learn
   the visual language from.
@@ -148,10 +159,6 @@ split:
   than an unauthenticated payload may carry — which means its own route behind
   `requireIdentity` and its own disclosure rule. Deliberately not built on the argument that it
   is cheaper to add later than to unpick.
-- **The group synthesize route still names no source.** The board reports that honestly as
-  `unstated`, which is why this is not urgent, but the asymmetry is real: seven solo routes say
-  who wrote the body and the one route producing a client deliverable does not. Making it
-  report is a server change rather than a board one.
 
 ## Open questions
 

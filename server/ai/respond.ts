@@ -12,7 +12,7 @@
  */
 import type { Response } from "express";
 import { isRateLimited } from "./client.ts";
-import type { ModelResult } from "./providers/types.ts";
+import type { ModelResult, ProviderName } from "./providers/types.ts";
 
 export type AiSource = "model" | "fallback";
 
@@ -36,12 +36,34 @@ const PROVIDER_HEADER = "X-Extraction-AI-Provider";
  * where `runChain` already puts it.
  */
 export function sendModel<T>(res: Response, result: ModelResult<T>) {
+  return sendGenerated(res, result.data as object, result.provider);
+}
+
+/**
+ * A model-written body the route assembled itself, rather than one `generate` handed back whole.
+ *
+ * The group level set is the case this exists for, and it is genuinely a different shape: it is
+ * built from **two** model calls — a classification pass feeding `coverage.ts`'s arithmetic, then
+ * the call that writes the prose — plus fields the server owns, so there is no single
+ * `ModelResult` to hand over. Before this, that route answered with a plain `res.json(levelSet)`
+ * and named no source at all, which made the one response carrying a client deliverable the only
+ * one the board could say nothing about.
+ *
+ * **The provider is optional here, and that is the honest part.** Each call runs the chain
+ * independently, so they can be answered by different families. Naming one of them would credit
+ * a family with a body it only half wrote, so the caller passes a family only when naming one
+ * does not overstate, and an absent provider still says `model` — which is true, and which the
+ * board already draws as "Model" with no family named.
+ *
+ * No status is set. The caller may be answering 200 or 202, and which one is its business.
+ */
+export function sendGenerated<T extends object>(res: Response, body: T, provider?: ProviderName) {
   res.setHeader(HEADER, "model");
-  res.setHeader(PROVIDER_HEADER, result.provider);
+  if (provider) res.setHeader(PROVIDER_HEADER, provider);
   return res.json({
-    ...(result.data as object),
+    ...body,
     source: "model" satisfies AiSource,
-    provider: result.provider,
+    ...(provider ? { provider } : {}),
   });
 }
 

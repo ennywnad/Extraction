@@ -24,12 +24,14 @@
 /**
  * What the server said wrote the body.
  *
- * `unstated` is the honest third state and the reason this is not a boolean. The seven solo
- * routes in server.ts go through `sendModel` / `sendFallback` and always say. The group
- * synthesize route in server/engagementRoutes.ts answers with a plain `res.json(levelSet)` and
- * says nothing — so an absent marker means "this route does not report", never "a model wrote
- * it". Defaulting absence to `model` would make the board assert exactly what it was not told,
- * on the one screen whose job is refusing to do that.
+ * `unstated` is the honest third state and the reason this is not a boolean. Every AI route in
+ * the app now declares who wrote its body — the seven solo routes through
+ * `sendModel` / `sendFallback`, and the group synthesize route through `sendGenerated` — so
+ * nothing in the tree currently produces this state. It stays because it is the only safe
+ * reading of a response that says nothing: an absent marker means "this route does not report",
+ * never "a model wrote it". Defaulting absence to `model` would make the board assert exactly
+ * what it was not told, on the one screen whose job is refusing to do that, and it would do so
+ * the moment somebody adds a route and forgets the helper.
  */
 export type AnswerSource = "model" | "fallback" | "unstated";
 
@@ -40,7 +42,13 @@ export interface LastAnswer {
   /** The route that answered, as a person would name it: "quick fire", not the path. */
   route: string;
   source: AnswerSource;
-  /** Present only when a model answered and the route named the family. */
+  /**
+   * Present only when a model answered and the route named the family.
+   *
+   * A model answer with no family is a real state rather than a defect: the group level set is
+   * built from two model calls, and when a cross-provider chain has them answered by different
+   * families the route names none rather than crediting one with the whole body.
+   */
   provider?: AnswerProvider;
   /** When this browser received it, for "3m ago". */
   at: number;
