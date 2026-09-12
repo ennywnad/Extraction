@@ -1,7 +1,7 @@
 # 005 — Listening mode: a kickoff with no model
 
-**Status:** intent, in part — the state is nameable and the prompting routes honour it. See
-[STATUS.md](STATUS.md).
+**Status:** intent, in part — the state is nameable, the prompting routes honour it, and coverage
+is visible live while the room writes. See [STATUS.md](STATUS.md).
 **Written:** 2026-09-03
 
 ## What
@@ -100,8 +100,10 @@ And, as the first draft of this file found, nearly all of the rest was there alr
   pile, and the result needs somewhere to land in the workspace, which today has no surface for
   one. Until then ending listening hands back an ordinary session and the person picks a mode off
   the tape, which is what they do in every other session.
-- **Live coverage while the room writes.** Still the thing that would make the mode visibly useful
-  in the room, and still blocked on the same piece: see the open question below.
+- ~~**Live coverage while the room writes.**~~ **Built**, on 2026-09-11, and the unblocking came
+  from [006](006-local-assists-before-submit.md) rather than from anything in this file: a
+  fragment whose author accepted an area arrives already classified, so the wall needs no model
+  call. See the open question below for what it does and does not claim.
 
 ## Open questions
 
@@ -122,20 +124,22 @@ And, as the first draft of this file found, nearly all of the rest was there alr
   order.** At intake it is skipped, which is what "Listen First" does. Offering it from the pile
   at the exit is the better feature and is the named next increment above, because it needs the
   prompt to read a pile and a surface that does not exist yet.
-- **Can a facilitator see coverage live, during listening mode?** This would be the thing that
-  makes the mode visibly useful in the room rather than merely quiet — a wall showing which of
-  the ten areas nobody has entered, filling in as people write. It is not free, and it is worth
-  being precise about why. The coverage _arithmetic_ in
-  [coverage.ts](../../server/ai/coverage.ts) is deliberately not a model call, but its input
-  is: `classify()` asks a model to assign each fragment to an area, and returns `{}` when no
-  model is configured — which makes every area report zero and read as dark. So live coverage
-  needs either a classification pass run at the end of listening (easy, but not live), or a
-  non-model classifier over the ten areas (live, and a real piece of work). The keyword filters
-  above are the closest existing thing and are not close enough. What is left of this question
-  is only the classification: the wall itself is built
-  ([CoverageMap.tsx](../../src/components/CoverageMap.tsx), from a map that arrives with the
-  ordinary poll), and it already distinguishes a fragment nobody placed from an area nobody
-  spoke into — so a classifier returning nothing reads as unplaced rather than as silence.
+- ~~**Can a facilitator see coverage live, during listening mode?**~~ **Yes, since 2026-09-11,
+  and the classification is the half that was missing exactly as this question said.** The
+  arithmetic in [coverage.ts](../../src/utils/coverage.ts) was never a model call; its input was,
+  because `classify()` asks a model to assign each fragment to an area and returns `{}` with
+  nothing configured — which made every area read as unplaced in precisely the session that is
+  deliberately quiet. The non-model classifier this question asked for turned out not to be a
+  classifier at all: [006](006-local-assists-before-submit.md)'s area assist suggests an area to
+  an author on their own machine _before_ they submit, so a fragment arrives already carrying one
+  and nothing needs re-reading the pile. See [liveCoverage.ts](../../src/utils/liveCoverage.ts).
+
+  Two things this deliberately does not claim. The classification is **partial** — only fragments
+  whose author accepted a suggestion carry an area — so the wall says "nothing filed yet" where
+  the level set's map says "still dark", which is a weaker and truer sentence. And it draws
+  nothing until five fragments are filed, for the reason the chorus stays quiet under eight: nine
+  black cells read as a finding when they mean the assist is switched off, which by default it
+  is.
 
 ## Non-goals
 

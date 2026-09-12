@@ -54,7 +54,7 @@ each other — one is a recap of what one person uncovered, the other states the
 ask that ten people will be held to.
 
 **Arithmetic the model is not asked to do.** Coverage — including which areas _nobody_ raised —
-is computed in [server/ai/coverage.ts](server/ai/coverage.ts) from classified fragments. The
+is computed in [src/utils/coverage.ts](src/utils/coverage.ts) from classified fragments. The
 model assigns each fragment to one area from a bounded list, which it is reliable at; counting
 is done in TypeScript, because the headline of a level set is the zero and a zero has to be
 right every time.

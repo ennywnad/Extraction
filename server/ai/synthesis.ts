@@ -3,7 +3,7 @@ import { getEngagementStore } from "../store/index.ts";
 import { aiAvailable, generate, type ProviderName } from "./client.ts";
 import { CLASSIFICATION_SCHEMA, LEVEL_SET_SCHEMA } from "./schema.ts";
 import { UserFacingError } from "./respond.ts";
-import { computeCoverage, type AreaCoverage } from "./coverage.ts";
+import { computeCoverage, type AreaCoverage } from "../../src/utils/coverage.ts";
 import { LEVEL_SET_AREAS, classificationPrompt, levelSetPrompt } from "./levelSetPrompt.ts";
 
 export interface LevelSet {

@@ -1,5 +1,5 @@
-import { areaStatus, voicesIn } from "../../src/utils/voices.ts";
-import type { AreaCoverage, AreaStatus, Session } from "../../src/types.ts";
+import { areaStatus, voicesIn } from "./voices.ts";
+import type { AreaCoverage, AreaStatus, Session } from "../types.ts";
 
 // The shape is declared in src/types.ts, with the rest of what crosses the wire. Re-exported
 // so callers of the arithmetic can keep importing the type from beside it.
@@ -7,6 +7,13 @@ export type { AreaCoverage, AreaStatus };
 
 /**
  * Turns a per-fragment classification into a coverage map.
+ *
+ * Here rather than under server/ai/ for the reason voices.ts is here, and the move was forced by
+ * the same thing that made it safe: this is pure arithmetic over a Session, it imports nothing
+ * but voices.ts, and there are now two callers on opposite sides of the wire. The level set feeds
+ * it a classification a model produced; the browser feeds it the areas authors accepted from a
+ * local assist while the room is still writing. Neither is a model call *here* — which was always
+ * the point of the file, and is now the point of where it lives.
  *
  * The classification is the model's job; this is deliberately not. The headline output of a
  * level set is the area nobody raised, and asking a model to notice an absence across two

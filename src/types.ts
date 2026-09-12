@@ -181,7 +181,7 @@ export interface Session {
   synthesizedActionItems?: string[];
   /**
    * Per-area coverage from the last level set. Engagements only, and server-written: it is
-   * arithmetic over the pile (see server/ai/coverage.ts), so a client that could set it
+   * arithmetic over the pile (see src/utils/coverage.ts), so a client that could set it
    * could contradict the count. Absent until a level set has been generated.
    */
   coverage?: AreaCoverage[];

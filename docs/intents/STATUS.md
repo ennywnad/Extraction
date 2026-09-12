@@ -17,19 +17,86 @@ this file only records which pieces of one have become code.
 
 ## Where each intent stands
 
-| #                                              | Intent                        | State                                                           |
-| :--------------------------------------------- | :---------------------------- | :-------------------------------------------------------------- |
-| [001](001-mcp-server-over-the-pile.md)         | MCP server over the pile      | unchanged                                                       |
-| [002](002-model-provider-seam.md)              | Provider-neutral model seam   | **landed** — per-route selection deliberately deferred          |
-| [003](003-local-models-in-solo-mode.md)        | Local models in solo mode     | unchanged                                                       |
-| [004](004-claude-and-the-gcp-model-gateway.md) | Claude as a deployment choice | **in part** — built and stubbed; never run against Vertex       |
-| [005](005-listening-mode.md)                   | Listening mode                | **in part** — chosen, honoured, and labelled rather than warned |
-| [006](006-local-assists-before-submit.md)      | Local assists before submit   | **in part** — built, and both backends calibrated to 89%        |
-| [007](007-status-board.md)                     | Status board                  | **in part** — reported, drawn, live, and every route labelled   |
-| [008](008-deploying-group-mode.md)             | Deploying group mode          | **in part** — three preparatory items; still never deployed     |
-| [009](009-the-deferred-group-surface.md)       | The deferred group surface    | **in part** — the coverage map is built                         |
-| [010](010-model-armor.md)                      | Model Armor at the prompt     | unchanged                                                       |
-| [011](011-the-role-brief.md)                   | The role brief                | **in part** — roles can be declared, grouped and briefed        |
+| #                                              | Intent                        | State                                                         |
+| :--------------------------------------------- | :---------------------------- | :------------------------------------------------------------ |
+| [001](001-mcp-server-over-the-pile.md)         | MCP server over the pile      | unchanged                                                     |
+| [002](002-model-provider-seam.md)              | Provider-neutral model seam   | **landed** — per-route selection deliberately deferred        |
+| [003](003-local-models-in-solo-mode.md)        | Local models in solo mode     | unchanged                                                     |
+| [004](004-claude-and-the-gcp-model-gateway.md) | Claude as a deployment choice | **in part** — built and stubbed; never run against Vertex     |
+| [005](005-listening-mode.md)                   | Listening mode                | **in part** — honoured, labelled, and coverage visible live   |
+| [006](006-local-assists-before-submit.md)      | Local assists before submit   | **in part** — built, and both backends calibrated to 89%      |
+| [007](007-status-board.md)                     | Status board                  | **in part** — reported, drawn, live, and every route labelled |
+| [008](008-deploying-group-mode.md)             | Deploying group mode          | **in part** — three preparatory items; still never deployed   |
+| [009](009-the-deferred-group-surface.md)       | The deferred group surface    | **in part** — the coverage map is built, and now drawn live   |
+| [010](010-model-armor.md)                      | Model Armor at the prompt     | unchanged                                                     |
+| [011](011-the-role-brief.md)                   | The role brief                | **in part** — roles can be declared, grouped and briefed      |
+
+---
+
+## 2026-09-11 — 005 and 009, in part: the coverage wall, while the room is still writing
+
+**Against [005](005-listening-mode.md)'s last open question and [009](009-the-deferred-group-surface.md)'s
+catalogue, and it is the payoff that picked 006 in the first place.** 005 asks whether a
+facilitator can see coverage live — "a wall showing which of the ten areas nobody has entered,
+filling in as people write" — and answers that it is not free, because `classify()` is a server
+model call that returns `{}` with nothing configured, so in a listening session, exactly where
+this is most useful, every area reads as unplaced. [006](006-local-assists-before-submit.md)'s
+area assist is what pays for it: a fragment whose author accepted an area arrives already
+classified, so the wall needs no model call and behaves identically with Gemini unconfigured.
+That composition is the reason 006 was built before 005's own named next step, and this is it
+arriving.
+
+**Almost none of this was new code, which is the point.** `computeCoverage` was already pure,
+already imported nothing but `voices.ts`, and already refused to ask a model. `CoverageMap` was
+already a presentational component taking `AreaCoverage[]`. The increment is a move, forty lines
+of reading, and one honest prop.
+
+**The arithmetic moved to [src/utils/coverage.ts](../../src/utils/coverage.ts), beside
+`voices.ts`.** It had lived under `server/ai/` since it was written for the level set, but there
+is nothing server-side about it and now there are two callers on opposite sides of the wire. The
+move is the same one `voices.ts` already made and for the same stated reason — the browser
+recounts what the server counted, from the same functions. Comments across the repo that pointed
+at the old path were updated; the dated entries in this log and the records in `planv1/` were
+not, because they describe the repo on the day they were written.
+
+**A partial classification supports a weaker claim, and saying so was the whole design
+question.** The level set's map is over every fragment, so a black cell means nobody spoke into
+that area. This map is built only from areas authors accepted, so the same black cell usually
+means nobody _filed_ anything there. Identical numbers, identical cells, and a headline that has
+to differ: "9 of 10 areas still dark" would have a facilitator announcing a gap that is really an
+unused feature. `CoverageMap` now takes a `source` of `live` or `level-set` and says the honest
+sentence for each — including in the footer, where "not placed by the classifier" is the level
+set's sentence and there is no classifier here. The default is `level-set`, because
+[ExportPanel](../../src/components/ExportPanel.tsx) renders it with no prop at all and the client
+deliverable must never quietly start hedging. A test pins that default, which the first pass at
+the tests did not — found by mutation, not by reading.
+
+**It refuses to draw below five filed fragments.** The same judgement as `MIN_PILE` in
+chorus.ts: a map built from two filed fragments is nine black cells, and nine black cells read as
+"this room has covered nothing" when they mean "almost nobody has used the assist". The footer
+would say so truthfully and nobody reads a footer over a wall of black. Below the line the button
+is absent rather than disabled — a greyed-out control advertises a feature whose precondition
+nobody can see — which also means the default configuration, where both assists ship off, shows
+nothing at all rather than something broken-looking.
+
+**Areas are filtered against `LEVEL_SET_AREAS` rather than trusted.** An area is free text on a
+fragment, so a value from an older build, a shared link or a renamed area would be counted as
+placed while matching no cell — inflating the tally and making the unplaced warning, the one
+thing keeping the map honest, under-report.
+
+**Verified.** 453 tests, 0 failing, 1 skipped; 13 more than the entry below. Mutation-checked
+seven ways, each caught by exactly one leaf test: the area filter dropped; the minimum dropped;
+the live headline reverted to the level set's; the live footer blaming a classifier; the
+provenance line removed; and the default `source` flipped, which is the one the first pass missed.
+`npm run build` is clean, and the moved module compiles and serves through Vite.
+
+**What it deliberately did not do.** No writing back — nothing here changes a fragment, and 006's
+non-goals still hold: the assist suggests, the author accepts, and the pile is untouched by
+either. No live voice counts beyond what `computeCoverage` already returns, and no attempt to
+reconcile this map with the level set's when both exist; they answer different questions from
+different classifications and showing them side by side is a question about the deliverable
+rather than about the wall. And nothing at all happens in a session where the assists are off,
+which is still every session by default.
 
 ---
 

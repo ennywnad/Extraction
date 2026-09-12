@@ -2,7 +2,7 @@
  * Whether a set of scores is worth putting in front of an author, and which label wins.
  *
  * Every judgement in this feature is here, deliberately, and none of it is in an adapter. Same
- * division as server/ai/coverage.ts: the model produces numbers, and what the numbers *mean* is
+ * division as src/utils/coverage.ts: the model produces numbers, and what the numbers *mean* is
  * arithmetic somebody can read. An adapter that applied its own threshold would make the two
  * backends disagree about confidence, and a suggestion looking surer because a different
  * runtime has a more generous scale is the exact failure this feature cannot survive — the
