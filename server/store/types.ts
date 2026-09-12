@@ -1,6 +1,13 @@
 import type { AuthorStamp, RoleGroup, RosterEntry, Session, Thought } from "../../src/types.ts";
 
-/** Fields of a Session that a roster member may update. Never includes thoughts. */
+/**
+ * Fields of a Session that a roster member may update. Never includes thoughts.
+ *
+ * `listening` is in here rather than among the server's own fields for the reason the roster is
+ * auto-join: this app has no authorisation model, IAP decided who may be in the room, and quieting
+ * it is a facilitation decision somebody makes out loud and can undo. The same is already true of
+ * `status` and `topic`.
+ */
 export type SessionMetaPatch = Partial<
   Pick<
     Session,
@@ -8,6 +15,7 @@ export type SessionMetaPatch = Partial<
     | "modeHistory"
     | "modeProgress"
     | "status"
+    | "listening"
     | "topic"
     | "intention"
     | "synthesizedOutline"

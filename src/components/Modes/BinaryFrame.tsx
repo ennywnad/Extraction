@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { GitCommit, Sparkles, RefreshCw, ChevronRight } from "lucide-react";
 import { Thought, BinaryPair } from "../../types";
+import { askModel } from "../../utils/askModel";
 import { recordAnswer } from "../../utils/lastAnswer";
 
 interface BinaryFrameProps {
@@ -26,13 +27,9 @@ export default function BinaryFrame({ topic, onAddThought, thoughts }: BinaryFra
     setShowCustomInput(false);
     setCustomValue("");
     try {
-      const response = await fetch("/api/session/binary-bracket", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          topic,
-          recentThoughts: thoughts.slice(0, 8),
-        }),
+      const response = await askModel("/api/session/binary-bracket", {
+        topic,
+        recentThoughts: thoughts.slice(0, 8),
       });
 
       if (response.ok) {

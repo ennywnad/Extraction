@@ -15,7 +15,7 @@ import {
   RECOMMEND_SCHEMA,
   SYNTHESIZE_SESSION_SCHEMA,
 } from "./server/ai/schema.ts";
-import { sendAiError, sendFallback, sendModel } from "./server/ai/respond.ts";
+import { sendAiError, sendFallback, sendModel, servesFallback } from "./server/ai/respond.ts";
 import { instanceStatus } from "./server/status.ts";
 import {
   binaryBracketPrompt,
@@ -146,7 +146,7 @@ app.get("/api/whoami", requireIdentity, (req, res) => {
 // 1. RECOMMEND A MODE BASED ON WARMUP ANSWERS
 app.post("/api/session/recommend", async (req, res) => {
   const { topic, intention, clarity, nature, timeAvailable, intentType } = req.body;
-  if (!aiAvailable()) {
+  if (servesFallback(req)) {
     const recommended = clarity === "foggy" ? "free_stream" : "guided_drill";
     return sendFallback(res, {
       recommendation: recommended,
@@ -179,7 +179,7 @@ app.post("/api/session/recommend", async (req, res) => {
 // 2. QUICK FIRE PROMPTS GENERATOR
 app.post("/api/session/quick-fire", async (req, res) => {
   const { topic, intention, pastThoughts } = req.body;
-  if (!aiAvailable()) {
+  if (servesFallback(req)) {
     return sendFallback(res, {
       prompts: [
         `What's the first word that comes to mind when considering: ${topic}?`,
@@ -210,7 +210,7 @@ app.post("/api/session/quick-fire", async (req, res) => {
 // 3. GUIDED DRILL INTERVIEW: Adaptive next question
 app.post("/api/session/drill-next", async (req, res) => {
   const { topic, intention, history, recentThoughts, advancedSettings } = req.body;
-  if (!aiAvailable()) {
+  if (servesFallback(req)) {
     return sendFallback(res, {
       question: "Could you expand on the main blocker that feels most active right now?",
       contextNote: "Let's explore your core feeling.",
@@ -232,7 +232,7 @@ app.post("/api/session/drill-next", async (req, res) => {
 // 3b. GUIDED DRILL DIALOGUE: Bi-directional chat clarification
 app.post("/api/session/drill-clarify", async (req, res) => {
   const { topic, intention, history, userComment, recentThoughts, advancedSettings } = req.body;
-  if (!aiAvailable()) {
+  if (servesFallback(req)) {
     return sendFallback(res, {
       reply: `I understand you're asking about this with respect to "${topic}". Think of how this constraint forms the core bottleneck of what you are building or solving.`,
       nextQuestion: "How does this concern change your immediate strategic roadmap or next step?",
@@ -262,7 +262,7 @@ app.post("/api/session/drill-clarify", async (req, res) => {
 // 4. BINARY INTUITION / BRACKET PAIR GENERATOR
 app.post("/api/session/binary-bracket", async (req, res) => {
   const { topic, recentThoughts } = req.body;
-  if (!aiAvailable()) {
+  if (servesFallback(req)) {
     return sendFallback(res, {
       optionA: "I'm holding onto this because I'm genuinely excited about its potential.",
       optionB: "I'm holding onto this because I'm terrified of what happens if I let it go.",
@@ -284,7 +284,7 @@ app.post("/api/session/binary-bracket", async (req, res) => {
 // 5. DEVIL'S ADVOCATE GENERATOR
 app.post("/api/session/devils-advocate", async (req, res) => {
   const { topic, recentThoughts } = req.body;
-  if (!aiAvailable()) {
+  if (servesFallback(req)) {
     return sendFallback(res, {
       challenges: [
         "Is there a chance your standard of 'success' here is actually unrealistic?",
@@ -309,6 +309,8 @@ app.post("/api/session/devils-advocate", async (req, res) => {
 // 6. SYNTHESIZE SESSION: Produce outline, summary, and action items
 app.post("/api/session/synthesize", async (req, res) => {
   const { topic, intention, thoughts, advancedSettings } = req.body;
+  // `aiAvailable()` rather than `servesFallback(req)`: listening silences what the app says
+  // unasked, and synthesis is the one call somebody has to press a button for. See that function.
   if (!aiAvailable()) {
     // Structural only. Unlike the group level set, which refuses to generate at all rather
     // than write filler into a shared client deliverable, a solo outline is read by the one

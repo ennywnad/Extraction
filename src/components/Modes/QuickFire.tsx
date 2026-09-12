@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Zap, ChevronRight, HelpCircle, AlertTriangle, RefreshCw, Sparkles } from "lucide-react";
 import { Thought } from "../../types";
+import { askModel } from "../../utils/askModel";
 import { recordAnswer } from "../../utils/lastAnswer";
 
 interface QuickFireProps {
@@ -29,14 +30,10 @@ export default function QuickFire({ topic, intention, onAddThought, thoughts }: 
   const fetchPrompts = async () => {
     setLoading(true);
     try {
-      const response = await fetch("/api/session/quick-fire", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          topic,
-          intention,
-          pastThoughts: thoughts.slice(0, 10),
-        }),
+      const response = await askModel("/api/session/quick-fire", {
+        topic,
+        intention,
+        pastThoughts: thoughts.slice(0, 10),
       });
       if (response.ok) {
         const data = await response.json();

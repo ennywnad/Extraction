@@ -1,4 +1,12 @@
-import { useState, useEffect, useMemo, useRef, useCallback, useSyncExternalStore } from "react";
+import {
+  Fragment,
+  useState,
+  useEffect,
+  useMemo,
+  useRef,
+  useCallback,
+  useSyncExternalStore,
+} from "react";
 import { Cpu, Monitor, Moon, Sun } from "lucide-react";
 import { loadSessions, persistSession, deleteSession } from "./utils/localDB";
 import * as engagementAPI from "./utils/engagementAPI";
@@ -7,6 +15,7 @@ import { pushSessionUpdate } from "./utils/engagementSync";
 import { decodeSnapshot } from "./utils/shareLink";
 import { Session, Thought, ExtractionMode, InstanceStatus } from "./types";
 import { engagementStats } from "./utils/engagementStats";
+import { setListening } from "./utils/askModel";
 import { lastAnswer, subscribeToAnswers } from "./utils/lastAnswer";
 import { DEFAULT_PREFS, loadPrefs, savePrefs, type BoardPrefs } from "./utils/boardPrefs";
 import { buildIndex, echoFor, tally } from "./utils/chorus";
@@ -234,6 +243,10 @@ function validateAndSanitizeSnapshot(data: any): Session | null {
     updatedAt,
   };
 
+  // A boolean or nothing. A snapshot is somebody else's file, and a truthy string here would
+  // put the session in a state the banner claims and the routes do not — see the guard in
+  // server/engagementRoutes.ts, which drops a non-boolean for the same reason.
+  if (data.listening === true) session.listening = true;
   if (warmupAnswers) session.warmupAnswers = warmupAnswers;
   if (advancedSettings) session.advancedSettings = advancedSettings;
   if (typeof data.synthesizedOutline === "string")
@@ -273,6 +286,11 @@ export default function App() {
   const [lastContributed, setLastContributed] = useState<{ id: string; text: string } | null>(null);
   const aiEnabled = instanceStatus?.aiEnabled !== false;
   /**
+   * Whether this session has asked the app to stay quiet. In an engagement it is the room's
+   * state, so a poll can bring somebody else's decision in and this follows it.
+   */
+  const listening = currentSession?.listening === true;
+  /**
    * Who wrote the last AI response this tab received.
    *
    * Read from a store rather than threaded down as a callback: the nine AI fetches live in
@@ -283,6 +301,15 @@ export default function App() {
    * truthful answer before anything has been asked in any case.
    */
   const currentAnswer = useSyncExternalStore(subscribeToAnswers, lastAnswer, lastAnswer);
+
+  /**
+   * The six prompting call sites read this when they compose a request rather than taking it as
+   * a prop — see src/utils/askModel.ts for why it is not threaded through the modes. Mirrored
+   * here, in one effect, so there is exactly one place the two can fall out of step.
+   */
+  useEffect(() => {
+    setListening(listening);
+  }, [listening]);
 
   // Held in refs so the polling effect can read them without resubscribing every render.
   const engagementEtag = useRef<string | null>(null);
@@ -364,6 +391,9 @@ export default function App() {
       intention: sessionData.intention || "Unclutter scatters",
       isCustomIntention: false,
       status: "active",
+      // Absent rather than false when the form did not ask for it, so a stored session carries
+      // the field only when somebody chose it.
+      ...(sessionData.listening ? { listening: true } : {}),
       activeMode: sessionData.activeMode || "free_stream",
       thoughts: [],
       modeProgress: { ...EMPTY_MODE_PROGRESS },
@@ -408,6 +438,25 @@ export default function App() {
 
     // Keep state updated in parent list
     setSessions(loadSessions());
+  };
+
+  /**
+   * Turns listening on or off — for the whole room, when this is an engagement.
+   *
+   * The toast is the handoff. Ending listening is the transition the intent calls the feature,
+   * and without something said out loud it is a flag flip: the modes come alive on the next
+   * question and nobody is told which change they are looking at. It names what actually
+   * becomes true, which on an instance with no model configured is nothing.
+   */
+  const handleListeningChange = (on: boolean) => {
+    handleUpdateSession({ listening: on });
+    showToast(
+      on
+        ? "Listening. Nothing will be generated until you end it — keep writing."
+        : aiEnabled
+          ? "Listening ended. The modes are asking the model again."
+          : "Listening ended. No model is configured, so prompts stay fixed.",
+    );
   };
 
   /**
@@ -829,13 +878,19 @@ export default function App() {
               onSaveRosterEntry={currentSession.engagementId ? handleSaveRosterEntry : undefined}
               onSetRoleGroup={currentSession.engagementId ? handleSetRoleGroup : undefined}
               aiEnabled={aiEnabled}
+              listening={listening}
+              onListeningChange={handleListeningChange}
               chorusEnabled={chorusPrefs.enabled}
               onChorusToggle={handleChorusToggle}
               chorus={chorus}
               onChorusDismiss={() => setLastContributed(null)}
               loneIds={loneIds}
             >
-              {renderActiveMode()}
+              {/* Keyed on the listening boundary so the mode remounts when it is crossed.
+                  Every mode that asks for a prompt asks once, on mount, so without this the
+                  handoff would not arrive until somebody happened to press refresh — the room
+                  would be told generation was back while still reading a fixed question. */}
+              <Fragment key={listening ? "listening" : "live"}>{renderActiveMode()}</Fragment>
             </Workspace>
           );
         }

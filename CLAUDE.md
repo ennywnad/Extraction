@@ -19,8 +19,8 @@ solo (fragments in `localStorage`) and group (a shared pile on the server, behin
 Healthy `npm run check` ends with:
 
 ```
-# tests 385
-# pass 384
+# tests 402
+# pass 401
 # fail 0
 # skipped 1
 ```
@@ -30,7 +30,7 @@ The skip is `FirestoreEngagementStore` in
 
 ```
 gcloud emulators firestore start --host-port=localhost:8484   # needs Java 21+ on PATH
-npm run test:firestore                                        # 398 tests, 0 skipped
+npm run test:firestore                                        # 415 tests, 0 skipped
 ```
 
 ## Configuration decides behavior
@@ -112,6 +112,15 @@ Every backend picks itself by **presence of configuration**, not by a flag. Read
   because Gemini and Firestore errors both name the project, and `/api/session/*` has no
   identity requirement in a solo deployment. Allowlist, not denylist. A 429 — the only status
   a caller can act on — passes through.
+- **A session can ask the app to stay quiet, and a route must be told rather than trusted.**
+  `Session.listening` is listening mode ([docs/intents/005-listening-mode.md](docs/intents/005-listening-mode.md)):
+  a deliberate state, distinct from `aiEnabled`, which is a fact about the deployment. So a
+  prompting route guards with `servesFallback(req)` rather than `!aiAvailable()` — same fallback,
+  one more reason to serve it — and every client call reaches one through `askModel()` in
+  [src/utils/askModel.ts](src/utils/askModel.ts), which folds the flag in so a new mode is quiet
+  without knowing the state exists. Synthesis is the one exception on both sides: it is the model
+  call somebody presses a button for. [test/listening.test.ts](test/listening.test.ts) scans for
+  both, because an unguarded route just works.
 - Adding an extraction mode means touching four places, and **a forgotten one is a
   `npm run lint` failure rather than a mode nobody can reach.** Three are keyed on
   `ExtractionMode`, so the missing key is the error: `EMPTY_MODE_PROGRESS` in

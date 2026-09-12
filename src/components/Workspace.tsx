@@ -18,6 +18,7 @@ import {
   MicOff,
   Waves,
   Users,
+  Ear,
 } from "lucide-react";
 import { Session, Thought, ExtractionMode } from "../types";
 import ChorusCard from "./ChorusCard";
@@ -47,6 +48,16 @@ interface WorkspaceProps {
   viewerEmail?: string;
   /** False when the AI proxy is unreachable and every mode is serving canned prompts. */
   aiEnabled?: boolean;
+  /**
+   * The session has asked the app to stay quiet: no generated prompts, no adaptive questions.
+   *
+   * A separate prop from `aiEnabled` because they are separate facts and the room is told them
+   * differently — one is an accident to fix, the other is a choice somebody made. The banner
+   * below is the whole point of the distinction. See `Session.listening`.
+   */
+  listening?: boolean;
+  /** Turns listening on or off. In group mode this is a decision about the whole room. */
+  onListeningChange?: (on: boolean) => void;
   /** Per viewer; see src/utils/chorusPrefs.ts for why it is not a fact about the room. */
   chorusEnabled?: boolean;
   onChorusToggle?: () => void;
@@ -173,6 +184,8 @@ export default function Workspace({
   onEditingChange,
   viewerEmail,
   aiEnabled = true,
+  listening = false,
+  onListeningChange,
   chorusEnabled = false,
   onChorusToggle,
   onSaveRosterEntry,
@@ -405,6 +418,24 @@ export default function Workspace({
           </button>
 
           <button
+            onClick={() => onListeningChange?.(!listening)}
+            aria-pressed={listening}
+            title={
+              listening
+                ? "Listening: the app is taking input and generating nothing. Click to end it."
+                : "Listening is off: the modes ask the model for prompts and questions"
+            }
+            className={`px-3.5 py-1.5 border-2 border-black text-xs font-bold font-display uppercase tracking-wider flex items-center gap-1.5 cursor-pointer shadow-hard-2 transition-all ${
+              listening
+                ? "bg-frost text-black hover:bg-powder"
+                : "bg-white text-zinc-400 hover:bg-zinc-50"
+            }`}
+          >
+            <Ear className="w-3.5 h-3.5" />
+            Listening
+          </button>
+
+          <button
             onClick={() => setShowDirectInput((prev) => !prev)}
             className="px-3.5 py-1.5 border-2 border-black bg-white hover:bg-zinc-50 text-black text-xs font-bold font-display uppercase tracking-wider flex items-center gap-1.5 cursor-pointer shadow-hard-2 transition-all"
           >
@@ -518,18 +549,50 @@ export default function Workspace({
           ref={modePaneRef}
           className="flex-1 p-6 overflow-y-auto bg-paper flex flex-col justify-between"
         >
-          {/* Degradation has to be visible. Without this the modes quietly serve generic
-              canned prompts, which in a paid workshop is worse than an outright error. */}
-          {!aiEnabled && (
-            <div className="max-w-3xl mx-auto w-full mb-4 border-3 border-black bg-coral p-3 shadow-hard-4">
-              <p className="text-[11px] font-mono font-bold uppercase tracking-wider text-black">
-                AI is unavailable
-              </p>
-              <p className="text-[11px] text-zinc-800 font-sans mt-0.5">
-                Prompts are falling back to a fixed list and are not tailored to this topic. Check
-                the Gemini configuration before running a session that matters.
-              </p>
+          {/* Two states, one slot, and the chosen one wins.
+              The app has always had exactly one way to be modelless and it was worded for an
+              accident, which is the confusion docs/intents/005-listening-mode.md exists to
+              remove: a facilitator who turned generation off does not need to check their
+              configuration. So a chosen quiet is labelled rather than warned about — and when
+              it is also true that nothing is configured, this says so instead of hiding it,
+              because that fact outlives the choice. */}
+          {listening ? (
+            <div className="max-w-3xl mx-auto w-full mb-4 border-3 border-black bg-frost p-3 shadow-hard-4 flex items-start gap-3">
+              <div className="flex-1">
+                <p className="text-[11px] font-mono font-bold uppercase tracking-wider text-black flex items-center gap-1.5">
+                  <Ear className="w-3.5 h-3.5" />
+                  Listening
+                </p>
+                <p className="text-[11px] text-zinc-800 font-sans mt-0.5">
+                  Nothing is being generated. Prompts and questions are this app&apos;s own fixed
+                  set, no model is being asked, and every fragment is still being kept.
+                  {!aiEnabled &&
+                    " No model is configured on this server either, so ending listening will not change what the modes ask."}
+                </p>
+              </div>
+              {onListeningChange && (
+                <button
+                  onClick={() => onListeningChange(false)}
+                  className="shrink-0 px-3 py-1.5 border-2 border-black bg-white hover:bg-zinc-50 text-black text-[10px] font-black font-display uppercase tracking-wider cursor-pointer shadow-hard-2 transition-all"
+                >
+                  End listening
+                </button>
+              )}
             </div>
+          ) : (
+            /* Degradation has to be visible. Without this the modes quietly serve generic
+               canned prompts, which in a paid workshop is worse than an outright error. */
+            !aiEnabled && (
+              <div className="max-w-3xl mx-auto w-full mb-4 border-3 border-black bg-coral p-3 shadow-hard-4">
+                <p className="text-[11px] font-mono font-bold uppercase tracking-wider text-black">
+                  AI is unavailable
+                </p>
+                <p className="text-[11px] text-zinc-800 font-sans mt-0.5">
+                  Prompts are falling back to a fixed list and are not tailored to this topic. Check
+                  the Gemini configuration before running a session that matters.
+                </p>
+              </div>
+            )
           )}
           {/* Deliberately after the fragment is committed rather than while it is being
               written: shown to somebody mid-sentence this would be an anchoring machine, and

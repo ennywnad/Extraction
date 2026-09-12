@@ -1,6 +1,7 @@
 # 005 — Listening mode: a kickoff with no model
 
-**Status:** intent. Not planned, not scheduled.
+**Status:** intent, in part — the state is nameable and the prompting routes honour it. See
+[STATUS.md](STATUS.md).
 **Written:** 2026-09-03
 
 ## What
@@ -27,17 +28,50 @@ design for a drill and the wrong one for a firehose. Listening mode is not a deg
 is the opposite design goal, and it deserves to be named rather than approximated by turning
 things off.
 
-**It converts a failure state into a feature.** Right now the app has one way to be modelless:
-a coral warning banner reading _"AI is unavailable… check the Gemini configuration before
-running a session that matters."_ That message is correct for an accident and actively wrong
-for a deliberate choice. Making the state nameable is most of the work.
+**It converts a failure state into a feature.** The app had one way to be modelless: a coral
+warning banner reading _"AI is unavailable… check the Gemini configuration before running a
+session that matters."_ That message is correct for an accident and actively wrong for a
+deliberate choice — telling a facilitator who just turned generation off to go and check their
+configuration. Naming the state was most of the work, and it is the half that is built.
 
 **It is cheap.** Of the seven intents on this list, this is the one where the code is already
 almost entirely there.
 
 ## What the code already supports
 
-Nearly all of it:
+The state itself, end to end:
+
+- **`Session.listening` is the state, as a field rather than a seventh `status`** — a listening
+  session is `active`, because people are contributing. It is per engagement, so a facilitator can
+  quiet a room somebody else opened and every tab learns it on the ordinary poll; it is in
+  `SessionMetaPatch` and `META_FIELDS` for the reason the roster is auto-join, and it is stored
+  only as a real boolean — the patch route and the shared-link importer both drop anything else.
+- **One decision, consulted by every route that speaks unasked.** `servesFallback(req)` in
+  [respond.ts](../../server/ai/respond.ts) folds "the caller asked for quiet" together with "no
+  model is reachable", because the answer is the same body either way: the fallback that route
+  already owns, already labelled `source: "fallback"`. Six prompting routes ask it. Synthesis
+  deliberately does not — a level set is the one model call a person has to press a button for,
+  which is what "no synthesis until someone asks for it" means. It takes availability as an
+  argument, so the decision is testable with no key.
+- **The client has one door, and the flag lives behind it.** `askModel` in
+  [askModel.ts](../../src/utils/askModel.ts) composes the POST the six call sites were each
+  writing by hand and folds in `listening`. That is a module rather than a prop on six mode
+  interfaces for `lastAnswer.ts`'s reason, and it means a mode added later is quiet by
+  construction instead of quiet if somebody remembered. Two scans in
+  [test/listening.test.ts](../../test/listening.test.ts) keep both halves honest: a prompting route
+  with no guard fails, and a raw `fetch` to one of those paths fails.
+- **Two banners in one slot, and the chosen state wins.** The workspace labels a deliberate quiet
+  instead of warning about it, and when nothing is configured _as well_ it says so in the same
+  card — that fact outlives the choice, and somebody ending listening has to know the modes will
+  not come alive. The coral warning is untouched for the accident it was written for, which a test
+  pins.
+- **Both ways in, and the way out.** "Listen First" at intake launches straight into Free Stream
+  and never calls `/api/session/recommend`; a header toggle enters and leaves the state mid-session,
+  for the whole room in group mode. Crossing the boundary remounts the mode, so a mode holding a
+  fixed prompt asks again the moment the app is allowed to answer — without that the handoff is
+  invisible until somebody happens to press refresh.
+
+And, as the first draft of this file found, nearly all of the rest was there already:
 
 - **Free Stream and Quick Fire already work with no model whatsoever.** Free Stream's only
   model-adjacent behaviour is a nudge after ten idle seconds, and its prompts are a local
@@ -59,30 +93,35 @@ Nearly all of it:
 
 ## What would have to change
 
-- **A session-level flag, distinct from `aiEnabled`.** `aiEnabled` means "the server has a
-  model"; listening mode means "don't use it yet". They are independent — the interesting
-  configuration is a fully-configured deployment deliberately staying quiet. Either a new
-  `Session` field or a new `status` value (`status` today is
-  `intake | intention | recommendation | active | review | exported`).
-- **Suppress the warning banner when the state is chosen.** Showing "AI is unavailable —
-  check your configuration" to a facilitator who deliberately turned it off is precisely the
-  confusion this intent exists to remove. It needs a different, calm affordance instead.
-- **Skip the recommendation step.** Intake currently routes through mode recommendation, which
-  is a model call. Listening mode has to bypass it — you cannot ask a model which mode to use
-  in a mode defined by not asking a model.
-- **Decide the exit.** Presumably listening mode ends by handing off into a normal session with
-  a pile already full, at which point the modes and synthesis become available. That transition
-  is the feature; without it this is just a text box.
+- **A mode recommendation made from the pile, offered at the exit.** Skipping the call at intake
+  is the cheap half and it is done; the interesting half is the other direction — a recommendation
+  read off fifty real fragments rather than off a topic sentence and four quiz answers. It is not
+  free: `recommendModePrompt` takes only the warmup answers, so the prompt has to learn to read a
+  pile, and the result needs somewhere to land in the workspace, which today has no surface for
+  one. Until then ending listening hands back an ordinary session and the person picks a mode off
+  the tape, which is what they do in every other session.
+- **Live coverage while the room writes.** Still the thing that would make the mode visibly useful
+  in the room, and still blocked on the same piece: see the open question below.
 
 ## Open questions
 
-- Is it a session `status`, a boolean on `Session`, or simply "the facilitator has not enabled
-  AI yet" as a roster/engagement-level setting?
-- Per-engagement or per-contributor? A room where one person is drilling while five others dump
-  is plausible and might be better than a global mode.
-- Does the recommendation call get skipped, or deferred and offered later once there is a pile
+- ~~Is it a session `status`, a boolean on `Session`, or simply "the facilitator has not enabled
+  AI yet" as a roster/engagement-level setting?~~ **A boolean field.** It is orthogonal to every
+  value `status` holds — a listening session is `active` — so folding it into that union would
+  mean re-entering the status afterwards as whatever it would otherwise have been, and giving
+  every switch on `status` a case meaning "and also still active".
+- ~~Per-engagement or per-contributor? A room where one person is drilling while five others dump
+  is plausible and might be better than a global mode.~~ **Per engagement.** The suppression has
+  to be a fact the pile carries, or a facilitator cannot quiet a room they did not open and one
+  person is the only one hearing nothing back. Per-contributor is a real second feature — one
+  person drilling while five dump — but it is a preference, not this state, and it would want
+  naming separately rather than reusing this field.
+- ~~Does the recommendation call get skipped, or deferred and offered later once there is a pile
   to base it on? Deferred is more interesting — a mode recommendation made from fifty real
-  fragments is a better recommendation than one made from a topic sentence.
+  fragments is a better recommendation than one made from a topic sentence.~~ **Both, in that
+  order.** At intake it is skipped, which is what "Listen First" does. Offering it from the pile
+  at the exit is the better feature and is the named next increment above, because it needs the
+  prompt to read a pile and a surface that does not exist yet.
 - **Can a facilitator see coverage live, during listening mode?** This would be the thing that
   makes the mode visibly useful in the room rather than merely quiet — a wall showing which of
   the ten areas nobody has entered, filling in as people write. It is not free, and it is worth

@@ -17,19 +17,132 @@ this file only records which pieces of one have become code.
 
 ## Where each intent stands
 
-| #                                              | Intent                        | State                                                         |
-| :--------------------------------------------- | :---------------------------- | :------------------------------------------------------------ |
-| [001](001-mcp-server-over-the-pile.md)         | MCP server over the pile      | unchanged                                                     |
-| [002](002-model-provider-seam.md)              | Provider-neutral model seam   | **landed** — per-route selection deliberately deferred        |
-| [003](003-local-models-in-solo-mode.md)        | Local models in solo mode     | unchanged                                                     |
-| [004](004-claude-and-the-gcp-model-gateway.md) | Claude as a deployment choice | **in part** — built and stubbed; never run against Vertex     |
-| [005](005-listening-mode.md)                   | Listening mode                | unchanged — but its wall now exists                           |
-| [006](006-local-assists-before-submit.md)      | Local assists before submit   | unchanged                                                     |
-| [007](007-status-board.md)                     | Status board                  | **in part** — reported, drawn, live, and every route labelled |
-| [008](008-deploying-group-mode.md)             | Deploying group mode          | **in part** — three preparatory items; still never deployed   |
-| [009](009-the-deferred-group-surface.md)       | The deferred group surface    | **in part** — the coverage map is built                       |
-| [010](010-model-armor.md)                      | Model Armor at the prompt     | unchanged                                                     |
-| [011](011-the-role-brief.md)                   | The role brief                | **in part** — roles can be declared, grouped and briefed      |
+| #                                              | Intent                        | State                                                           |
+| :--------------------------------------------- | :---------------------------- | :-------------------------------------------------------------- |
+| [001](001-mcp-server-over-the-pile.md)         | MCP server over the pile      | unchanged                                                       |
+| [002](002-model-provider-seam.md)              | Provider-neutral model seam   | **landed** — per-route selection deliberately deferred          |
+| [003](003-local-models-in-solo-mode.md)        | Local models in solo mode     | unchanged                                                       |
+| [004](004-claude-and-the-gcp-model-gateway.md) | Claude as a deployment choice | **in part** — built and stubbed; never run against Vertex       |
+| [005](005-listening-mode.md)                   | Listening mode                | **in part** — chosen, honoured, and labelled rather than warned |
+| [006](006-local-assists-before-submit.md)      | Local assists before submit   | unchanged                                                       |
+| [007](007-status-board.md)                     | Status board                  | **in part** — reported, drawn, live, and every route labelled   |
+| [008](008-deploying-group-mode.md)             | Deploying group mode          | **in part** — three preparatory items; still never deployed     |
+| [009](009-the-deferred-group-surface.md)       | The deferred group surface    | **in part** — the coverage map is built                         |
+| [010](010-model-armor.md)                      | Model Armor at the prompt     | unchanged                                                       |
+| [011](011-the-role-brief.md)                   | The role brief                | **in part** — roles can be declared, grouped and briefed        |
+
+---
+
+## 2026-09-11 — 005, in part: the app can be asked to stay quiet, and it is asked rather than broken
+
+**Against [005](005-listening-mode.md), and it is the intent's own claim that picked it:** the
+technical condition already existed — every AI route has a static fallback, so an instance with no
+key takes input and generates nothing — and what was missing was for that to be a state somebody
+chooses rather than a state something is wrong with. Picked as the next increment because it is the
+cheapest item on the list that a room would actually notice, and because both halves of it were
+already built and only needed connecting: the `aiEnabled` plumbing on one side, labelled fallbacks
+on the other.
+
+**`Session.listening`, a field rather than a seventh `status`.** The intent left that open and the
+answer is not close: a listening session is `active` — twelve people are contributing to it. In the
+`status` union it would have to be re-entered afterwards as whatever the status would otherwise have
+been, and every switch on `status` in the app would need a case meaning "and also still active". As
+a field it is orthogonal, which is what it is. Per engagement rather than per contributor, for the
+reason the field exists at all: the suppression has to be a fact the pile carries, or a facilitator
+cannot quiet a room somebody else opened. It sits in `SessionMetaPatch` and `META_FIELDS` beside
+`status` and `topic`, for the reason the roster is auto-join — IAP decided who may be in the room,
+and quieting it is a facilitation decision made out loud and undone the same way.
+
+**One decision, and the routes consult it instead of reimplementing it.** `servesFallback(req)` in
+[respond.ts](../../server/ai/respond.ts) is `listening || !aiAvailable()`, and the six prompting
+routes now guard on it where they guarded on `!aiAvailable()` alone. Two reasons collapsing into one
+function is the right shape here because the _answer_ is identical: the fallback that route already
+owns, already labelled `source: "fallback"`, already covered. Short-circuiting in the browser was
+the alternative, and it would have meant a second fallback per route living in the client, drifting
+from the one the server serves — which is the drift the labelling in that module exists to prevent.
+So a quiet room and a quiet deployment take the same path, and the board reads the same on both.
+
+**Synthesis is the deliberate exception, on both sides of the wire.** "No synthesis until someone
+asks for it" is already satisfied by there being a button: it is the one model call in the app a
+person has to press. Gating it would mean listening silently degraded a client deliverable, which is
+the thing the group level set refuses to do even with nothing configured. It keeps `!aiAvailable()`,
+and a test asserts it never grows a `servesFallback` — worth pinning, because the tidying instinct
+is to make all seven routes look alike.
+
+**The client got a door, because six call sites cannot each be trusted to remember.** `askModel` in
+[askModel.ts](../../src/utils/askModel.ts) composes the POST every AI call site was writing out by
+hand and folds `listening` into the body. The flag is module state read at call time rather than a
+prop, which is `lastAnswer.ts`'s decision for `lastAnswer.ts`'s reason: those five modes and the
+intake form share nothing but the pile, and this is a fact about the model seam rather than about
+any mode. The property worth having is that a mode added later is quiet _by construction_ — a
+forgotten prop would have looked exactly like a mode nobody had got round to, while its questions
+went on arriving in the middle of a briefing.
+
+**Two structural scans, for the reason [modelSeam.test.ts](../../test/modelSeam.test.ts) has its
+own:** the way this dies is somebody adding a route, or reaching for `fetch` because that is what
+the neighbouring code used to do, and it simply working. So a `/api/session/*` route with no guard
+fails, and a raw `fetch` to one of those paths outside the door fails. Both scans name the synthesis
+exception explicitly rather than tolerating it by silence.
+
+**The field list had a third copy, and it failed in silence.** `SessionMetaPatch` types what a
+member may patch and `META_FIELDS` enforces it, but `SESSION_META_FIELDS` in
+[engagementSync.ts](../../src/utils/engagementSync.ts) decides what the browser actually sends —
+and a field missing from that one does not error. The update applies optimistically, the PATCH
+leaves it out, and the refetch puts the old value back: in group mode the toggle would have flicked
+and reverted, with nothing logged and nothing to search for. It was found by reading the push path
+rather than by anything failing, which is the point: the two lists now have to be equal, and a test
+compares them, so the next field added is caught by the third copy rather than by a workshop.
+
+**Strictly a boolean in three places, and that is one decision rather than three.** The patch route
+drops a non-boolean, the snapshot importer ignores one, and `servesFallback` reads `=== true`. They
+have to agree: a coerced `"yes"` would give a room a banner saying nothing is quiet above routes
+that had stopped answering, and that disagreement is worse than either state on its own.
+
+**The banner was the actual feature.** The app had exactly one way to be modelless and it was worded
+for an accident — "check the Gemini configuration before running a session that matters" — which is
+the wrong sentence to put in front of somebody who just turned generation off on purpose. Two states
+now share one slot and the chosen one wins. When both are true the calm card says so in its own
+second sentence rather than suppressing it: a missing model outlives the choice, and somebody ending
+listening while expecting the modes to come alive has to know that they will not.
+
+**Crossing the boundary remounts the mode.** Every mode that asks for a prompt asks once, on mount.
+Without the remount, ending listening left the room reading a fixed question while being told
+generation was back — and the handoff, which the intent calls the feature, would not have arrived
+until somebody happened to press refresh. One keyed `Fragment` in `App.tsx`, and it fires in both
+directions and for everybody else in the room when their poll brings the change in.
+
+**Verified.** 402 tests, 0 failing, 1 skipped (the Firestore contract, as designed); 17 more than the
+entry below. Mutation-checked six ways, each caught by exactly one suite and no other: a truthy read
+of `listening`; one route reverted to `!aiAvailable()`; the door no longer folding the flag in; the
+calm banner never drawn; the patch route accepting a non-boolean; the field dropped from the client's
+own list. Each line was restored by writing the original text back rather than by `git checkout`, for
+the reason recorded on 2026-09-08.
+
+**Driven against a real model, because the suite structurally cannot be.** `npm test` runs with no
+key, so `aiAvailable()` is false and every route already answers from its fallback — which swallows
+the entire listening half of the condition. That is why `servesFallback` takes availability as an
+argument, and why this was also run against this machine's Gemini key on a configured instance
+(`aiEnabled: true`, chain of two, provider `gemini`): quick-fire asked normally answered
+`source: model` with `X-Extraction-AI-Provider: gemini`; the same call with `listening: true`
+answered `source: fallback` and named no provider, as did drill-next, drill-clarify, binary-bracket,
+devils-advocate and recommend; synthesize with `listening: true` answered `source: model` and wrote
+a real summary; and `listening: "yes"` answered `source: model`, so the strict read holds where it
+costs something rather than only in a unit test. 9 of 9.
+
+**What it deliberately did not do.** No recommendation read off the pile at the exit — skipping the
+call at intake was the cheap half, and the interesting half needs `recommendModePrompt` to learn to
+read a pile plus a surface in the workspace for the result to land in. That is the next increment
+and the intent names it. No live coverage during listening: `classify()` is a model call and returns
+`{}` with nothing configured, so the wall reads every area as unplaced — honest, since it already
+distinguishes a fragment nobody placed from an area nobody spoke into, but not useful in the room,
+and the classifier that would fix it is [006](006-local-assists-before-submit.md)'s. No
+per-contributor quiet: one person drilling while five dump is a real second feature and wants its own
+name rather than this field. Free Stream's idle nudge still fires, because it is a static line the
+mode owns rather than anything a model wrote, and silencing it would mean giving a mode a listening
+prop for one sentence. And the status board still says only that a fixed answer was served, without
+saying which of the two reasons — true as far as it goes, and it reads a browser store with no
+session in reach, so telling the two apart there is a change to what the board is rather than a fact
+it is missing.
 
 ---
 
