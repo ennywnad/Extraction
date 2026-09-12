@@ -178,9 +178,9 @@ describe("the seam — scores in, one per label, in order", () => {
       async () => true,
     );
     const got = await assistant.classify("draft", [
-      { id: "a", text: "a" },
-      { id: "b", text: "b" },
-      { id: "c", text: "c" },
+      { id: "a", texts: ["a"] },
+      { id: "b", texts: ["b"] },
+      { id: "c", texts: ["c"] },
     ]);
     assert.deepEqual(
       got.map((g) => g.id),
@@ -267,12 +267,29 @@ describe("labels — the two sets the app can actually store", () => {
     assert.deepEqual(TAG_LABELS.map((l) => l.id).sort(), ["action", "fear", "goal", "insight"]);
   });
 
-  it("shows the model a sentence rather than the heading", () => {
-    // The whole reason `id` and `text` are separate. "Commercials & funding envelope" is a
-    // heading in a deliverable; embedding it matches on register rather than on meaning.
+  it("shows the model several exemplars rather than the heading", () => {
+    // The whole reason `id` and `texts` are separate, and why the plural was worth the change:
+    // a heading matches on register, and one long description matches on topic words. Measured
+    // at 13/28 for a description against 18/28 for exemplars — see src/local/labels.ts.
     for (const label of [...AREA_LABELS, ...TAG_LABELS]) {
-      assert.notEqual(label.text, label.id, `${label.id} is being scored against its own heading`);
-      assert.ok(label.text.length > 40, `${label.id} needs a sentence, not a phrase`);
+      assert.ok(label.texts.length >= 3, `${label.id} needs several exemplars, not one`);
+      for (const text of label.texts) {
+        assert.notEqual(text, label.id, `${label.id} is being scored against its own heading`);
+      }
+    }
+  });
+
+  it("keeps the exemplars in a participant's voice, not a consultant's", () => {
+    // The property that makes exemplars beat a description: they are the same length, register
+    // and person as the thing being classified. A paragraph creeping back in here would undo the
+    // measurement without failing anything else.
+    for (const label of [...AREA_LABELS, ...TAG_LABELS]) {
+      for (const text of label.texts) {
+        assert.ok(
+          text.length < 90,
+          `"${text}" is drifting back toward a description of ${label.id}`,
+        );
+      }
     }
   });
 

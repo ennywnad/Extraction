@@ -132,6 +132,13 @@ Every backend picks itself by **presence of configuration**, not by a flag. Read
   Its refusals are the feature — the author is the verification step, and one confident wrong
   label teaches them to rubber-stamp. Any threshold here must be scale-free _and_ independent of
   how many labels there are; a z-score is neither, because its ceiling is `sqrt(n - 1)`.
+  **Both constants and the label texts are measured, not chosen** — against a held-out set of
+  drafts from an engagement the exemplars were not written for, because scoring your own
+  paraphrases proves nothing. A label is several short exemplars in a participant's voice rather
+  than one description of the category, and that is worth 13/28 against 18/28; a threshold that
+  reads plausible can speak on four drafts in thirty-one. Change either by re-running the set,
+  never by reading it. A model's own incantations — nomic's `classification:` task prefix — belong
+  in that runtime's adapter, since the other backend takes none.
   The only text that ever reaches a runtime is the author's own unsubmitted draft, and
   [test/localAssist.test.ts](test/localAssist.test.ts) scans for all of it — a hard-coded runtime
   address, an adapter imported outside the seam, or a `Session` reaching `src/local/` fails it.

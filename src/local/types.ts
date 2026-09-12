@@ -32,16 +32,24 @@
 export type LocalBackend = "in-page" | "ollama";
 
 /**
- * One candidate label.
+ * One candidate label, and the example fragments that stand for it.
  *
- * `id` is what the app stores and `text` is what the model is actually shown — they are
- * deliberately different. "Commercials & funding envelope" is a heading in a consulting
- * deliverable, not a sentence anybody writes, and scoring a draft against the heading alone is
- * the weakest version of this. See labels.ts, where the sentences are written out.
+ * `id` is what the app stores; `texts` is what the model is actually shown. They are
+ * deliberately different, and the plural is the result of measuring rather than a guess.
+ * "Commercials & funding envelope" is a heading in a consulting deliverable, not a sentence
+ * anybody writes, so scoring a draft against the heading matches on register. Replacing the
+ * heading with one careful *description* of the category is better and still not good: it is a
+ * paragraph about a topic, and a short draft compared against a paragraph matches whichever
+ * paragraph shares the most topic words.
+ *
+ * What works is several short fragments in the voice a participant would actually use, scored by
+ * the best match among them. On a held-out set of twenty-eight drafts from an engagement the
+ * exemplars were not written for, that took top-1 from 13/28 to 18/28 — see
+ * docs/intents/STATUS.md for the run.
  */
 export interface Label {
   id: string;
-  text: string;
+  texts: string[];
 }
 
 /** A label and how well it matched. Scale is per backend and comparable only within one call. */

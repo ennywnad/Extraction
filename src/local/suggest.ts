@@ -20,15 +20,31 @@
  * the same reason the chorus refuses to editorialise: a confident wrong label on your own
  * half-formed thought is worse than no label, because you will take it.
  *
- * **The shape of the rules is settled; the two constants are not.** Both are scale-free, so
- * neither is tied to a particular model's range — but the numbers themselves were calibrated
- * against score distributions written by hand, not observed ones, because no machine the code
- * has run on yet has an embedding runtime to observe. Real cosine similarities between a short
- * draft and a label sentence cluster more tightly than invented ones do, and the lift threshold
- * is the one that would feel it: too high and the assist never fires, too low and it starts
- * filing lunch. The first person to run this against a real runtime should watch how often it
- * declines and move `MIN_RELATIVE_LIFT` rather than assume these were measured. See
- * docs/intents/STATUS.md, where this is recorded as the increment's open gap.
+ * **Both constants are measured, and the first guesses were wrong.** They were originally set
+ * against score distributions written by hand, and a run against a real embedding runtime showed
+ * how badly that misses: real cosine similarities between a short draft and a short exemplar
+ * cluster far more tightly than invented ones, so the first `MIN_RELATIVE_LIFT` of 0.15 spoke on
+ * four drafts out of thirty-one. The assist would have looked broken rather than careful.
+ *
+ * The numbers below come from a sweep over a held-out set — twenty-eight drafts from an
+ * engagement the exemplars were not written for, plus three pieces of noise that must be
+ * refused. They are chosen for **precision over coverage**, which is the right trade here and
+ * not a close call: declining costs nothing, and a confident wrong label on somebody's own
+ * half-formed thought is the failure the whole design is arranged to avoid.
+ *
+ * | separation | lift | speaks on | precision |
+ * | ---------: | ---: | --------: | --------: |
+ * |        0.5 | 0.15 |      4/31 |       75% |
+ * |        0.5 | 0.10 |     13/31 |       85% |
+ * |    **0.8** | **0.10** | **9/31** |   **89%** |
+ * |        1.0 | 0.05 |      9/31 |       78% |
+ *
+ * So it offers something on roughly one draft in three and is right about nine times in ten when
+ * it does. Two cautions for whoever changes these. The sample is small — 89% against 85% is one
+ * item, not a finding; what the sweep establishes is the *region*, not the decimal. And they were
+ * measured against one runtime (`nomic-embed-text` through Ollama); the rules are scale-free, so
+ * they should travel, but the in-page backend has not been through this and nobody should claim
+ * it has until it is.
  */
 import { contentWords } from "../utils/chorus.ts";
 import type { Label, LocalAssistant, Scored } from "./types.ts";
@@ -40,7 +56,7 @@ import type { Label, LocalAssistant, Scored } from "./types.ts";
  * to whatever somebody has pulled into Ollama. This is the rule that refuses a coin toss: a
  * fragment genuinely about two of the ten areas gets no suggestion rather than an arbitrary one.
  */
-const MIN_SEPARATION = 0.5;
+const MIN_SEPARATION = 0.8;
 
 /**
  * How far above the field the winner has to be as a fraction of its own score.
@@ -65,7 +81,7 @@ const MIN_SEPARATION = 0.5;
  * never firing, for a reason invisible from reading it. Any rule in units of spread has to be
  * one that does not tighten as the label set shrinks.
  */
-const MIN_RELATIVE_LIFT = 0.15;
+const MIN_RELATIVE_LIFT = 0.1;
 
 /**
  * The least a draft can be and still be classifiable, counted in content words.

@@ -38,9 +38,18 @@ export function cosine(a: number[], b: number[]): number {
 /**
  * Builds an assistant from something that can embed.
  *
- * The draft and every label go in **one** call rather than one call per label. Two reasons, and
- * the second is the one that would bite: a batch is far faster on every runtime, and a model
- * loaded lazily would otherwise be asked to warm up fourteen times for one keystroke.
+ * The draft and every exemplar of every label go in **one** call rather than one call per label.
+ * Two reasons, and the second is the one that would bite: a batch is far faster on every runtime,
+ * and a model loaded lazily would otherwise be asked to warm up forty-odd times for one press of
+ * a button.
+ *
+ * **A label scores as its best exemplar, not its average.** The exemplars for one label are
+ * deliberately spread across the different ways somebody says that thing — a fear as a slipped
+ * deadline, a fear as an untested rollback — so they are not near each other, and averaging
+ * would punish a label precisely for covering its own ground. What is being asked is "does this
+ * draft look like *any* of the ways people say this", and the best match is that question.
+ * Measured both ways on a held-out set; max and mean scored the same there, and max is the one
+ * whose behaviour stays sane as exemplars are added.
  */
 export function fromEmbedder(
   backend: LocalBackend,
@@ -52,13 +61,21 @@ export function fromEmbedder(
     reachable,
     async classify(text: string, labels: Label[]): Promise<Scored[]> {
       if (!labels.length) return [];
-      const vectors = await embed([text, ...labels.map((l) => l.text)]);
-      const [draft, ...labelVectors] = vectors;
+      const flat = labels.flatMap((l) => l.texts);
+      if (!flat.length) return [];
+
+      const vectors = await embed([text, ...flat]);
+      const [draft, ...exemplarVectors] = vectors;
       // A runtime that returned the wrong number of vectors is not a runtime that returned a
-      // weak answer, and scoring the labels that happen to line up would hide that. An absent
-      // suggestion is the correct output of a broken call.
-      if (!draft || labelVectors.length !== labels.length) return [];
-      return labels.map((label, i) => ({ id: label.id, score: cosine(draft, labelVectors[i]) }));
+      // weak answer, and scoring whichever exemplars happen to line up would hide that. An
+      // absent suggestion is the correct output of a broken call.
+      if (!draft || exemplarVectors.length !== flat.length) return [];
+
+      let i = 0;
+      return labels.map((label) => {
+        const sims = label.texts.map(() => cosine(draft, exemplarVectors[i++]));
+        return { id: label.id, score: Math.max(...sims) };
+      });
     },
   };
 }
