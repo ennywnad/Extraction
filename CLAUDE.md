@@ -19,8 +19,8 @@ solo (fragments in `localStorage`) and group (a shared pile on the server, behin
 Healthy `npm run check` ends with:
 
 ```
-# tests 402
-# pass 401
+# tests 436
+# pass 435
 # fail 0
 # skipped 1
 ```
@@ -30,7 +30,7 @@ The skip is `FirestoreEngagementStore` in
 
 ```
 gcloud emulators firestore start --host-port=localhost:8484   # needs Java 21+ on PATH
-npm run test:firestore                                        # 415 tests, 0 skipped
+npm run test:firestore                                        # 449 tests, 0 skipped
 ```
 
 ## Configuration decides behavior
@@ -121,6 +121,22 @@ Every backend picks itself by **presence of configuration**, not by a flag. Read
   without knowing the state exists. Synthesis is the one exception on both sides: it is the model
   call somebody presses a button for. [test/listening.test.ts](test/listening.test.ts) scans for
   both, because an unguarded route just works.
+- **A local assist has its own seam in the browser, and it never sees the pile.**
+  [src/local/](src/local/) is the client's model seam ([docs/intents/006](docs/intents/006-local-assists-before-submit.md)):
+  one adapter per runtime behind `LocalAssistant`, `choose.ts` picking between them, and a
+  contract that is the _task_ — `classify(text, labels)` — so a caller never names a runtime.
+  Components reach it through `assist()` in [src/local/assist.ts](src/local/assist.ts), the
+  sibling of `askModel()` and a module for the same reason. **Every judgement lives in
+  [suggest.ts](src/local/suggest.ts), never in an adapter**, same division as `coverage.ts`:
+  adapters return numbers, and whether a number means anything is arithmetic somebody can read.
+  Its refusals are the feature — the author is the verification step, and one confident wrong
+  label teaches them to rubber-stamp. Any threshold here must be scale-free _and_ independent of
+  how many labels there are; a z-score is neither, because its ceiling is `sqrt(n - 1)`.
+  The only text that ever reaches a runtime is the author's own unsubmitted draft, and
+  [test/localAssist.test.ts](test/localAssist.test.ts) scans for all of it — a hard-coded runtime
+  address, an adapter imported outside the seam, or a `Session` reaching `src/local/` fails it.
+  The library is fetched from a CDN rather than bundled, deliberately: from npm it carries
+  `onnxruntime-node` and `sharp` for a Node path the browser never takes.
 - Adding an extraction mode means touching four places, and **a forgotten one is a
   `npm run lint` failure rather than a mode nobody can reach.** Three are keyed on
   `ExtractionMode`, so the missing key is the error: `EMPTY_MODE_PROGRESS` in

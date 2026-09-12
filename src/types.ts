@@ -1,3 +1,6 @@
+import type { LocalBackend } from "./local/types.ts";
+import type { PileCategory } from "./utils/pileCategories.ts";
+
 export type ExtractionMode =
   | "free_stream"
   | "quick_fire"
@@ -100,6 +103,22 @@ export interface Thought {
 
   // Optional linkage to parent prompt
   promptContext?: string;
+
+  /**
+   * What a local model suggested about this fragment and its author accepted, before it was
+   * submitted. Absent on everything else, which is almost everything.
+   *
+   * Recorded for the reason `source` is recorded on a response: the app is careful elsewhere
+   * about saying who wrote what, and "the author filed this" and "a model proposed a filing and
+   * the author agreed" are different facts. Absence is the honest default rather than a claim
+   * that nothing helped — see docs/intents/006.
+   */
+  assist?: {
+    backend: LocalBackend;
+    tag?: PileCategory;
+    /** One of LEVEL_SET_AREAS, verbatim, so coverage arithmetic can count it unchanged. */
+    area?: string;
+  };
 
   /** Present only on engagement fragments. Absent means a solo, local thought. */
   author?: AuthorStamp;

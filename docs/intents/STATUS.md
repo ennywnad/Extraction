@@ -24,12 +24,121 @@ this file only records which pieces of one have become code.
 | [003](003-local-models-in-solo-mode.md)        | Local models in solo mode     | unchanged                                                       |
 | [004](004-claude-and-the-gcp-model-gateway.md) | Claude as a deployment choice | **in part** — built and stubbed; never run against Vertex       |
 | [005](005-listening-mode.md)                   | Listening mode                | **in part** — chosen, honoured, and labelled rather than warned |
-| [006](006-local-assists-before-submit.md)      | Local assists before submit   | unchanged                                                       |
+| [006](006-local-assists-before-submit.md)      | Local assists before submit   | **in part** — a seam, two backends, two bounded assists         |
 | [007](007-status-board.md)                     | Status board                  | **in part** — reported, drawn, live, and every route labelled   |
 | [008](008-deploying-group-mode.md)             | Deploying group mode          | **in part** — three preparatory items; still never deployed     |
 | [009](009-the-deferred-group-surface.md)       | The deferred group surface    | **in part** — the coverage map is built                         |
 | [010](010-model-armor.md)                      | Model Armor at the prompt     | unchanged                                                       |
 | [011](011-the-role-brief.md)                   | The role brief                | **in part** — roles can be declared, grouped and briefed        |
+
+---
+
+## 2026-09-11 — 006, in part: a model on your own machine, on your own draft, before it is anyone else's
+
+**Against [006](006-local-assists-before-submit.md), and picked over 005's own named next step
+because [README.md](README.md) argues for it in the one place these two intents touch.** 005 left
+the pile-based mode recommendation as its interesting half; 006 was chosen instead because its
+area suggestion is what unblocks 005's live-coverage question — `classify()` is a server model
+call that returns `{}` with nothing configured, so the coverage wall reads every area as unplaced
+in exactly the session that is deliberately quiet. A fragment that arrives already carrying an
+area needs no server call at all. That composition is the reason to build this one first, and it
+is 006 that pays for it.
+
+**The transport fork was the first decision and it was answered "both, in that order" — which
+the seam made cheap rather than doubling.** 006 frames in-page and localhost as two paths for two
+different motivations, and they are. But the contract is `classify(text, labels)`, which is the
+_task_, so a second backend is an adapter rather than a second code path through the app. The
+order is the part with a decision in it: in-page is tried first because it needs nothing from the
+person using it, and probing localhost is not free — since Chrome 142 it fires a native
+permission prompt, so asking every browser to look would put a dialog in front of everybody who
+never asked for a local model.
+
+**Both adapters embed, and choosing that over a chat model is the substantive call.** The obvious
+build for Ollama is a chat completion that answers with a label, and it is worse in a way that
+compounds: free text can answer with a label nobody offered, in a sentence, in the wrong case —
+so either the app trusts it or it writes a matcher over the model's prose, which is the keyword
+matcher this was supposed to improve on. Embeddings answer the question the seam actually asks,
+in numbers, and they are what make the two backends genuinely interchangeable instead of one
+being bolted on beside the other.
+
+**The dependency was taken and then given back, and the second decision was the right one.**
+`@huggingface/transformers` from npm pulls `onnxruntime-node` and `sharp`: 143MB installed and
+four high-severity advisories with no fix available, every byte of it for inference under Node,
+which a browser never does. In a repo that runs `npm run check` before each commit, that is a
+permanent triage tax for a feature that is off by default. The library is fetched from a CDN
+instead, lazily, and the argument is not merely that it is lighter — the _weights_ come from a
+CDN at runtime no matter how the glue is packaged, so this is not a new kind of dependency. The
+built bundle contains the URL and none of the library, which is what makes "free while off"
+checkable rather than asserted.
+
+**Every judgement is above the runtime, and the refusals are the feature.** An adapter returns
+numbers; `suggest.ts` alone decides whether any of them means anything. That is `coverage.ts`'s
+division, and here it is load-bearing for a specific reason: the author is the verification step,
+and a verification step learns to rubber-stamp whatever is usually right. A draft about where to
+have lunch still scores highest against one of the ten areas of a consulting engagement, and
+showing that arithmetic accident to somebody as a suggestion is how the habit forms.
+
+**Mutation testing found a real bug in my own rule, which is the reason to run it.** The first
+version asked that the winner stand a fixed number of standard deviations above the mean. It read
+as scale-free and is not: a z-score has a ceiling of `sqrt(n - 1)`, so a threshold of 1.6 is
+ordinary across ten areas and nearly unreachable across the **four** pile tags, whose ceiling is
+1.73. The tag assist would have sat there almost never firing, for a reason invisible from
+reading the code. The rule is gone rather than retuned — "clear of the runner-up" and
+"proportionally above the field" already say it, and neither tightens as the label set shrinks.
+A test now pins a realistic four-tag distribution that the old rule threw away. A second guard
+went the same way: a check for a negative best score was a branch no input can reach, because a
+positive gap over a negative score is already a negative lift, and an unreachable branch is a
+thing the next reader takes for load-bearing.
+
+**The acceptance is keyed to the draft it was offered on.** Accept a tag, rewrite the sentence
+into something else, submit — and without the key the old tag rides onto a fragment nobody ever
+offered it for, stamped with a backend name that makes it look checked. It is consumed once, so
+it cannot attach to a second fragment either. This rides through a module rather than a prop for
+`askModel`'s reason, and the reason is sharper here: nine of the twelve modes have a text input,
+and a forgotten prop on the tenth would look exactly like a mode nobody had got round to.
+
+**Asked for, never volunteered.** 006 names the tension — this app exists to get raw thought out
+before the editing voice arrives, and Quick Fire clears the box on Enter precisely so you cannot
+polish. So the bar sits between the box and the submit button, and nothing is scored or fetched
+until a button is pressed. The chorus solves the same problem by firing only after a fragment is
+committed; this one cannot, since the whole point is that the author accepts before submitting,
+so a button is the honest substitute. And no assist that rewrites a word was built, though 006
+rates two of them buildable.
+
+**Verified.** 436 tests, 0 failing, 1 skipped (the Firestore contract, as designed); 34 more than
+the entry below. Mutation-checked fifteen ways, each caught by exactly one leaf test and no
+other: both threshold rules dropped in turn; the n-fragile rule reintroduced; the three-label
+minimum, the short-draft check moved after the runtime, a vector-count mismatch scored anyway, a
+throwing probe no longer caught, the probe order reversed, the acceptance unkeyed and then not
+consumed, an area label renamed, preferences read loosely, the assists defaulted to on, a
+component naming a runtime, and the bar drawing before a runtime answered. Each line was restored
+by writing the original text back rather than by `git checkout`, for the reason recorded on
+2026-09-08. `npm run build` is clean and the client bundle carries the CDN URL and none of the
+library.
+
+**The gap, and it is the one worth stating plainly: this has never been run against a real
+embedding model.** The shape of the two rules is settled and pinned; the two _constants_ were
+calibrated against score distributions written by hand, because no machine this has run on has an
+embedding runtime — this one has Ollama with four chat models and a server started without
+`--embeddings`. Real cosine similarities between a short draft and a label sentence cluster more
+tightly than invented ones do, and `MIN_RELATIVE_LIFT` is the threshold that would feel it: too
+high and the assist never fires, too low and it starts filing lunch. That is recorded in
+[suggest.ts](../../src/local/suggest.ts) beside the constant rather than only here, because the
+person who hits it will be reading the code and not this log. Everything structural — the seam,
+the refusals, the keying, the provenance — is exercised; what is unmeasured is where exactly the
+line sits, and no unit test can move it.
+
+**What it deliberately did not do.** **No live coverage map yet, which is the payoff that picked
+this intent** — fragments now carry an accepted area, and drawing a wall from them needs
+`computeCoverage` to move from `server/ai/` into `src/utils/` beside `voices.ts` (it is already
+pure, and already imports from there) plus a surface in the workspace. That is one small
+increment and it is now the interesting one. The assist is mounted on Free Stream and the
+workspace's own input rather than all nine authoring modes: those two are where a listening room
+lands and where a scratch note goes, and the rest is mechanical once the shape is proven. No
+rewriting assists — shorten and tidy are rated buildable by 006 and argued against by it, and
+nothing here changes a word the author typed. No replacement of the keyword matcher: it files the
+pile a viewer is looking at, works with nothing configured, and a test now pins the gap the two
+divide between them.
 
 ---
 

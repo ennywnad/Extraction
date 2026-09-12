@@ -1,6 +1,7 @@
 # 006 — Local assists before a fragment enters the pile
 
-**Status:** intent. Not planned, not scheduled. Low priority, and cheap.
+**Status:** intent, in part — the seam, both backends and the two bounded assists are built.
+The transport fork below is resolved: both, in that order. See [STATUS.md](STATUS.md).
 **Written:** 2026-09-03
 **Depends on:** nothing. See below — this turns out not to need
 [002](002-model-provider-seam.md) or [003](003-local-models-in-solo-mode.md).
@@ -84,6 +85,40 @@ placement: an assist belongs _after_ you have written and are about to submit, n
 something hovering while you type. Reformatting is a filing decision, not a writing one.
 
 ## What the code already supports
+
+The assist itself, end to end, for the two bounded-output suggestions:
+
+- **A seam in the browser, and no component that names a runtime.** `src/local/` holds one
+  adapter per runtime behind `LocalAssistant`, and `choose.ts` picks between them — the same
+  shape as `server/ai/providers/`, and for the same reason. The contract is the _task_
+  (`classify(text, labels)`) rather than the mechanism, which is what lets an in-page embedder
+  and an Ollama endpoint sit behind one seam instead of one being bolted onto the other. It
+  takes its order and its lookup as **arguments**, so every decision is testable with no runtime,
+  exactly as `runChain` is.
+- **Both backends, in the order the fork below argues for.** In-page first, because it needs
+  nothing from the person using it and is therefore the only one that answers on a machine
+  nobody has prepared; Ollama second, because probing localhost fires a browser permission
+  prompt and must never happen to somebody who has not asked for a local model.
+- **Every judgement above the runtime, and the refusals are the feature.** `suggest.ts` decides
+  which label wins and whether any label wins; an adapter only returns numbers. Two rules, both
+  in units of the field's own spread: clear of the runner-up, and proportionally above the mean.
+  A draft about lunch gets no area, and a draft genuinely spanning two areas gets neither rather
+  than a coin toss.
+- **The library is fetched, not bundled.** Taken from npm, transformers.js pulls
+  `onnxruntime-node` and `sharp` — 143MB and four high-severity advisories with no fix — all of
+  it for inference under Node, which the browser never does. The weights come from a CDN at
+  runtime regardless, so the glue arrives the same way and a deployment that never switches this
+  on pays nothing: the built bundle contains the URL and none of the library.
+- **The author is the verification step, structurally.** Suggestions are chips that do nothing
+  until clicked, the acceptance is keyed to the exact draft it was offered on, and
+  `Thought.assist` records only what was accepted. Rewrite the sentence and the acceptance is
+  void — otherwise a stale tag rides onto a fragment nobody offered it for, stamped with a
+  backend name that makes it look checked.
+- **Asked for, never volunteered.** The tension named below decided the placement: the bar sits
+  between the box and the submit button and does nothing until a button is pressed. Nothing is
+  scored and nothing is fetched while somebody types.
+
+And, as the first draft of this file found, a good deal of the rest was there already:
 
 - **Nine of the twelve modes already have a text input** to hang this off. Swipe, Timeline and
   Priority Pile author nothing — they file existing cards — so the surface is smaller and more
@@ -224,21 +259,36 @@ transport was never the hard part. The trust boundary was.
 
 ## Open questions
 
-- **Localhost or in-page?** The fork above is the first decision and the only one that changes
-  who this is for. Possibly both, in that order.
+- ~~**Localhost or in-page?** The fork above is the first decision and the only one that changes
+  who this is for. Possibly both, in that order.~~ **Both, in that order** — and the seam is what
+  made that cheap rather than twice the work. The contract is the task, so the second backend was
+  an adapter rather than a second code path. In-page is tried first because it is the only one
+  that answers on a machine nobody has prepared.
 - If localhost: OpenAI-compatible HTTP, so "local" means any such endpoint rather than one
-  runtime?
+  runtime? **Still open, and now narrower than it looks.** The adapter speaks Ollama's `/api/embed`
+  rather than an OpenAI-compatible path, because the seam asks for _scores against labels_ and
+  the OpenAI-compatible surface people mean by that phrase is a chat completion. Generalising it
+  means deciding whether a chat model answering with a label is allowed behind this seam at all
+  — which is a question about trust, not about HTTP.
 - Is there a Chrome-only shortcut worth taking? The browser ships a built-in on-device model
   API that would remove even the WebGPU download. Chrome-only, and its status should be checked
   rather than assumed.
-- Does an assisted fragment record that it was assisted? Arguably yes — the app is careful
-  elsewhere about saying who wrote what, and "the human typed this" versus "a model reshaped it
-  and the human accepted" is the same kind of distinction the `source` field already makes for
-  responses.
-- Does tag suggestion replace the keyword matcher, or sit alongside it as an upgrade when a
-  runtime is present? Alongside is more honest, since most users will not have one — and more
-  clearly right now that the matcher works properly. `categoriesOf()` already returns every
-  category a fragment matches, which is the shape a side-by-side comparison would read.
+- ~~Does an assisted fragment record that it was assisted?~~ **Yes**, on `Thought.assist`, and
+  only what the author actually accepted — an unclicked suggestion leaves no trace, and an
+  acceptance emptied by unclicking is cleared rather than written as a stamp with nothing in it.
+  Absence means "nothing was accepted", never "nothing helped", which is the same reading
+  `AnswerSource.unstated` insists on.
+- ~~Does tag suggestion replace the keyword matcher, or sit alongside it?~~ **Alongside**, and
+  they never meet: `pileCategories.ts` files the pile a viewer is looking at and keeps working
+  with nothing configured, while this suggests a tag to an author before submission. A test pins
+  the gap they divide between them — a fragment that plainly expresses a fear while containing no
+  word for one, which the lexical matcher returns nothing for by design.
+- **What are the two thresholds actually worth?** The open gap this increment leaves. Their
+  _shape_ is settled and mutation-checked, but the constants were calibrated against score
+  distributions written by hand, because no machine this has run on has an embedding runtime.
+  Real cosine similarities cluster more tightly than invented ones, and `MIN_RELATIVE_LIFT` is
+  the one that would feel it — too high and the assist never fires, too low and it files lunch.
+  Whoever runs this against a real runtime first should watch how often it declines.
 
 ## References
 

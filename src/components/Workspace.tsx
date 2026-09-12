@@ -19,9 +19,12 @@ import {
   Waves,
   Users,
   Ear,
+  Cpu,
 } from "lucide-react";
 import { Session, Thought, ExtractionMode } from "../types";
 import ChorusCard from "./ChorusCard";
+import AssistBar from "./AssistBar";
+import { DEFAULT_ASSISTS, type AssistPrefs } from "../utils/assistPrefs";
 import RosterPanel from "./RosterPanel";
 import { roleOf, rosterState } from "../utils/roster";
 import type { Echo } from "../utils/chorus";
@@ -61,6 +64,13 @@ interface WorkspaceProps {
   /** Per viewer; see src/utils/chorusPrefs.ts for why it is not a fact about the room. */
   chorusEnabled?: boolean;
   onChorusToggle?: () => void;
+  /**
+   * Which local assists this viewer has switched on. Per viewer for a stronger version of the
+   * chorus's reason — the runtime is on *this* machine, so a room-level setting would switch on
+   * a feature that works only for whoever happens to have one. See src/utils/assistPrefs.ts.
+   */
+  assistPrefs?: AssistPrefs;
+  onAssistToggle?: (which: keyof AssistPrefs) => void;
   /**
    * Saves this viewer's own roster entry. Absent in solo mode, where there is no roster and
    * no other position to describe yourself relative to.
@@ -187,6 +197,8 @@ export default function Workspace({
   listening = false,
   onListeningChange,
   chorusEnabled = false,
+  assistPrefs = DEFAULT_ASSISTS,
+  onAssistToggle,
   onChorusToggle,
   onSaveRosterEntry,
   onSetRoleGroup,
@@ -417,6 +429,38 @@ export default function Workspace({
             Chorus
           </button>
 
+          {/* Two switches rather than one, because they are two different offers: a tag files a
+              fragment in the sidebar this viewer is looking at, an area feeds the arithmetic
+              behind the deliverable. Somebody may well want the first and not the second, and
+              collapsing them would make that choice for them. Off by default — see
+              src/utils/assistPrefs.ts for why this one cannot start on the way Chorus does. */}
+          {onAssistToggle && (
+            <span className="flex items-stretch border-2 border-black shadow-hard-2">
+              {(["tag", "area"] as const).map((which, i) => (
+                <button
+                  key={which}
+                  onClick={() => onAssistToggle(which)}
+                  aria-pressed={assistPrefs[which]}
+                  title={
+                    assistPrefs[which]
+                      ? `Local ${which} suggestions are on: a model on this machine will offer a ${which} for your own draft before you submit it`
+                      : `Local ${which} suggestions are off`
+                  }
+                  className={`px-2.5 py-1.5 text-[10px] font-bold font-display uppercase tracking-wider flex items-center gap-1 cursor-pointer transition-all ${
+                    i > 0 ? "border-l-2 border-black" : ""
+                  } ${
+                    assistPrefs[which]
+                      ? "bg-sage text-black hover:bg-mint"
+                      : "bg-white text-zinc-400 hover:bg-zinc-50"
+                  }`}
+                >
+                  {i === 0 && <Cpu className="w-3 h-3" />}
+                  {which}
+                </button>
+              ))}
+            </span>
+          )}
+
           <button
             onClick={() => onListeningChange?.(!listening)}
             aria-pressed={listening}
@@ -470,45 +514,52 @@ export default function Workspace({
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="bg-zinc-50 border-b-2 border-black p-3.5 flex items-center gap-2.5 shrink-0"
+            className="bg-zinc-50 border-b-2 border-black p-3.5 shrink-0"
           >
-            <input
-              type="text"
-              placeholder="Jot down a quick thought fragment instantly or record..."
-              value={newThoughtText}
-              onChange={(e) => setNewThoughtText(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleAddDirectThought()}
-              className="flex-1 text-xs border-2 border-black px-3 py-2 bg-white focus:outline-none font-mono text-black"
-            />
-            {/* Direct voice input */}
-            <button
-              onClick={toggleSpeechDirect}
-              type="button"
-              className={`px-3 py-2 border-2 border-black flex items-center justify-center cursor-pointer transition-all ${
-                isRecordingDirect
-                  ? "bg-red-500 text-white animate-pulse"
-                  : "bg-white hover:bg-zinc-100 text-black shadow-hard-2"
-              }`}
-              title="Record scratch note"
-            >
-              {isRecordingDirect ? (
-                <MicOff className="w-3.5 h-3.5" />
-              ) : (
-                <Mic className="w-3.5 h-3.5" />
-              )}
-            </button>
-            <button
-              onClick={handleAddDirectThought}
-              className="px-4 py-2 border-2 border-black bg-black text-white hover:bg-white hover:text-black font-display font-bold text-xs uppercase cursor-pointer transition-all"
-            >
-              Add
-            </button>
-            <button
-              onClick={() => setShowDirectInput(false)}
-              className="text-xs uppercase font-bold tracking-wider font-display text-zinc-500 hover:text-black px-1"
-            >
-              Cancel
-            </button>
+            <div className="flex items-center gap-2.5">
+              <input
+                type="text"
+                placeholder="Jot down a quick thought fragment instantly or record..."
+                value={newThoughtText}
+                onChange={(e) => setNewThoughtText(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleAddDirectThought()}
+                className="flex-1 text-xs border-2 border-black px-3 py-2 bg-white focus:outline-none font-mono text-black"
+              />
+              {/* Direct voice input */}
+              <button
+                onClick={toggleSpeechDirect}
+                type="button"
+                className={`px-3 py-2 border-2 border-black flex items-center justify-center cursor-pointer transition-all ${
+                  isRecordingDirect
+                    ? "bg-red-500 text-white animate-pulse"
+                    : "bg-white hover:bg-zinc-100 text-black shadow-hard-2"
+                }`}
+                title="Record scratch note"
+              >
+                {isRecordingDirect ? (
+                  <MicOff className="w-3.5 h-3.5" />
+                ) : (
+                  <Mic className="w-3.5 h-3.5" />
+                )}
+              </button>
+              <button
+                onClick={handleAddDirectThought}
+                className="px-4 py-2 border-2 border-black bg-black text-white hover:bg-white hover:text-black font-display font-bold text-xs uppercase cursor-pointer transition-all"
+              >
+                Add
+              </button>
+              <button
+                onClick={() => setShowDirectInput(false)}
+                className="text-xs uppercase font-bold tracking-wider font-display text-zinc-500 hover:text-black px-1"
+              >
+                Cancel
+              </button>
+            </div>
+            {/* Below the row and above nothing — a filing decision offered once the sentence is
+                written, never while it is being typed. See src/components/AssistBar.tsx. */}
+            <div className="mt-2.5">
+              <AssistBar text={newThoughtText} />
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
