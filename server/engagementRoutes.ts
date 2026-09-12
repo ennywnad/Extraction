@@ -14,7 +14,7 @@ import { getEngagementStore } from "./store/index.ts";
 import { recordPoll } from "./pollWindow.ts";
 import { CONTRIBUTOR_ROLE, FACILITATOR_ROLE, VALID_MODES } from "./store/shape.ts";
 import { isSynthesisRunning, synthesizeEngagement } from "./ai/synthesis.ts";
-import { sendAiError } from "./ai/respond.ts";
+import { sendAiError, sendGenerated } from "./ai/respond.ts";
 
 /**
  * Fields any roster member may change on any fragment.
@@ -332,12 +332,20 @@ export function createEngagementRouter() {
     }
     const author = await ensureMember(session, identityOf(req).email);
     try {
-      const { levelSet, joined } = await synthesizeEngagement(session, author.email, {
+      const { levelSet, joined, provider } = await synthesizeEngagement(session, author.email, {
         outputFilter: req.body?.outputFilter,
         cognitiveBiasAudit: req.body?.cognitiveBiasAudit,
       });
       // 202 tells the caller it attached to a run someone else started.
-      res.status(joined ? 202 : 200).json(levelSet);
+      //
+      // Labelled like the seven solo routes rather than answered with a bare body. This is the
+      // one response carrying a client deliverable, and it was the only one that named no
+      // source — so the board could say nothing about the answer that matters most. `provider`
+      // is absent when two families answered the two calls behind this body; see
+      // `answeringProvider`. There is no fallback branch to label here: synthesis refuses to
+      // write filler into a shared deliverable, so a level set exists only if a model wrote it.
+      res.status(joined ? 202 : 200);
+      sendGenerated(res, levelSet, provider);
     } catch (e) {
       // Nothing is written on failure: a placeholder in a shared client deliverable reads
       // like a real result, and nobody would know to regenerate it. 503 rather than 500 is

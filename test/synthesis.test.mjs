@@ -93,6 +93,19 @@ describe("group synthesis", () => {
     assert.notEqual(after.status, "review", "a failed run must not advance the session");
   });
 
+  it("claims nothing about who wrote a level set it failed to produce", async () => {
+    // The route labels its success with `sendGenerated`, and a failure must not inherit that.
+    // `sendAiError` answers with an error and no source, which is the honest state: there is no
+    // body for a model or a fallback to have written. A `model` header on a 503 would be the
+    // board reporting an answer that does not exist.
+    const eng = await seed("unlabelled failure", ["a fragment"]);
+    const res = await as(A, `/api/engagement/${eng.id}/synthesize`, { method: "POST", body: "{}" });
+
+    assert.equal(res.status, 503);
+    assert.equal(res.headers.get("x-extraction-ai-source"), null);
+    assert.equal(res.headers.get("x-extraction-ai-provider"), null);
+  });
+
   it("reports no run in flight once a failed one settles", async () => {
     const eng = await seed("in flight", ["fragment"]);
     await as(A, `/api/engagement/${eng.id}/synthesize`, { method: "POST", body: "{}" });

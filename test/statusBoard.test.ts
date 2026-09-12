@@ -296,17 +296,33 @@ describe("status board", () => {
     });
 
     it("refuses to read an unmarked response as a model answer", () => {
-      // The group synthesize route answers with a plain res.json and names no source. Absence
-      // is a fact about that route, never evidence about who wrote the words.
+      // Every route declares a source today, so this guards the next one that does not:
+      // absence is a fact about a route, never evidence about who wrote the words.
       const html = render(
         deployed,
         stats,
         {},
         "board",
-        answered({ route: "level set", source: "unstated", provider: undefined }),
+        answered({ route: "some new route", source: "unstated", provider: undefined }),
       );
       assert.match(html, /Not stated/);
       assert.match(html, /not a claim either way/);
+      assert.doesNotMatch(html, /Model · /);
+    });
+
+    it("draws a model answer that named no family as a model answer, without naming one", () => {
+      // The level set is two model calls; a cross-provider chain can have them answered by
+      // different families, and the route then names none. That is still a model answer, and
+      // the board must not fill the gap with a family or demote it to "not stated".
+      const html = render(
+        deployed,
+        stats,
+        {},
+        "board",
+        answered({ route: "level set", source: "model", provider: undefined }),
+      );
+      assert.match(html, /did not name its family/);
+      assert.doesNotMatch(html, /Not stated/);
       assert.doesNotMatch(html, /Model · /);
     });
 

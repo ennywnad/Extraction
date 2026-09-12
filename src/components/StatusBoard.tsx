@@ -81,12 +81,18 @@ const PROVIDER_LABELS: Record<ProviderName, string> = {
  * changing without a restart. This is the one line reporting that a request actually happened,
  * which is what 007 means by the live half of the board.
  *
- * **Three states, not two.** `unstated` is not a quieter `model`. The seven solo routes go
- * through `sendModel` / `sendFallback` and always say which wrote the body; the group
- * synthesize route answers with a plain `res.json(levelSet)` and says nothing. So absence is a
- * fact about that route, not evidence about the words — and rendering it as "model" would be
- * this board asserting precisely what it was not told, on the screen whose whole job is
- * refusing to do that.
+ * **Three states, not two.** `unstated` is not a quieter `model`. Every route in the app now
+ * says which wrote its body — the solo ones through `sendModel` / `sendFallback`, the group
+ * level set through `sendGenerated` — so nothing in the tree produces this state today. It is
+ * still drawn, because absence is a fact about a route and never evidence about the words:
+ * rendering it as "model" would be this board asserting precisely what it was not told, on the
+ * screen whose whole job is refusing to do that, and a route added without the helper would
+ * land here.
+ *
+ * **A model answer may name no family, and that is not the same as saying nothing.** The group
+ * level set is two model calls, and a chain that crosses providers can have them answered by
+ * different ones; the route then declares `model` and names nobody rather than crediting one
+ * family with a body it half wrote.
  *
  * **No elapsed time.** A static render has no clock, and "2m ago" baked into markup is wrong
  * by the time anybody reads it.
