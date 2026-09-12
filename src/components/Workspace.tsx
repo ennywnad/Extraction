@@ -20,10 +20,13 @@ import {
   Users,
   Ear,
   Cpu,
+  EyeOff,
 } from "lucide-react";
 import { Session, Thought, ExtractionMode } from "../types";
 import ChorusCard from "./ChorusCard";
 import AssistBar from "./AssistBar";
+import CoverageMap from "./CoverageMap";
+import { liveCoverage } from "../utils/liveCoverage";
 import { DEFAULT_ASSISTS, type AssistPrefs } from "../utils/assistPrefs";
 import RosterPanel from "./RosterPanel";
 import { roleOf, rosterState } from "../utils/roster";
@@ -213,6 +216,11 @@ export default function Workspace({
   const [newThoughtText, setNewThoughtText] = useState("");
   const [showDirectInput, setShowDirectInput] = useState(false);
   const [showRoster, setShowRoster] = useState(false);
+  const [showCoverage, setShowCoverage] = useState(false);
+
+  // Recomputed when the pile changes, which is what "live" means here. It is arithmetic over an
+  // array — the same cost as the chorus index beside it — so there is nothing to defer.
+  const coverage = useMemo(() => liveCoverage(session), [session.thoughts]);
 
   // Group mode only: `roster` is absent on a solo session by design, and a panel describing
   // your position relative to other people is meaningless when there are none.
@@ -411,6 +419,23 @@ export default function Workspace({
             </button>
           )}
 
+          {/* Only once enough fragments carry an accepted area for the wall to mean something —
+              see MIN_PLACED in src/utils/liveCoverage.ts. Absent rather than disabled, because a
+              greyed-out button advertises a feature whose precondition nobody can see. */}
+          {coverage && (
+            <button
+              onClick={() => setShowCoverage(true)}
+              title="What the room has filed against each area, so far"
+              className="px-3.5 py-1.5 border-2 border-black bg-white hover:bg-sky text-black text-xs font-bold font-display uppercase tracking-wider flex items-center gap-1.5 cursor-pointer shadow-hard-2 transition-all"
+            >
+              <EyeOff className="w-3.5 h-3.5" />
+              Coverage
+              <span className="font-mono text-[10px] tabular-nums">
+                {coverage.filter((c) => c.status === "dark").length}/{coverage.length}
+              </span>
+            </button>
+          )}
+
           <button
             onClick={onChorusToggle}
             aria-pressed={chorusEnabled}
@@ -496,6 +521,28 @@ export default function Workspace({
           </button>
         </div>
       </header>
+
+      {coverage && showCoverage && (
+        <div
+          className="fixed inset-0 z-50 bg-black/40 flex items-start justify-center p-6 overflow-y-auto"
+          onClick={() => setShowCoverage(false)}
+        >
+          <div className="w-full max-w-4xl my-8" onClick={(e) => e.stopPropagation()}>
+            <CoverageMap
+              coverage={coverage}
+              pileSize={session.thoughts.length}
+              rolesDeclared={roster ? { declared: roster.declared, total: roster.total } : null}
+              source="live"
+            />
+            <button
+              onClick={() => setShowCoverage(false)}
+              className="mt-3 px-4 py-2 border-3 border-black bg-white hover:bg-zinc-50 text-black text-xs font-black font-display uppercase tracking-wider cursor-pointer shadow-hard-4"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
 
       {roster && showRoster && onSaveRosterEntry && (
         <RosterPanel

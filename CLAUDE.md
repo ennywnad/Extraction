@@ -72,8 +72,16 @@ Every backend picks itself by **presence of configuration**, not by a flag. Read
   fragment's absence.** Modes compose whole new `thoughts` arrays from a possibly-stale
   snapshot, so absence means "older than the server", not "removed". Deletion is an explicit
   call. Don't "simplify" this into an array diff.
-- Coverage arithmetic ([server/ai/coverage.ts](server/ai/coverage.ts)) is deliberately **not**
-  delegated to the model — a count of zero has to be right every time.
+- Coverage arithmetic ([src/utils/coverage.ts](src/utils/coverage.ts)) is deliberately **not**
+  delegated to the model — a count of zero has to be right every time. It lives in `src/utils/`
+  rather than beside the level set because it is pure and has **two callers on opposite sides of
+  the wire**: the deliverable's map, classified by a model, and the live wall in
+  [liveCoverage.ts](src/utils/liveCoverage.ts), built from areas authors accepted from a local
+  assist before submitting. Those two make **different claims from the same cells** — the live
+  one is partial by construction, so a dark area there means "nobody filed anything" and not
+  "nobody spoke". `CoverageMap` takes a `source` to say which it is drawing, and it defaults to
+  `level-set` because `ExportPanel` passes no prop and the client deliverable must never start
+  hedging.
   - **A voice is a group of role labels, never a raw string.** Roles are free text, so anything
     that counts or labels by role goes through `voiceOf` / `resolveVoice` in
     [src/utils/voices.ts](src/utils/voices.ts): spelling is folded there, and
@@ -178,7 +186,7 @@ Every backend picks itself by **presence of configuration**, not by a flag. Read
   well past synthesis, which is single-flight per engagement and capped at ten per window — and
   the only thing a model would add is the wording, which is the exact part that must not
   editorialise. "Nobody else has been here" is one careless sentence away from "nobody agrees
-  with you". Same rule as [coverage.ts](server/ai/coverage.ts): counting is not a model's job.
+  with you". Same rule as [coverage.ts](src/utils/coverage.ts): counting is not a model's job.
   The consequence worth keeping is that it behaves identically with Gemini unconfigured.
 - Share links are **base64url** ([src/utils/shareLink.ts](src/utils/shareLink.ts)). Standard
   base64's `+` becomes a space in a query string and `atob` then silently drops it. Don't

@@ -4,8 +4,14 @@ import { AreaCoverage, AreaStatus } from "../types";
 /**
  * The map of what a room has *not* discussed.
  *
+ * Drawn twice now, from the same arithmetic and about two different things: at review time from
+ * the level set's own classification, and live during a session from the areas authors accepted
+ * before submitting. The `source` prop is how it knows which claim it is allowed to make — see
+ * the prop's own note, because getting that wrong is how a facilitator ends up announcing a gap
+ * that is really an unused feature.
+ *
  * The arithmetic behind this has always been the most distinctive thing the app produces and
- * has never been drawn: server/ai/coverage.ts computes it deliberately outside the model so
+ * has never been drawn: src/utils/coverage.ts computes it deliberately outside the model so
  * that a count of zero is right every time, the level set carries it, and until now the only
  * trace of it a human saw was whatever the prose chose to mention.
  *
@@ -43,6 +49,7 @@ export default function CoverageMap({
   rolesDeclared,
   recounted = false,
   ungroupedPairs = 0,
+  source = "level-set",
 }: {
   coverage: AreaCoverage[];
   pileSize: number;
@@ -60,6 +67,19 @@ export default function CoverageMap({
   recounted?: boolean;
   /** Pairs of role labels that share a word and are still counted as separate voices. */
   ungroupedPairs?: number;
+  /**
+   * Which of the two coverage maps this is, because they are different claims.
+   *
+   * `"level-set"` is the deliverable's map: a model classified every fragment, so an area with
+   * nothing in it is an area nobody spoke into, and "still dark" is the headline it deserves.
+   *
+   * `"live"` is drawn while the room is writing, from the areas authors accepted from a local
+   * assist before submitting (src/utils/liveCoverage.ts). The classification is partial by
+   * construction, so the same black cell usually means "nobody has filed anything here" — a much
+   * weaker statement, and stating it the strong way would have a facilitator announcing a gap
+   * that is really an unused feature. Same numbers, same cells, honest headline.
+   */
+  source?: "level-set" | "live";
 }) {
   if (!coverage.length) return null;
 
@@ -71,6 +91,7 @@ export default function CoverageMap({
   // however many people are in the room. Stated for the same reason as the unplaced line
   // below: the map's claims are only worth anything if its limits are on it.
   const stubbedRoles = Boolean(rolesDeclared && rolesDeclared.declared < rolesDeclared.total);
+  const live = source === "live";
 
   return (
     <div className="bg-white border-3 border-black p-6 shadow-hard-6 space-y-5" id="coverage-map">
@@ -80,13 +101,24 @@ export default function CoverageMap({
           COVERAGE MAP
         </span>
         <h2 className="text-lg font-black uppercase text-black font-display tracking-tight mt-1 leading-tight">
-          {dark.length === 0
-            ? "Every area has been spoken into"
-            : `${dark.length} of ${coverage.length} areas still dark`}
+          {live
+            ? dark.length === 0
+              ? "Every area has something filed against it"
+              : `${dark.length} of ${coverage.length} areas have nothing filed yet`
+            : dark.length === 0
+              ? "Every area has been spoken into"
+              : `${dark.length} of ${coverage.length} areas still dark`}
         </h2>
         <p className="text-[11px] text-zinc-700 font-sans mt-1">
           Counted, not generated — an area with no fragments reports zero because zero is what it
           has.
+          {live && (
+            <>
+              {" "}
+              Built from the areas people accepted on their own drafts, on their own machines, so
+              this is a picture of what has been <em>filed</em> rather than of what has been said.
+            </>
+          )}
         </p>
       </div>
 
@@ -128,8 +160,9 @@ export default function CoverageMap({
         {unplaced > 0 && (
           <span className="text-black font-bold">
             {" "}
-            {unplaced} {unplaced === 1 ? "was" : "were"} not placed by the classifier, so a dark
-            area above may be unplaced rather than unspoken.
+            {unplaced} {unplaced === 1 ? "was" : "were"}{" "}
+            {live ? "never filed by anyone" : "not placed by the classifier"}, so a dark area above
+            may be unplaced rather than unspoken.
           </span>
         )}
         {stubbedRoles && (

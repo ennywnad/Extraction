@@ -12,7 +12,7 @@ import {
  * The distinction this file exists for: `AuthorStamp.role` is always set, and until somebody
  * says otherwise it is set to one of two constants the server picked. So a role is not
  * evidence that anyone declared anything, and the difference matters because the coverage map
- * counts *voices* as a group-by over roles — see server/ai/coverage.ts. In an engagement where
+ * counts *voices* as a group-by over roles — see src/utils/coverage.ts. In an engagement where
  * nobody has declared, that group-by can return at most two however many people are in the
  * room, and every `voices` number in the deliverable is measuring the server's defaults.
  *

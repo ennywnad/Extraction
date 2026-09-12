@@ -10,7 +10,7 @@ import { voiceOf } from "./voices";
  * has to remember. The one exception is `polling`, which the server counts and hands over on
  * a response header — see server/pollWindow.ts.
  *
- * Same discipline as server/ai/coverage.ts: counting is not a model's job, and a number on a
+ * Same discipline as src/utils/coverage.ts: counting is not a model's job, and a number on a
  * wall in front of a room has to be right every time.
  */
 export interface EngagementStats {

@@ -5,7 +5,7 @@
  */
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { computeCoverage, darkAreas } from "../server/ai/coverage.ts";
+import { computeCoverage, darkAreas } from "../src/utils/coverage.ts";
 import type { Session, Thought } from "../src/types.ts";
 
 const AREAS = ["Processes", "Systems", "Commercials"];

@@ -10,7 +10,7 @@ import RoleGroups from "./RoleGroups";
  * Who is in this engagement, and the one card in the app that is about you.
  *
  * This exists because of a number rather than because of a feature. `AuthorStamp.role` is
- * stamped onto every fragment and grouped over by server/ai/coverage.ts to produce `voices` —
+ * stamped onto every fragment and grouped over by src/utils/coverage.ts to produce `voices` —
  * and until this panel existed there was no surface anywhere that could set a role, so every
  * role in every live engagement was one of two constants the server assigned. The arithmetic
  * was right and its input was a stub: `voices` could reach two in a room of twenty.

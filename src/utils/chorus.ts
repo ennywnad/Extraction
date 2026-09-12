@@ -1,7 +1,7 @@
 /**
  * Who is standing next to a fragment, and which fragments are standing alone.
  *
- * The app measures one silence well. `server/ai/coverage.ts` answers *which areas has nobody
+ * The app measures one silence well. `src/utils/coverage.ts` answers *which areas has nobody
  * spoken into*, it answers it by counting rather than by asking a model, and CoverageMap draws
  * it. What it cannot answer is the other silence: **which things did only one person say.**
  * Those are different, and the difference matters — an area can be green, with twelve
