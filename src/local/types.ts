@@ -58,8 +58,35 @@ export interface Scored {
   score: number;
 }
 
+/**
+ * Where a backend's confidence bar sits, measured rather than chosen.
+ *
+ * The *rule* lives in suggest.ts and is the same for every runtime. These two numbers are not
+ * the rule; they are where that rule has to be set for one particular model, and they belong to
+ * the adapter because the thing they describe is the model's own score geometry. Two embedders
+ * disagree about this more than they look like they should: against the same held-out set, nomic
+ * separates its labels by *proportion* and the lift rule does the work, while MiniLM separates
+ * them by *spread* and the separation rule does. One shared pair leaves one of them either
+ * mute or wrong — shipped at nomic's numbers, the in-page backend ran at 73% precision.
+ *
+ * This is not the drift the seam exists to prevent. That would be each adapter inventing its own
+ * *rule*; this is one rule, calibrated against one held-out set, so that "confident enough to
+ * show somebody" means the same thing in outcome terms on both. **A backend with no measured
+ * calibration does not ship** — the numbers come from running the set, never from a plausible
+ * guess, which is a lesson this file learned the expensive way.
+ */
+export interface Calibration {
+  /** How far clear of the runner-up the winner must be, in standard deviations of the field. */
+  separation: number;
+  /** How far above the field the winner must be, as a fraction of its own score. */
+  lift: number;
+}
+
 export interface LocalAssistant {
   readonly backend: LocalBackend;
+
+  /** Where this runtime's confidence bar sits. See `Calibration`. */
+  readonly calibration: Calibration;
 
   /**
    * Whether this runtime can actually answer, without doing any work worth noticing.

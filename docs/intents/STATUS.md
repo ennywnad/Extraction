@@ -24,12 +24,63 @@ this file only records which pieces of one have become code.
 | [003](003-local-models-in-solo-mode.md)        | Local models in solo mode     | unchanged                                                       |
 | [004](004-claude-and-the-gcp-model-gateway.md) | Claude as a deployment choice | **in part** — built and stubbed; never run against Vertex       |
 | [005](005-listening-mode.md)                   | Listening mode                | **in part** — chosen, honoured, and labelled rather than warned |
-| [006](006-local-assists-before-submit.md)      | Local assists before submit   | **in part** — built, then calibrated against a real model       |
+| [006](006-local-assists-before-submit.md)      | Local assists before submit   | **in part** — built, and both backends calibrated to 89%        |
 | [007](007-status-board.md)                     | Status board                  | **in part** — reported, drawn, live, and every route labelled   |
 | [008](008-deploying-group-mode.md)             | Deploying group mode          | **in part** — three preparatory items; still never deployed     |
 | [009](009-the-deferred-group-surface.md)       | The deferred group surface    | **in part** — the coverage map is built                         |
 | [010](010-model-armor.md)                      | Model Armor at the prompt     | unchanged                                                       |
 | [011](011-the-role-brief.md)                   | The role brief                | **in part** — roles can be declared, grouped and briefed        |
+
+---
+
+## 2026-09-11 — 006, in part: the bar belongs to the backend, because the models disagree about their own geometry
+
+**Against [006](006-local-assists-before-submit.md), and it closes the caveat the entry below
+wrote down rather than a new idea.** That entry said the in-page backend had been through none of
+the calibration and nobody should claim otherwise. Running the same held-out set through it —
+`Xenova/all-MiniLM-L6-v2`, the exact checkpoint the adapter asks for, driven under Node in a
+scratch directory so the repo keeps its clean install — showed the caveat was right and the
+correction had made things worse in the one place nobody was looking.
+
+**The default backend was the weak one.** Handed nomic's numbers, in-page spoke on **15 of 31**
+drafts at **73%** precision. The entry below had fixed a threshold that was far too strict for
+one model by measuring a second, and then applied that second model's answer to both — the same
+mistake one level up, and just as invisible: every test passed, because the tests pin the rule
+and not the bar.
+
+**The two embedders discriminate along different axes, which is the finding.** Against the same
+twenty-eight drafts, nomic packs its labels close together and separates them by _proportion_, so
+the lift rule does the work and separation is nearly inert. MiniLM spreads its labels out and
+separates them by _distance_, so separation does the work and lift is nearly inert. That is not a
+tuning detail — it means no single pair of constants can serve both, and the sweeps show it: the
+pair that gives one backend 89% gives the other 73%.
+
+**So the rule stays in one place and the bar moves to the adapter.** `Calibration` is two numbers
+on `LocalAssistant`, declared by each adapter and measured against the same held-out set. This is
+deliberately _not_ the drift the seam exists to prevent — that would be each adapter inventing its
+own rule. It is one rule, set where each model's geometry puts it, so that "confident enough to
+show somebody" means the same thing in outcome terms on both. **A backend with no measured
+calibration does not ship**, and a test refuses two backends that share a pair, since identical
+numbers mean one of them inherited the other's measurement.
+
+**Verified, end to end through the shipped rule and the shipped labels, on both backends.** 440
+tests, 0 failing, 1 skipped.
+
+| backend          | top-1 | speaks on | correct | wrong | noise refused | precision |
+| :--------------- | ----: | --------: | ------: | ----: | ------------: | --------: |
+| in-page (MiniLM) | 18/28 |      9/31 |       8 |     1 |           3/3 |       89% |
+| ollama (nomic)   | 18/28 |      9/31 |       8 |     1 |           2/3 |       89% |
+
+Identical top-1 across two unrelated checkpoints is the strongest evidence yet that the exemplar
+rewrite was the right change and is not overfitted to one model — the labels travel, and only the
+bar is local. Both now offer something on about one draft in three and are right about nine times
+in ten, which is the property to hold steady as backends are added rather than the numbers.
+
+**What is still not claimed.** In-page was measured under Node rather than in a browser. The
+checkpoint, quantisation, pooling and arithmetic are the ones the adapter asks for, so the scores
+are the scores; what is untested is the _runtime path_ — WebGPU and WASM execution providers, the
+CDN fetch, and the first-load cost on a real machine. That is a different kind of verification
+and it needs a browser, not a sweep. The sample also stays small: 89% against 85% is one item.
 
 ---
 
