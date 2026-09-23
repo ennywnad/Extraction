@@ -19,8 +19,8 @@ solo (fragments in `localStorage`) and group (a shared pile on the server, behin
 Healthy `npm run check` ends with:
 
 ```
-# tests 457
-# pass 456
+# tests 465
+# pass 464
 # fail 0
 # skipped 1
 ```
@@ -30,7 +30,7 @@ The skip is `FirestoreEngagementStore` in
 
 ```
 gcloud emulators firestore start --host-port=localhost:8484   # needs Java 21+ on PATH
-npm run test:firestore                                        # 470 tests, 0 skipped
+npm run test:firestore                                        # 478 tests, 0 skipped
 ```
 
 ## Configuration decides behavior
@@ -47,7 +47,10 @@ Every backend picks itself by **presence of configuration**, not by a flag. Read
   assertions in [test/storeContract.test.ts](test/storeContract.test.ts) — add to that file
   rather than to one store's tests, or the production store goes back to being assumed.
 - **Model** — **two axes, and keeping them apart is load-bearing.** `MODEL_BACKEND` says only
-  _how the client authenticates_ (`vertex` = ADC, no key material; `apikey`). `MODEL_CHAIN`
+  _how the client authenticates_ (`vertex` = ADC, no key material; `apikey`; `none` reaches no
+  model, and is selectable rather than only inferred because on a deployment "leave it out"
+  means `vertex` — see [docs/intents/008](docs/intents/008-deploying-group-mode.md)).
+  `MODEL_CHAIN`
   says _who answers_, as `provider:model` entries tried in order — so a chain can name both
   providers and fall between them, and a bare id means Gemini so every old `GEMINI_MODELS`
   value still works. Crossing the two into one enum is how an earlier version ended up with
@@ -209,6 +212,11 @@ Every backend picks itself by **presence of configuration**, not by a flag. Read
   An arbitrary value compiles to a literal, cannot be reached by the remapping, and shows up
   as a patch of daylight in a dark room. [test/theme.test.ts](test/theme.test.ts) fails on
   one, on a hue with no dark ramp, and on a hard shadow written out longhand.
+- **The docs document by pointing at code, and a Markdown link is checked.**
+  [test/docLinks.test.ts](test/docLinks.test.ts) fails on a relative link naming a file that
+  does not exist, because a moved file rots every link to it and no build step reads Markdown.
+  It checks links only — a backtick path in prose is often a deliberate statement about
+  history. `planv1/` is exempt: it is frozen, and describes a repo that no longer exists.
 - Plans and design records live in [planv1/](planv1/) and are committed with their provenance.
 - Roadmap direction lives in [docs/intents/](docs/intents/): one file per idea, each carrying an
   honest read of how far the current seams already go. Not plans, not scheduled. If work starts

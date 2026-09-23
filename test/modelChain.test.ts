@@ -13,7 +13,14 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { AiCallError } from "../server/ai/errors.ts";
-import { parseChain, runChain } from "../server/ai/client.ts";
+import {
+  aiAvailable,
+  availableProviders,
+  modelBackend,
+  parseChain,
+  resetProviders,
+  runChain,
+} from "../server/ai/client.ts";
 import { RECOMMEND_SCHEMA } from "../server/ai/schema.ts";
 import type { ChainEntry, Provider, ProviderName } from "../server/ai/providers/types.ts";
 
@@ -194,5 +201,87 @@ describe("the chain — deciding", () => {
       () => g.provider,
     );
     assert.equal(data.recommendation, "free_stream");
+  });
+});
+
+/**
+ * Which backend a setting selects.
+ *
+ * `none` is the interesting one and the reason this block exists. It is the only backend an
+ * operator asks for in order to get *less*, and on a deployment it cannot be reached by
+ * leaving something out — scripts/config.sh defaults MODEL_BACKEND to `vertex`, so unset means
+ * AI is on. It was a member of `ModelBackend` that both adapters honoured for a while before
+ * any configuration could select it, which made docs/intents/008's "deploy with no model
+ * first" an instruction nobody could follow.
+ */
+describe("the backend — what a setting selects", () => {
+  const original = process.env.MODEL_BACKEND;
+  const originalLegacy = process.env.GENAI_BACKEND;
+
+  function withSetting<T>(value: string | undefined, run: () => T): T {
+    if (value === undefined) delete process.env.MODEL_BACKEND;
+    else process.env.MODEL_BACKEND = value;
+    delete process.env.GENAI_BACKEND;
+    resetProviders();
+    try {
+      return run();
+    } finally {
+      if (original === undefined) delete process.env.MODEL_BACKEND;
+      else process.env.MODEL_BACKEND = original;
+      if (originalLegacy === undefined) delete process.env.GENAI_BACKEND;
+      else process.env.GENAI_BACKEND = originalLegacy;
+      resetProviders();
+    }
+  }
+
+  it("selects the two that authenticate", () => {
+    assert.equal(
+      withSetting("vertex", modelBackend),
+      "vertex",
+      "vertex is ADC as the runtime service account",
+    );
+    assert.equal(withSetting("apikey", modelBackend), "apikey");
+  });
+
+  it("selects none when asked for it", () => {
+    assert.equal(withSetting("none", modelBackend), "none");
+  });
+
+  it("reaches no provider under none, whatever the chain names", () => {
+    // The point of the backend: a chain naming both providers, with keys present for both,
+    // still answers nothing. Every AI route then serves its labelled fallback.
+    const saved = {
+      MODEL_CHAIN: process.env.MODEL_CHAIN,
+      GEMINI_API_KEY: process.env.GEMINI_API_KEY,
+      ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
+    };
+    try {
+      withSetting("none", () => {
+        process.env.MODEL_CHAIN = "gemini:a,claude:b";
+        process.env.GEMINI_API_KEY = "real-looking-key";
+        process.env.ANTHROPIC_API_KEY = "real-looking-key";
+        resetProviders();
+        assert.deepEqual(availableProviders(), []);
+        assert.equal(aiAvailable(), false);
+      });
+    } finally {
+      for (const [key, value] of Object.entries(saved)) {
+        if (value === undefined) delete process.env[key];
+        else process.env[key] = value;
+      }
+      resetProviders();
+    }
+  });
+
+  it("falls back to apikey when unset, for a fresh clone with a key in .env", () => {
+    assert.equal(withSetting(undefined, modelBackend), "apikey");
+  });
+
+  it("treats an unrecognised value as apikey rather than as none", () => {
+    // A typo must not silently turn the model off — that failure is indistinguishable from a
+    // deployment nobody configured, and `none` is exactly the state you do not want to reach
+    // by accident.
+    assert.equal(withSetting("verex", modelBackend), "apikey");
+    assert.equal(withSetting("", modelBackend), "apikey");
   });
 });

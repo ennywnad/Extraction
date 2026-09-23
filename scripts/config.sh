@@ -17,7 +17,12 @@ RUNTIME_SA="${RUNTIME_SA_ID}@${PROJECT}.iam.gserviceaccount.com"
 # How the client authenticates, which is a separate question from which provider answers.
 # `vertex` (default) is ADC as the runtime service account and needs no key material at all;
 # `apikey` uses each named provider's own key, in which case bootstrap provisions the Secret
-# Manager secret that provider needs.
+# Manager secret that provider needs; `none` reaches no model at all, so every AI route answers
+# from its labelled fallback.
+#
+# `none` has to be said out loud — leaving this unset gets you `vertex`, not silence. It is for
+# a first deploy that proves IAP, Firestore and the container before anything can spend a
+# token; docs/intents/008 is the argument.
 #
 # GENAI_BACKEND is the old name and is still honoured, so an operator's existing shell or CI
 # does not silently start deploying the default. The app reads both too; see
