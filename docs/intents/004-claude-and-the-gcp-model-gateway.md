@@ -23,7 +23,7 @@ knowing or caring which.
 ## Why
 
 **The security posture is the argument.** The reason the current deployment uses
-`GENAI_BACKEND=vertex` is not that Gemini is the best model; it is that ADC means no key
+`MODEL_BACKEND=vertex` is not that Gemini is the best model; it is that ADC means no key
 material ever exists in the deployment, and the client's data stays inside the project's own
 perimeter. Claude on Vertex keeps that property exactly — the Vertex client takes a project id
 and a region and authenticates through ADC, with no Anthropic API key anywhere. That means

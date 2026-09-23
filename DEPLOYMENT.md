@@ -220,7 +220,7 @@ whether the deployment is wired the way you think it is:
   "ok": true,
   "identity": { "mode": "iap", "verified": true },
   "storage": { "backend": "firestore", "live": false },
-  "model": { "backend": "vertex", "chainLength": 2 },
+  "model": { "backend": "vertex", "chainLength": 2, "providers": ["gemini"] },
   "aiEnabled": true
 }
 ```
@@ -236,9 +236,13 @@ has opened the store yet; load the app and check again.
 They are separate because Vertex serves both providers under the same ADC, and because a chain
 can name both and fall between them.
 
-`aiEnabled: false` means no model is reachable and every AI route is silently returning canned
-static output. Do not run a workshop in that state. It is a deliberate first-deploy state,
-though — see the note about deploying without `MODEL_BACKEND` below.
+`aiEnabled: false` means no model is reachable and every AI route is returning labelled static
+output. Do not run a workshop in that state. Whether it is a fault or a choice is answered by
+`model.backend` beside it: `none` is the deliberate state described under "A first deploy that
+cannot spend" below, and anything else — `vertex` or `apikey` reporting no providers — means
+the client could not be built, so check that `aiplatform.googleapis.com` is enabled and that
+`VERTEX_LOCATION` arrived. Leaving `MODEL_BACKEND` unset does **not** produce this state:
+[config.sh](scripts/config.sh) defaults it to `vertex`.
 
 It names no project, audience, model id or path: the endpoint is reachable by anyone inside the
 IAP perimeter, and `test/status.test.ts` fails if deployment topology leaks into it. The AI
@@ -278,6 +282,13 @@ Keep enough versions to cover any revision you might roll back to.
 - **IAP is all-or-nothing per service.** It gates the static bundle and every API route alike;
   there is no path-level exemption. The deployed instance is private to the group. For a public
   solo instance, deploy the same image as a second service without `--iap`.
+- **A first deploy that cannot spend.** `MODEL_BACKEND=none ./scripts/deploy.sh` reaches no
+  model at all: every AI route answers from its labelled fallback and `/healthz` reports
+  `aiEnabled: false`. It proves IAP, Firestore and the container without a token being spent,
+  which is the phase-0 argument applied again at a smaller scale — get the deployment problems
+  out of the way while the surface that can go wrong is smallest. Under it `bootstrap-gcp.sh`
+  enables neither `aiplatform` nor Secret Manager and grants no model role, and turning the
+  model on afterwards is one redeploy. It has to be asked for by name: unset gets you `vertex`.
 - **Using the Gemini Developer API instead of Vertex:** `export MODEL_BACKEND=apikey GEMINI_KEY=...`
   before bootstrap. That path adds Secret Manager and a key to rotate; Vertex needs neither.
 - **Running Claude instead of Gemini** is one chain entry: `MODEL_CHAIN=claude:claude-opus-5`,

@@ -94,6 +94,13 @@ export function modelBackend(): ModelBackend {
   const setting = modelBackendSetting();
   if (setting === "vertex") return "vertex";
   if (setting === "apikey") return "apikey";
+  // `none` is selectable rather than only inferred, because on a deployment it cannot be
+  // reached by leaving something out: scripts/config.sh defaults this to `vertex` and
+  // scripts/deploy.sh pushes it with the two variables the Vertex client needs, so *unset*
+  // means AI is on. Asking for no model is a thing an operator does on purpose — a first
+  // deploy that proves IAP, Firestore and the container without spending a token — and it has
+  // to be sayable. Both adapters already refuse to build under it; see docs/intents/008.
+  if (setting === "none") return "none";
   // Unset behaves as apikey, which is what a fresh clone with a key in .env expects.
   return "apikey";
 }

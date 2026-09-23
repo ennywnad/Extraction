@@ -46,6 +46,12 @@ echo "    Model chain:     ${MODEL_CHAIN:-<app default>}"
 if [[ "${MODEL_BACKEND}" == "vertex" ]]; then
   echo "    Vertex location: ${VERTEX_LOCATION}"
 fi
+# Said plainly, because it is the one backend whose symptom — every AI route answering with
+# canned text — looks like a broken deployment rather than a chosen one.
+if [[ "${MODEL_BACKEND}" == "none" ]]; then
+  echo "    No model will be reachable. Every AI route answers from its labelled fallback,"
+  echo "    and /healthz will report aiEnabled: false. Deliberate at MODEL_BACKEND=none."
+fi
 
 DEPLOY_ARGS=(
   run deploy "${SERVICE}"
@@ -88,17 +94,19 @@ gcloud run services add-iam-policy-binding "${SERVICE}" --region "${REGION}" \
 
 URL="$(gcloud run services describe "${SERVICE}" --region "${REGION}" --format='value(status.url)')"
 
+# access.sh is the grant, and it postdates this epilogue's original hand-written gcloud
+# command. It writes the same binding and then checks the three things that decide whether the
+# binding actually works — the IAP service agent's run.invoker, the consent screen, and
+# user: on a group address, which grants nobody and reads as if it worked.
 cat <<NEXT
 
 Deployed: ${URL}
 
-Nobody can reach it yet. Grant the engagement group:
+Nobody can reach it yet, including you. Grant someone:
 
-  gcloud iap web add-iam-policy-binding \\
-    --resource-type=cloud-run --service=${SERVICE} --region=${REGION} \\
-    --member="group:YOUR-GROUP@yourdomain.com" \\
-    --role=roles/iap.httpsResourceAccessor
+  ./scripts/access.sh grant you@example.com          # prints an invite to send them
+  ./scripts/access.sh grant group:workshop@acme.com
+  ./scripts/access.sh check you@example.com          # can they get in, right now?
 
-Use user:someone@example.com for individuals. Verify with a non-member account: IAP should
-return 403 before the request reaches the app.
+Verify with a non-member account: IAP should return 403 before the request reaches the app.
 NEXT

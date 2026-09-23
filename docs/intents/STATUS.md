@@ -543,7 +543,7 @@ computed and discarded twice before the route could have named it. The route was
 not the missing one.
 
 **A level set is two model calls, and that is the decision rather than the plumbing.** A
-classification pass feeds [coverage.ts](../../server/ai/coverage.ts)'s arithmetic, then a second
+classification pass feeds [coverage.ts](../../src/utils/coverage.ts)'s arithmetic, then a second
 call writes the prose, and each runs the chain **independently** — so the cross-provider chain the
 2026-09-11 entry below made possible can have them answered by different families. `answeringProvider`
 names the writer only when no second family contributed, and otherwise the response says `model`
@@ -717,7 +717,7 @@ rather than built. No facilitator tier. 011's row is narrower, not closed.
 **Against [011](011-the-role-brief.md), and it answers the question that file said to settle
 first:** whether free-text roles may inflate `voices`. In `main` they could, and quietly did.
 The roster panel asks people to say what they own rather than pick from a list, and
-[coverage.ts](../../server/ai/coverage.ts) counted distinct role _strings_. So one "Finance" and
+[coverage.ts](../../src/utils/coverage.ts) counted distinct role _strings_. So one "Finance" and
 one "finance" made two voices, and two is exactly what `defined` needs. One part of the business
 could get an area printed as defined in a client deliverable. The board's `roles` tile had the
 same defect through a second copy of the group-by.
@@ -1062,7 +1062,7 @@ ways: with nothing configured, all seven solo routes answer with a labelled fall
 `/healthz` reports `none`; with a Gemini key, a real request came back through the new seam
 carrying `X-Extraction-AI-Source: model` and `X-Extraction-AI-Provider: gemini`.
 
-**Claude has never answered.** [providerContract.test.ts](../../test/providerContract.test.ts)
+**Claude has never answered.** `providerContract.test.ts`
 drives both adapters against a stubbed transport, so what is proven is everything up to the
 wire — the request each builds, the parse, the reported model, the status gate. Whether Vertex
 accepts it needs a project with Claude enabled in Model Garden, which is
@@ -1081,7 +1081,7 @@ it in one line as the sharpest of its reasons, and it had been true in `main` th
 `newEngagement` stamps the creator `Facilitator` and `ensureMember` stamps everyone else
 `Contributor`, `updateMyRosterEntry` was written and **had no callers anywhere in the client**,
 and no component in the app could reach a roster. So every role in every live engagement was one
-of two constants — and `voices` in [coverage.ts](../../server/ai/coverage.ts) is a group-by over
+of two constants — and `voices` in [coverage.ts](../../src/utils/coverage.ts) is a group-by over
 role. **It could reach two in a room of twenty**, and that number is printed per area on the
 coverage map a facilitator puts in front of a client. The arithmetic was right and its input was
 a stub.
@@ -1356,7 +1356,7 @@ the ten coverage areas and this classifies nothing; [009](009-the-deferred-group
 catalogued comments and +1s, which change what the pile _is_, and this changes nothing about
 the pile at all.
 
-**The finding it exists for.** `server/ai/coverage.ts` answers _which areas has nobody spoken
+**The finding it exists for.** `src/utils/coverage.ts` answers _which areas has nobody spoken
 into_, and it is the best idea in the app. It cannot answer _which things did only one person
 say_ — and those are different silences. An area can hold twelve fragments from three roles and
 have every one of them be a lone voice nobody else ever touched, and that engagement reads green
@@ -1563,7 +1563,7 @@ across the wire and never rendered:
 - [server/ai/synthesis.ts](../../server/ai/synthesis.ts) — mirrors `coverage` onto the session
   alongside `synthesized*`.
 - `AreaCoverage` moved to [src/types.ts](../../src/types.ts) (re-exported from
-  [coverage.ts](../../server/ai/coverage.ts)) since it now crosses the wire in both directions,
+  [coverage.ts](../../src/utils/coverage.ts)) since it now crosses the wire in both directions,
   and `ServerMetaPatch` in [store/types.ts](../../server/store/types.ts) keeps it server-written.
 - Six render tests and one write-gate test.
 
@@ -1641,7 +1641,7 @@ board is a rendering job over a value that already crosses the wire — the same
 
 **Next, if picking up here.** Either half of 007 is now cheap; the board still needs its
 audience decision made first. The other candidate with no decisions blocking it is 009's
-coverage map: computed in [coverage.ts](../../server/ai/coverage.ts), returned on the
+coverage map: computed in [coverage.ts](../../src/utils/coverage.ts), returned on the
 `LevelSet`, and the string `coverage` still appears nowhere in [src/](../../src/).
 
 **Still true, and worth repeating.** [008](008-deploying-group-mode.md) comes before all of it.

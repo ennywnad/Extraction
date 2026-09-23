@@ -116,7 +116,7 @@ decision and it should be made deliberately, once, in the open — not discovere
 
 **Floor settings are almost free and cover half the deployments.** They are configuration, not
 code, which fits this repo's "configuration decides behavior" spine exactly. But they enforce
-at the Vertex layer, so `GENAI_BACKEND=apikey` — the local development path — would be
+at the Vertex layer, so `MODEL_BACKEND=apikey` — the local development path — would be
 completely unscreened. That is arguably fine (dev is one person on their own text) and it is
 consistent with how identity and storage already differ by deployment. It should be stated
 rather than discovered.

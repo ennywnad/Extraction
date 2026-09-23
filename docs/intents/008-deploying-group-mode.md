@@ -96,12 +96,23 @@ More than expected. The cost work was done before the deploy, which is the right
   ceiling before anything else**, in that order. The budget is the alarm; the quota is the brake.
   Both are outside the app and neither can say _why_ a bill moved. `levelSetRuns` is the inside
   view that answers that, and it needs no setup — see the open question below, now closed.
-- **Deploy with `GENAI_BACKEND` unset first, if the aim is to isolate failures.** The app is
-  designed to run with no model and label its fallbacks, so a first deploy can prove IAP,
-  Firestore and the container without a single token being spent. Turning Vertex on afterwards
-  is one `gcloud run services update`. The plan's own phase-0 argument — get the deployment
-  problems out of the way while the feature surface is zero — applies again here at a smaller
-  scale.
+- **Deploy with `MODEL_BACKEND=none` first, if the aim is to isolate failures.** The app runs
+  with no model and labels its fallbacks, so a first deploy proves IAP, Firestore and the
+  container without a single token being spent. Turning the model on afterwards is one
+  redeploy. The plan's own phase-0 argument — get the deployment problems out of the way while
+  the feature surface is zero — applies again here at a smaller scale.
+
+  This bullet used to say "deploy with `GENAI_BACKEND` unset", and it is recorded here because
+  it is the class of surprise this intent exists to remove: the name was the deprecated one,
+  and unsetting it did nothing, because [config.sh](../../scripts/config.sh) defaults
+  `MODEL_BACKEND` to `vertex` and [deploy.sh](../../scripts/deploy.sh) pushes it with the two
+  variables the Gemini adapter needs to consider itself configured. `apikey` was not an escape
+  either — the deploy then mounts a secret `bootstrap-gcp.sh` only creates under `apikey`. So
+  for a while every path through these scripts produced a deployment that would spend tokens,
+  while the document said otherwise. `none` was already a `ModelBackend` member both adapters
+  honoured; nothing could select it. Now `modelBackend()` does, and `test/modelChain.test.ts`
+  holds it there.
+
 - **Exercise the route rules against Firestore.** The store contract is automated
   (`npm run test:firestore`); the layer above it is not. Worth doing by hand on the real
   service: two people contributing at once, one editing another's fragment and being refused,

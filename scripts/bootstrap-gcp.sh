@@ -35,9 +35,12 @@ APIS=(
 # chain. See docs/intents/004: that equivalence is the whole argument for Claude on Vertex.
 if [[ "${MODEL_BACKEND}" == "vertex" ]]; then
   APIS+=(aiplatform.googleapis.com)
-else
+elif [[ "${MODEL_BACKEND}" == "apikey" ]]; then
   APIS+=(secretmanager.googleapis.com)
 fi
+# `none` enables neither, which is the point of it: no model API, no secret store, nothing to
+# spend. Falling through to the apikey branch would enable Secret Manager for a deployment
+# that has no key to put in it.
 gcloud services enable "${APIS[@]}"
 
 echo "==> Firestore database"
@@ -65,7 +68,11 @@ grant() {
 }
 echo "==> IAM"
 grant roles/datastore.user
-if [[ "${MODEL_BACKEND}" == "vertex" ]]; then
+if [[ "${MODEL_BACKEND}" == "none" ]]; then
+  # No model, so no model credential of either kind. The app answers every AI route from a
+  # labelled fallback; see docs/intents/008.
+  echo "    MODEL_BACKEND=none: no model role and no key secret"
+elif [[ "${MODEL_BACKEND}" == "vertex" ]]; then
   # Claude on Vertex authenticates the same way Gemini does — same role, same runtime service
   # account, no key material for either. That equivalence is the argument; see docs/intents/004.
   grant roles/aiplatform.user

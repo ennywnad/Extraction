@@ -260,19 +260,19 @@ console step and the two things about access that no IAM read can answer.
 Everything below is optional. Never prefix a secret with `VITE_` — that publishes it to the
 browser. See [`.env.example`](.env.example) for the annotated list.
 
-| Variable                           | Purpose                                                                                                                                                     |
-| :--------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `MODEL_BACKEND`                    | How the client authenticates: `apikey` (default) or `vertex`. Vertex uses ADC and serves both providers — no key material. Was `GENAI_BACKEND`, still read. |
-| `GEMINI_API_KEY`                   | Gemini Developer API key. Easiest for local development.                                                                                                    |
-| `ANTHROPIC_API_KEY`                | Anthropic key, when `MODEL_BACKEND=apikey` and the chain names Claude. Not folded into one neutral name: two providers means two keys.                      |
-| `VERTEX_LOCATION`                  | Region, when `MODEL_BACKEND=vertex`.                                                                                                                        |
-| `MODEL_CHAIN`                      | Comma-separated `provider:model` chain, e.g. `claude:claude-opus-5,gemini:gemini-3.5-flash`. A bare id means Gemini. Was `GEMINI_MODELS`, still read.       |
-| `AUTH_MODE`                        | `iap` verifies the IAP assertion; `dev` asserts a local identity.                                                                                           |
-| `IAP_AUDIENCE`                     | Expected JWT audience. Computed for you by `scripts/deploy.sh`.                                                                                             |
-| `FIRESTORE_PROJECT_ID`             | Set to use Firestore; unset falls back to a local JSON file.                                                                                                |
-| `DEV_USER_EMAIL` / `DEV_USER_NAME` | The identity assumed under `AUTH_MODE=dev`.                                                                                                                 |
-| `PORT`                             | Listen port. Defaults to 3000; Cloud Run injects its own.                                                                                                   |
-| `DIST_DIR`                         | Static root under `NODE_ENV=production`. Defaults to `./dist`.                                                                                              |
+| Variable                           | Purpose                                                                                                                                                                                  |
+| :--------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `MODEL_BACKEND`                    | How the client authenticates: `apikey` (default), `vertex`, or `none` for no model at all. Vertex uses ADC and serves both providers — no key material. Was `GENAI_BACKEND`, still read. |
+| `GEMINI_API_KEY`                   | Gemini Developer API key. Easiest for local development.                                                                                                                                 |
+| `ANTHROPIC_API_KEY`                | Anthropic key, when `MODEL_BACKEND=apikey` and the chain names Claude. Not folded into one neutral name: two providers means two keys.                                                   |
+| `VERTEX_LOCATION`                  | Region, when `MODEL_BACKEND=vertex`.                                                                                                                                                     |
+| `MODEL_CHAIN`                      | Comma-separated `provider:model` chain, e.g. `claude:claude-opus-5,gemini:gemini-3.5-flash`. A bare id means Gemini. Was `GEMINI_MODELS`, still read.                                    |
+| `AUTH_MODE`                        | `iap` verifies the IAP assertion; `dev` asserts a local identity.                                                                                                                        |
+| `IAP_AUDIENCE`                     | Expected JWT audience. Computed for you by `scripts/deploy.sh`.                                                                                                                          |
+| `FIRESTORE_PROJECT_ID`             | Set to use Firestore; unset falls back to a local JSON file.                                                                                                                             |
+| `DEV_USER_EMAIL` / `DEV_USER_NAME` | The identity assumed under `AUTH_MODE=dev`.                                                                                                                                              |
+| `PORT`                             | Listen port. Defaults to 3000; Cloud Run injects its own.                                                                                                                                |
+| `DIST_DIR`                         | Static root under `NODE_ENV=production`. Defaults to `./dist`.                                                                                                                           |
 
 ## 🎨 Design language
 

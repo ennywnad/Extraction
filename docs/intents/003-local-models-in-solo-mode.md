@@ -13,7 +13,7 @@ routes actually ask for.
 **Explicitly not a requirement.** Solo mode runs today with no model at all and must keep
 doing so. This adds a third branch to the existing selection-by-configuration pattern:
 
-| `GENAI_BACKEND`  | What runs                                                               |
+| `MODEL_BACKEND`  | What runs                                                               |
 | :--------------- | :---------------------------------------------------------------------- |
 | unset / `apikey` | Gemini Developer API, if a key is present; otherwise labelled fallbacks |
 | `vertex`         | Vertex AI as the runtime service account                                |
