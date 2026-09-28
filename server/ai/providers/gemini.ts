@@ -122,8 +122,16 @@ export const gemini: Provider = {
  *   gemini-3.5-flash       stable 2026-05-19, retires no earlier than 2027-05-19
  *   gemini-3.5-flash-lite  stable 2026-07-21, retires no earlier than 2027-07-21
  *
- * Note: Newer models like gemini-3.7-flash and gemini-3.8-flash are available and can
- * be used simply by overriding MODEL_CHAIN. The app passes the string straight to the SDK.
+ * Newer ids exist and are deliberately not the default (checked 2026-09-27, same way):
+ *
+ *   gemini-3.7-flash       stable 2026-08-13, short-term availability, no retirement date
+ *   gemini-3.8-flash       stable 2026-09-02, short-term availability, no retirement date
+ *
+ * "Short-term availability" is the opposite of what a default wants: 3.5-flash has a
+ * guaranteed floor and these have none. Either is one MODEL_CHAIN override away — the id
+ * goes straight to the SDK, and 3.8's rejected parameters (temperature, top_p/top_k,
+ * thinking_budget, a `minimal` thinking level) are none that this adapter sends. 3.8 is
+ * also priced up on 2027-01-01 and spends more tokens by design.
  *
  * The second entry is a cheaper model rather than an older one, which is the only fallback
  * that means anything: the chain advances on "this id is not served here", and a *previous
