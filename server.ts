@@ -125,7 +125,12 @@ if (authConfig.mode === "dev") {
 
 // Unauthenticated, so it reports which branch each seam took and nothing that names the
 // deployment. See server/status.ts for the rule and what it deliberately does not claim.
-app.get("/healthz", (_req, res) => {
+//
+// Served at two paths because Cloud Run reserves some paths ending in `z`: on a *.run.app URL
+// the Google front end answers /healthz with its own 404 before IAP or this server sees it.
+// /api/status is the one the client and a deployment's checks use; /healthz stays for local
+// runs and the tests that poll it.
+app.get(["/api/status", "/healthz"], (_req, res) => {
   res.json(instanceStatus(authConfig));
 });
 

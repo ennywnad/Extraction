@@ -24,13 +24,31 @@ export REGION=us-central1          # optional, this is the default
 
 Billing must be enabled on the project.
 
-## One manual step
+## Manual steps (console, once)
 
-`gcloud run deploy --iap` needs an OAuth brand. In a project with no organisation, configure
-the consent screen as **External** once, in the console:
-<https://console.cloud.google.com/auth/branding>
+In a project with **no organisation** IAP cannot use a Google-managed OAuth client, so it needs
+a brand and a client of your own. Without them the deploy succeeds, prints a warning about
+"initial setup via the Cloud Console", and every request then fails with a **502** whose body
+reads `Empty Google Account OAuth client ID(s)/secret(s)`. Both steps can be done before or
+after `deploy.sh`; neither needs a redeploy. (`gcloud iap oauth-brands` cannot do this — that
+API is shut down, and it never supported projects outside an organisation.)
 
-This is the only click-through in the process.
+1. **Consent screen:** <https://console.cloud.google.com/auth/branding> — Get started,
+   audience **External**. Leave it in Testing and add yourself under Audience → Test users.
+2. **OAuth client:** <https://console.cloud.google.com/auth/clients> — Create client,
+   **Web application**. Add the authorised redirect URI
+   `https://iap.googleapis.com/v1/oauth/clientIds/CLIENT_ID:handleRedirect`, then hand the
+   client to IAP without putting the secret in shell history or the repo:
+
+```bash
+read "CID?Client ID: "; read -s "CSECRET?Client secret: "; echo
+printf 'access_settings:\n  oauth_settings:\n    client_id: %s\n    client_secret: %s\n' \
+  "$CID" "$CSECRET" > /tmp/iap_settings.yaml
+gcloud iap settings set /tmp/iap_settings.yaml --project="$PROJECT"
+rm /tmp/iap_settings.yaml; unset CSECRET
+```
+
+(`read "VAR?prompt"` is zsh; in bash use `read -p "prompt" VAR`.)
 
 ## Provision
 
@@ -204,16 +222,19 @@ access with no change to the app — offboarding is the client directory's job.
 
 ## Verify
 
-| Check                                                      | Expected                                           |
-| ---------------------------------------------------------- | -------------------------------------------------- |
-| `curl $URL/healthz` with no credentials                    | `403` from IAP, before the request reaches the app |
-| Signed-in group member                                     | `200`, app loads                                   |
-| Signed-in non-member                                       | `403` from IAP                                     |
-| `/healthz` as a member                                     | the branch each seam took — see below              |
-| `gcloud run services describe extraction --region=$REGION` | no secret mounts                                   |
+| Check                                                      | Expected                              |
+| ---------------------------------------------------------- | ------------------------------------- |
+| `curl $URL/` with no credentials                           | `302` to Google sign-in, from IAP     |
+| Signed-in group member                                     | `200`, app loads                      |
+| Signed-in non-member                                       | `403` from IAP                        |
+| `/api/status` as a member                                  | the branch each seam took — see below |
+| `gcloud run services describe extraction --region=$REGION` | no secret mounts                      |
 
-`/healthz` reports which branch every seam selected, which is the fastest way to find out
-whether the deployment is wired the way you think it is:
+`/api/status` reports which branch every seam selected, which is the fastest way to find out
+whether the deployment is wired the way you think it is. **Not `/healthz` on Cloud Run** — the
+app serves both, but Cloud Run reserves paths ending in `z` and the Google front end answers
+`/healthz` with its own HTML 404 before IAP or the app sees the request. `/healthz` still works
+locally.
 
 ```json
 {

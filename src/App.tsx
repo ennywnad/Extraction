@@ -352,7 +352,8 @@ export default function App() {
 
     // Unauthenticated, so this answers in solo deployments too. A silent downgrade to canned
     // prompts is the failure nobody notices until a workshop has already gone badly.
-    fetch("/healthz")
+    // Not /healthz: Cloud Run reserves paths ending in `z` and 404s them at the front end.
+    fetch("/api/status")
       .then((r) => r.json())
       .then((h) => setInstanceStatus(h as InstanceStatus))
       .catch(() => undefined);

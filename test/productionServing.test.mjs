@@ -102,6 +102,12 @@ describe("production static serving", () => {
     }
   });
 
+  it("serves the status at /api/status too, since Cloud Run 404s /healthz", async () => {
+    const [a, b] = await Promise.all([fetch(`${H}/api/status`), fetch(`${H}/healthz`)]);
+    assert.equal(a.headers.get("content-type")?.split(";")[0], "application/json");
+    assert.deepEqual(await a.json(), await b.json());
+  });
+
   it("does not swallow the API, which sits in front of the fallback", async () => {
     const res = await fetch(`${H}/healthz`);
     assert.equal(res.headers.get("content-type")?.split(";")[0], "application/json");
