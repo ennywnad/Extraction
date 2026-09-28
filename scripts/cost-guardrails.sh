@@ -72,6 +72,7 @@ policy() {
     return
   fi
   local tmp; tmp="$(mktemp)"
+  # Alert filters must name a resource.type as well as a metric.type, or the API rejects them.
   # Monitoring filters carry double quotes; escape them so the JSON below stays valid.
   local filter_json="${filter//\"/\\\"}"
   cat > "${tmp}" <<POLICY
@@ -115,7 +116,7 @@ echo "==> Usage alert policies"
 # group level set is TWO model calls over the whole pile (classify, then synthesise), so
 # budget synthesis at double what one prompt looks like.
 policy "Extraction: Vertex AI token burn" \
-  'metric.type="aiplatform.googleapis.com/publisher/online_serving/token_count"' \
+  'resource.type="aiplatform.googleapis.com/PublisherModel" AND metric.type="aiplatform.googleapis.com/publisher/online_serving/token_count"' \
   2000000 3600s \
   "Vertex AI consumed more than 2M tokens in an hour. A workshop uses a few hundred thousand, remembering that one level set is two calls over the whole pile. Check for a client retry loop against the /api/session/* routes."
 
@@ -125,13 +126,13 @@ policy "Extraction: Vertex AI token burn" \
 # counted). If this fires, the pile is being loaded in full on every poll — look for a client
 # that stopped sending If-None-Match, or an engagement whose updatedAt is moving constantly.
 policy "Extraction: Firestore read burn" \
-  'metric.type="firestore.googleapis.com/document/read_count"' \
+  'resource.type="firestore_instance" AND metric.type="firestore.googleapis.com/document/read_count"' \
   100000 3600s \
   "Firestore served more than 100k document reads in an hour, against a steady state of roughly 240 per open tab. An unchanged 15-second poll should cost one read, so this means polls are missing the 304 path and loading the whole pile, or a client is polling far faster than 15s."
 
 # max-instances=3 x concurrency=80 caps compute, so this is about what is downstream.
 policy "Extraction: Cloud Run request burn" \
-  'metric.type="run.googleapis.com/request_count"' \
+  'resource.type="cloud_run_revision" AND metric.type="run.googleapis.com/request_count"' \
   50000 3600s \
   "Cloud Run served more than 50k requests in an hour, against roughly 240 per open tab. Compute cost is capped by max-instances=3, so the concern is what each request drives: Vertex tokens and Firestore reads. If the solo instance is deployed without IAP, check this first — /api/session/* is unauthenticated there."
 
