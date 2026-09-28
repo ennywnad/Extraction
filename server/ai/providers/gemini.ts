@@ -122,6 +122,9 @@ export const gemini: Provider = {
  *   gemini-3.5-flash       stable 2026-05-19, retires no earlier than 2027-05-19
  *   gemini-3.5-flash-lite  stable 2026-07-21, retires no earlier than 2027-07-21
  *
+ * Note: Newer models like gemini-3.7-flash and gemini-3.8-flash are available and can
+ * be used simply by overriding MODEL_CHAIN. The app passes the string straight to the SDK.
+ *
  * The second entry is a cheaper model rather than an older one, which is the only fallback
  * that means anything: the chain advances on "this id is not served here", and a *previous
  * generation* id is strictly more likely to have been retired than the one that just failed.
