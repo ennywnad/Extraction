@@ -69,7 +69,7 @@
             {
               "timeSeriesQuery": {
                 "timeSeriesFilter": {
-                  "filter": "metric.type=\"firestore.googleapis.com/document/read_count\" resource.type=\"datastore_database\"",
+                  "filter": "metric.type=\"firestore.googleapis.com/document/read_count\" resource.type=\"firestore_instance\"",
                   "aggregation": {
                     "perSeriesAligner": "ALIGN_RATE",
                     "crossSeriesReducer": "REDUCE_SUM"
@@ -82,7 +82,7 @@
         }
       },
       {
-        "title": "Cloud Run Container CPU Utilization",
+        "title": "Cloud Run Container CPU Utilization (p99)",
         "xyChart": {
           "dataSets": [
             {
@@ -90,9 +90,10 @@
                 "timeSeriesFilter": {
                   "filter": "metric.type=\"run.googleapis.com/container/cpu/utilizations\" resource.type=\"cloud_run_revision\"",
                   "aggregation": {
-                    "perSeriesAligner": "ALIGN_MEAN",
-                    "crossSeriesReducer": "REDUCE_MEAN",
-                    "groupByFields": []
+                    "perSeriesAligner": "ALIGN_PERCENTILE_99",
+                    "crossSeriesReducer": "REDUCE_MAX",
+                    "groupByFields": [],
+                    "alignmentPeriod": "60s"
                   }
                 }
               },
