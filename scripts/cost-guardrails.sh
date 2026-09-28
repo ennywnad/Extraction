@@ -60,7 +60,7 @@ else
     --threshold-rule=percent=1.0 \
     --threshold-rule=percent=0.9,basis=forecasted-spend \
     --notifications-rule-monitoring-notification-channels="${CHANNEL}" \
-    --notifications-rule-disable-default-iam-recipients \
+    --disable-default-iam-recipients \
     >/dev/null && echo "    created"
 fi
 
@@ -72,6 +72,8 @@ policy() {
     return
   fi
   local tmp; tmp="$(mktemp)"
+  # Monitoring filters carry double quotes; escape them so the JSON below stays valid.
+  local filter_json="${filter//\"/\\\"}"
   cat > "${tmp}" <<POLICY
 {
   "displayName": "${name}",
@@ -81,7 +83,7 @@ policy() {
   "conditions": [{
     "displayName": "${name}",
     "conditionThreshold": {
-      "filter": "${filter}",
+      "filter": "${filter_json}",
       "comparison": "COMPARISON_GT",
       "thresholdValue": ${threshold},
       "duration": "0s",
