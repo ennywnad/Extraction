@@ -305,3 +305,8 @@ models in solo mode, Claude served from the same GCP project, a no-model listeni
 a status board in the same visual idiom, and optional local assists on a draft before it is
 submitted —
 is written up in [docs/intents/](docs/intents/).
+
+## License
+
+Copyright (c) 2026 Dan Wynne. All rights reserved. The source is public to read, not licensed for
+reuse — see [LICENSE](LICENSE).
